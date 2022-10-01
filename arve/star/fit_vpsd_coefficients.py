@@ -65,8 +65,6 @@ def fit_vpsd_coefficients(star, label):
             # update coefficients with fitted values
             coef[i] = c.params[comp + "_" + str(i)].value
 
-    return
-
 
 def func_res(params, star, label, freq_avg, vpsd_avg):
 

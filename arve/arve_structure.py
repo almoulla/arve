@@ -4,10 +4,13 @@ arve structure
 
 from .data.add_rv                import add_rv
 from .data.add_spectrum          import add_spectrum
+
 from .star.add_vpsd_component    import add_vpsd_component
 from .star.compute_vpsd          import compute_vpsd
 from .star.fit_vpsd_coefficients import fit_vpsd_coefficients
 from .star.plot_vpsd_components  import plot_vpsd_components
+
+from .planets.add_planet         import add_planet
 
 
 class ARVE_Structure:
@@ -56,3 +59,6 @@ class Planets:
     def __init__(self, arve):
         self.arve = arve
         self.parameters: dict = {}
+
+    def add_planet(self, **kwargs):
+        add_planet(self, **kwargs)

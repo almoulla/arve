@@ -20,8 +20,6 @@ def compute_vpsd(star, label):
 
     # save in ARVE structure
     star.vpsd[label] = {"freq": f, "vps": ps, "vpsd": psd, "phase": phi}
-    
-    return
 
 
 def periodogram(t, y, sig=0, ofac=1, normalize=True, win_func=False):
