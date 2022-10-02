@@ -15,12 +15,12 @@ from .planets.add_planet         import add_planet
 
 class ARVE_Structure:
     def __init__(self):
-        self.data = Data(self)
-        self.star = Star(self)
-        self.planets = Planets(self)
+        self.data = _Data(self)
+        self.star = _Star(self)
+        self.planets = _Planets(self)
 
 
-class Data:
+class _Data:
     def __init__(self, arve):
         self.arve = arve
         self.rv: dict = {}
@@ -34,7 +34,7 @@ class Data:
         add_spectrum(self, **kwargs)
 
 
-class Star:
+class _Star:
     def __init__(self, arve):
         self.arve = arve
         self.stellar_parameters: dict = {}
@@ -55,7 +55,7 @@ class Star:
         plot_vpsd_components(self, **kwargs)
 
 
-class Planets:
+class _Planets:
     def __init__(self, arve):
         self.arve = arve
         self.parameters: dict = {}
