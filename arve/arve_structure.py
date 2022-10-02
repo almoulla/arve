@@ -14,6 +14,7 @@ from .planets.add_planet         import add_planet
 
 
 class ARVE_Structure:
+
     def __init__(self):
         self.data = _Data(self)
         self.star = _Star(self)
@@ -21,6 +22,7 @@ class ARVE_Structure:
 
 
 class _Data:
+
     def __init__(self, arve):
         self.arve = arve
         self.rv: dict = {}
@@ -35,6 +37,7 @@ class _Data:
 
 
 class _Star:
+
     def __init__(self, arve):
         self.arve = arve
         self.stellar_parameters: dict = {}
@@ -56,6 +59,7 @@ class _Star:
 
 
 class _Planets:
+    
     def __init__(self, arve):
         self.arve = arve
         self.parameters: dict = {}
