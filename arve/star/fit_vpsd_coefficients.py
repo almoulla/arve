@@ -6,10 +6,10 @@ import numpy as np
 from lmfit import Parameters, minimize
 
 
-def fit_vpsd_coefficients(star, label):
+def fit_vpsd_coefficients(star):
 
     # read VPSD and units
-    freq, vpsd = [star.vpsd[label][var] for var in ["freq", "vpsd"]]
+    freq, vpsd = [star.vpsd[var] for var in ["freq", "vpsd"]]
 
     # log-average VPSD
     freq_bin = 10 ** (np.linspace(np.log10(freq[0]), np.log10(freq[-1]), 51))
@@ -31,10 +31,10 @@ def fit_vpsd_coefficients(star, label):
     params = Parameters()
 
     # loop components
-    for comp in star.vpsd_components[label].keys():
+    for comp in star.vpsd_components.keys():
 
         # component dictionary
-        comp_dict = star.vpsd_components[label][comp]
+        comp_dict = star.vpsd_components[comp]
 
         # type, coefficients, and vary
         type = comp_dict["type"]
@@ -48,13 +48,13 @@ def fit_vpsd_coefficients(star, label):
             params.add(comp + "_" + str(i), value=coef[i], vary=vary[i])
 
     # fit coefficients
-    c = minimize(func_res, params, args=(star, label, freq_avg, vpsd_avg))
+    c = minimize(func_res, params, args=(star, freq_avg, vpsd_avg))
 
     # loop components
-    for comp in star.vpsd_components[label].keys():
+    for comp in star.vpsd_components.keys():
 
         # component dictionary
-        comp_dict = star.vpsd_components[label][comp]
+        comp_dict = star.vpsd_components[comp]
 
         # coefficients
         coef = comp_dict["coef"]
@@ -66,15 +66,15 @@ def fit_vpsd_coefficients(star, label):
             coef[i] = c.params[comp + "_" + str(i)].value
 
 
-def func_res(params, star, label, freq_avg, vpsd_avg):
+def func_res(params, star, freq_avg, vpsd_avg):
 
     # empty array for sum of components
     vpsd_tot = np.zeros(len(freq_avg))
 
     # loop components
-    for comp in star.vpsd_components[label].keys():
+    for comp in star.vpsd_components.keys():
 
-        comp_dict = star.vpsd_components[label][comp]
+        comp_dict = star.vpsd_components[comp]
 
         type = comp_dict["type"]
 

@@ -6,14 +6,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def plot_vpsd_components(star, label):
+def plot_vpsd_components(star):
 
     # figure
     fig = plt.figure()
 
     # read VPSD and units
-    freq, vpsd = [star.vpsd[label][var] for var in ["freq", "vpsd"]]
-    time_unit, rv_unit = [star.arve.data.rv[label][var] for var in ["time_unit", "rv_unit"]]
+    freq, vpsd = [star.vpsd[var] for var in ["freq", "vpsd"]]
+    time_unit, vrad_unit = [star.arve.data.vrad[var] for var in ["time_unit", "vrad_unit"]]
 
     # log-average VPSD
     freq_bin = 10 ** (np.linspace(np.log10(freq[0]), np.log10(freq[-1]), 51))
@@ -39,10 +39,10 @@ def plot_vpsd_components(star, label):
     vpsd_tot = np.zeros(len(freq))
 
     # loop components
-    for comp in star.vpsd_components[label].keys():
+    for comp in star.vpsd_components.keys():
 
         # component dictionary
-        comp_dict = star.vpsd_components[label][comp]
+        comp_dict = star.vpsd_components[comp]
 
         # type and coefficients
         type = comp_dict["type"]
@@ -99,7 +99,7 @@ def plot_vpsd_components(star, label):
 
     # plot labels
     plt.xlabel("$f$" + " " + f"[{time_unit}" + "$^{-1}$]")
-    plt.ylabel("VPSD" + " " + f"[({rv_unit})" + "$^{2}$" + " / " + f"{time_unit}" + "$^{-1}$]")
+    plt.ylabel("VPSD" + " " + f"[({vrad_unit})" + "$^{2}$" + " / " + f"{time_unit}" + "$^{-1}$]")
 
     # plot legend
     leg = plt.legend(loc="lower left")

@@ -3,6 +3,8 @@ add planet
 """
 
 
-def add_planet(planets, label, planet):
+def add_planet(data):
 
-    return
+    # TODO
+
+    return None
