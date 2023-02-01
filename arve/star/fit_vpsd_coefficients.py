@@ -8,24 +8,8 @@ from lmfit import Parameters, minimize
 
 def fit_vpsd_coefficients(star):
 
-    # read VPSD and units
-    freq, vpsd = [star.vpsd[var] for var in ["freq", "vpsd"]]
-
-    # log-average VPSD
-    freq_bin = 10 ** (np.linspace(np.log10(freq[0]), np.log10(freq[-1]), 51))
-    freq_avg = (freq_bin[1:] + freq_bin[:-1]) / 2
-    vpsd_avg = np.empty(freq_avg.size)
-    for i in range(freq_avg.size):
-        vpsd_bin = vpsd[(freq > freq_bin[i]) & (freq < freq_bin[i + 1])]
-        if len(vpsd_bin) == 0:
-            vpsd_avg[i] = np.nan
-        else:
-            vpsd_avg[i] = np.mean(vpsd_bin)
-
-    # delete NaN values
-    i_delete = np.isnan(vpsd_avg)
-    freq_avg = np.delete(freq_avg, np.where(i_delete))
-    vpsd_avg = np.delete(vpsd_avg, np.where(i_delete))
+    # read VPSD
+    freq, vpsd, freq_avg, vpsd_avg = [star.vpsd[var] for var in ["freq", "vpsd", "freq_avg", "vpsd_avg"]]
 
     # LMFIT parameters
     params = Parameters()
@@ -36,16 +20,15 @@ def fit_vpsd_coefficients(star):
         # component dictionary
         comp_dict = star.vpsd_components[comp]
 
-        # type, coefficients, and vary
-        type = comp_dict["type"]
-        coef = comp_dict["coef"]
-        vary = comp_dict["vary"]
+        # coefficients and vary
+        coef_val = comp_dict["coef_val"]
+        vary     = comp_dict["vary"]
 
         # loop coefficients
-        for i in range(len(coef)):
+        for i in range(len(coef_val)):
 
             # add parameters
-            params.add(comp + "_" + str(i), value=coef[i], vary=vary[i])
+            params.add(comp + "_" + str(i), value=coef_val[i], min=coef_val[i]/10, max=coef_val[i]*10, vary=vary[i])
 
     # fit coefficients
     c = minimize(func_res, params, args=(star, freq_avg, vpsd_avg))
@@ -57,13 +40,15 @@ def fit_vpsd_coefficients(star):
         comp_dict = star.vpsd_components[comp]
 
         # coefficients
-        coef = comp_dict["coef"]
+        coef_val = comp_dict["coef_val"]
+        coef_err = comp_dict["coef_err"]
 
         # loop coefficients
-        for i in range(len(coef)):
+        for i in range(len(coef_val)):
 
             # update coefficients with fitted values
-            coef[i] = c.params[comp + "_" + str(i)].value
+            coef_val[i] = c.params[comp + "_" + str(i)].value
+            coef_err[i] = c.params[comp + "_" + str(i)].stderr
 
 
 def func_res(params, star, freq_avg, vpsd_avg):

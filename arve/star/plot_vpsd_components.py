@@ -12,24 +12,8 @@ def plot_vpsd_components(star):
     fig = plt.figure()
 
     # read VPSD and units
-    freq, vpsd = [star.vpsd[var] for var in ["freq", "vpsd"]]
+    freq, vpsd, freq_avg, vpsd_avg = [star.vpsd[var] for var in ["freq", "vpsd", "freq_avg", "vpsd_avg"]]
     time_unit, vrad_unit = [star.arve.data.vrad[var] for var in ["time_unit", "vrad_unit"]]
-
-    # log-average VPSD
-    freq_bin = 10 ** (np.linspace(np.log10(freq[0]), np.log10(freq[-1]), 51))
-    freq_avg = (freq_bin[1:] + freq_bin[:-1]) / 2
-    vpsd_avg = np.empty(freq_avg.size)
-    for i in range(freq_avg.size):
-        vpsd_bin = vpsd[(freq > freq_bin[i]) & (freq < freq_bin[i + 1])]
-        if len(vpsd_bin) == 0:
-            vpsd_avg[i] = np.nan
-        else:
-            vpsd_avg[i] = np.mean(vpsd_bin)
-
-    # delete NaN values
-    i_delete = np.isnan(vpsd_avg)
-    freq_avg = np.delete(freq_avg, np.where(i_delete))
-    vpsd_avg = np.delete(vpsd_avg, np.where(i_delete))
 
     # plot VPSD and average VPSD
     plt.loglog(freq, vpsd, ls="-", c="k", alpha=0.5)
@@ -45,14 +29,14 @@ def plot_vpsd_components(star):
         comp_dict = star.vpsd_components[comp]
 
         # type and coefficients
-        type = comp_dict["type"]
-        coef = comp_dict["coef"]
+        type     = comp_dict["type"]
+        coef_val = comp_dict["coef_val"]
 
         # component Constant
         if type == "Constant":
 
             # unpack coefficients
-            c0 = coef[0]
+            c0 = coef_val[0]
 
             # compute component
             vpsd_comp = c0
@@ -64,9 +48,9 @@ def plot_vpsd_components(star):
         if type == "Lorentz":
             
             # unpack coefficients
-            c0 = coef[0]
-            c1 = coef[1]
-            c2 = coef[2]
+            c0 = coef_val[0]
+            c1 = coef_val[1]
+            c2 = coef_val[2]
 
             # compute component
             vpsd_comp = c0*c1**2/(c1**2+(freq-c2)**2)
@@ -78,9 +62,9 @@ def plot_vpsd_components(star):
         if type == "Harvey":
 
             # unpack coefficients
-            c0 = coef[0]
-            c1 = coef[1]
-            c2 = coef[2]
+            c0 = coef_val[0]
+            c1 = coef_val[1]
+            c2 = coef_val[2]
 
             # compute component
             vpsd_comp = c0/(1+(c1*freq)**c2)
