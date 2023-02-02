@@ -2,6 +2,9 @@
 __init__
 """
 
+__version__ = "0.0.1"
+__author__  = "Khaled Al Moulla"
+
 from .arve import ARVE
 
 from .arve import load
