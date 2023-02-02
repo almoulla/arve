@@ -27,6 +27,18 @@ class ARVE:
         self.planets = _Planets(self)
         self.star = _Star(self)
 
+def load(arve):
+    return \
+    pickle.load(open(arve, 'rb'))
+
+def save(arve):
+    return \
+    pickle.dump(arve, open(arve.id+'.arve', 'wb'))
+
+def delete(arve):
+    del arve
+    gc.collect()
+
 
 class _Data:
 
@@ -88,15 +100,3 @@ class _Star:
     def plot_vpsd_components(self, **kwargs):
         return \
         plot_vpsd_components(self, **kwargs)
-
-def load(arve):
-    return \
-    pickle.load(open(arve, 'rb'))
-
-def save(arve):
-    return \
-    pickle.dump(arve, open(arve.id+'.arve', 'wb'))
-
-def delete(arve):
-    del arve
-    gc.collect()

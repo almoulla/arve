@@ -2,7 +2,7 @@
 __init__
 """
 
-__version__ = "0.0.4"
+__version__ = "0.1.0"
 __author__  = "Khaled Al Moulla"
 
 from .arve import ARVE
