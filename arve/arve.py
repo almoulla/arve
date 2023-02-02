@@ -2,17 +2,17 @@
 arve class
 """
 
-from .data.add_vrad               import add_vrad
+from .data      import add_vrad
 
-from .functions.gls_periodogram   import gls_periodogram
+from .functions import gls_periodogram
 
-from .planets.add_planet          import add_planet
+from .planets   import add_planet
 
-from .star.add_vpsd_components    import add_vpsd_components
-from .star.compute_vpsd           import compute_vpsd
-from .star.fit_vpsd_coefficients  import fit_vpsd_coefficients
-from .star.get_stellar_parameters import get_stellar_parameters
-from .star.plot_vpsd_components   import plot_vpsd_components
+from .star      import add_vpsd_components
+from .star      import compute_vpsd
+from .star      import fit_vpsd_coefficients
+from .star      import get_stellar_parameters
+from .star      import plot_vpsd_components
 
 import gc
 import pickle
