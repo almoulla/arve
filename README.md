@@ -1,2 +1,2 @@
-![Logo](arve_logo.png)
+![Logo](arve/_logo/logo.png)
 # ARVE ~ Analyzing Radial Velocity Elements
