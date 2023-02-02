@@ -18,7 +18,6 @@ setup(
                       "matplotlib",
                       "numba"     ,
                       "numpy"     ,
-                      "pickle"    ,
                      ],
 
     classifiers=[
