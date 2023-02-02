@@ -6,7 +6,7 @@ from setuptools import setup
 
 setup(
     name="arve",
-    version="0.0.2",
+    version="0.0.3",
     description="Analyzing Radial Velocity Elements",
     url="https://github.com/almoulla/arve",
     author="Khaled Al Moulla",
