@@ -1,9 +1,8 @@
 """
-add planet
+add_planet
 """
 
-
-def add_planet(data):
+def add_planet(self):
 
     # TODO
 

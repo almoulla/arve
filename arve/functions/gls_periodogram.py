@@ -1,64 +1,79 @@
 """
-gls periodogram
+gls_periodogram
 """
 
-import matplotlib.pyplot as plt
-import numpy as np
-from numba import njit
+from   numba import njit
+import numpy as     np
 
+def gls_periodogram(self, time:list, val:list, err:list=None, ofac:int=1, normalize:bool=True, win_func:bool=False) -> tuple:
+    """Generalized Lomb-Scargle (GLS) periodogram.
 
-def gls_periodogram(functions, time, y, sig=0, ofac=1, normalize=True, win_func=False):
+    :param time: time values
+    :type time: list
+    :param val: values
+    :type val: list
+    :param err: errors, defaults to None
+    :type err: list, optional
+    :param ofac: over-factorization, defaults to 1
+    :type ofac: int, optional
+    :param normalize: normalization of periodogram, defaults to True
+    :type normalize: bool, optional
+    :param win_func: return window function, defaults to False
+    :type win_func: bool, optional
+    :return: frequency, power spectrum and phase of periodogram; if win_func is True, the frequency, power spectrum and phase of the window function are returned as well
+    :rtype: tuple
+    """
 
     # if not provided, set uncertainties to unity
-    if type(sig) == int:
-        sig = np.ones(len(time))
+    if err is None:
+        err = np.ones(len(time))
 
-    # power spectrum and phases of data
-    f, ps, phi = gls(time, y, sig, ofac, normalize)
+    # frequencies, power spectrum and phases of data
+    freq, ps, phi = _gls(time, val, err, ofac, normalize)
 
     # spectral window function
     if win_func:
 
         # central frequency
-        fc = f[int(len(f) / 2)]
+        freq_c = freq[int(len(freq)/2)]
 
         # sinusoid with unit amplitude at central frequency
-        win_y = np.sin(2 * np.pi * fc * time)
+        win_val = np.sin(2*np.pi*freq_c*time)
+        win_err = err
 
         # power spectrum of window function
-        win_f, win_ps, _ = gls(time, win_y, sig, ofac)
+        win_freq, win_ps, _ = _gls(time, win_val, win_err, ofac)
 
         # recenter window function frequencies
-        win_f -= fc
+        win_freq -= freq_c
 
         # area of window function
-        win_df = np.mean(win_f[1:] - win_f[:-1])
-        win_area = np.sum(win_ps) * win_df
+        win_dfreq = np.mean(win_freq[1:]-win_freq[:-1])
+        win_area = np.sum(win_ps)*win_dfreq
 
     # return periodogram parameters
     if win_func:
-        return f, ps, phi, win_f, win_ps, win_area
+        return freq, ps, phi, win_freq, win_ps, win_area
     else:
-        return f, ps, phi
+        return freq, ps, phi
 
-
-def gls(t, y, sig, ofac, normalize=True):
+def _gls(time, val, err, ofac, normalize=True):
 
     # time span and steps
-    T = t[-1] - t[0]
-    dt = t[1:] - t[:-1]
+    Time = time[-1] - time[0]
+    dtime = time[1:] - time[:-1]
 
     # linear and angular frequencies
-    df = 1 / (T * ofac)
-    f = np.arange(1 / T, 1 / (2 * np.median(dt)), df)
-    omega = 2 * np.pi * f
+    dfreq = 1/(Time*ofac)
+    freq = np.arange(1/Time, 1/(2*np.median(dtime)), dfreq)
+    omega = 2*np.pi*freq
 
     # weights
-    W = sum(1 / sig ** 2)
-    w = 1 / (W * sig ** 2)
+    W = np.sum(1/err**2)
+    w = 1/(W*err**2)
 
     # empty arrays for powers and phases
-    N = len(f)
+    N = len(freq)
     ps = np.empty(N)
     phi = np.empty(N)
 
@@ -66,22 +81,22 @@ def gls(t, y, sig, ofac, normalize=True):
     for i in range(N):
 
         # trigonometric terms
-        arg = omega[i] * t
+        arg = omega[i] * time
         cosarg = np.cos(arg)
         sinarg = np.sin(arg)
 
         # weighted sums
-        Y = weight_sum1(w, y)
-        C = weight_sum1(w, cosarg)
-        S = weight_sum1(w, sinarg)
+        Y = _weight_sum1(w, val)
+        C = _weight_sum1(w, cosarg)
+        S = _weight_sum1(w, sinarg)
 
         # weighted sums of cross-terms
-        YYhat = weight_sum2(w, y, y)
-        YChat = weight_sum2(w, y, cosarg)
-        YShat = weight_sum2(w, y, sinarg)
-        CChat = weight_sum2(w, cosarg, cosarg)
-        SShat = weight_sum2(w, sinarg, sinarg)
-        CShat = weight_sum2(w, cosarg, sinarg)
+        YYhat = _weight_sum2(w, val, val)
+        YChat = _weight_sum2(w, val, cosarg)
+        YShat = _weight_sum2(w, val, sinarg)
+        CChat = _weight_sum2(w, cosarg, cosarg)
+        SShat = _weight_sum2(w, sinarg, sinarg)
+        CShat = _weight_sum2(w, cosarg, sinarg)
 
         # differences of sums
         YY = YYhat - Y * Y
@@ -100,27 +115,25 @@ def gls(t, y, sig, ofac, normalize=True):
 
         # power spectrum
         if normalize == True:
-            ps[i] = (SS * YC ** 2 + CC * YS ** 2 - 2 * CS * YC * YS) / (YY * D)
+            ps[i] = (SS*YC**2 + CC*YS**2 - 2*CS*YC*YS) / (YY*D)
         if normalize == False:
-            ps[i] = a ** 2 + b ** 2
+            ps[i] = a**2 + b**2
 
         # phases
         phi[i] = np.arctan2(a, b)
 
-    # return power spectrum and phases
-    return f, ps, phi
-
+    # return frequencies, power spectrum and phases
+    return freq, ps, phi
 
 @njit()
-def weight_sum1(w, arr):
+def _weight_sum1(w, arr):
     sumw = 0
     for i in range(len(w)):
         sumw += w[i] * arr[i]
     return sumw
 
-
 @njit()
-def weight_sum2(w, arr1, arr2):
+def _weight_sum2(w, arr1, arr2):
     sumw = 0
     for i in range(len(w)):
         sumw += w[i] * arr1[i] * arr2[i]

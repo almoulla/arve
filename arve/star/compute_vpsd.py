@@ -1,17 +1,21 @@
 """
-compute vpsd
+compute_vpsd
 """
 
 import numpy as np
 
+def compute_vpsd(self) -> None:
+    """Compute velocity power spectral density (VPSD).
 
-def compute_vpsd(star):
+    :return: None
+    :rtype: None
+    """
 
-    # RV time series
-    time, vrad_val, vrad_err, time_unit, vrad_unit = [star.arve.data.vrad[var] for var in ["time", "vrad_val", "vrad_err", "time_unit", "vrad_unit"]]
+    # read RV time series
+    time, vrad_val, vrad_err, time_unit, vrad_unit = [self.arve.data.vrad[key] for key in ["time", "vrad_val", "vrad_err", "time_unit", "vrad_unit"]]
 
     # compute velocity power spectrum
-    freq, vps, phi, win_freq, win_vps, win_area = star.arve.functions.gls_periodogram(time=time, y=vrad_val, sig=vrad_err, normalize=False, win_func=True)
+    freq, vps, phi, win_freq, win_vps, win_area = self.arve.functions.gls_periodogram(time=time, val=vrad_val, err=vrad_err, normalize=False, win_func=True)
 
     # compute log-average VPS
     freq_bin = 10 ** (np.linspace(np.log10(freq[0]), np.log10(freq[-1]), 51))
@@ -30,8 +34,10 @@ def compute_vpsd(star):
     vps_avg  = np.delete(vps_avg , np.where(i_delete))
 
     # compute VPSD
-    vpsd     = vps     / win_area
-    vpsd_avg = vps_avg / win_area
+    vpsd     = vps    /win_area
+    vpsd_avg = vps_avg/win_area
 
-    # save in ARVE structure
-    star.vpsd = {"freq": freq, "vps": vps, "vpsd": vpsd, "phase": phi, "freq_avg": freq_avg, "vps_avg": vps_avg, "vpsd_avg": vpsd_avg}
+    # save VPSD
+    self.vpsd = {"freq": freq, "vps": vps, "vpsd": vpsd, "phase": phi, "freq_avg": freq_avg, "vps_avg": vps_avg, "vpsd_avg": vpsd_avg}
+
+    return None

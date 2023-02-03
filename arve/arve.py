@@ -1,5 +1,5 @@
 """
-arve class
+arve
 """
 
 from .data      import add_vrad
@@ -17,8 +17,9 @@ from .star      import plot_vpsd_components
 import gc
 import pickle
 
-
 class ARVE:
+    """ARVE main class.
+    """
 
     def __init__(self):
         self.id: str = None
@@ -27,20 +28,48 @@ class ARVE:
         self.planets = _Planets(self)
         self.star = _Star(self)
 
-def load(arve):
+def load(arve:str) -> ARVE:
+    """Load ARVE object.
+
+    :param arve: ARVE file to load
+    :type arve: str
+    :return: loaded ARVE object
+    :rtype: ARVE
+    """
+
     return \
     pickle.load(open(arve, 'rb'))
 
-def save(arve):
+def save(arve:ARVE) -> None:
+    """Save ARVE object.
+
+    :param arve: ARVE object to save
+    :type arve: ARVE
+    :return: None
+    :rtype: None
+    """
+
     return \
     pickle.dump(arve, open(arve.id+'.arve', 'wb'))
 
-def delete(arve):
+def delete(arve:ARVE) -> None:
+    """Delete ARVE object.
+
+    :param arve: ARVE object to delete
+    :type arve: ARVE
+    :return: None
+    :rtype: None
+    """
+    
     del arve
     gc.collect()
-
+    
+    return \
+    None
 
 class _Data:
+    """ARVE _Data sub-class.
+    """
 
     def __init__(self, arve):
         self.arve = arve
@@ -50,8 +79,9 @@ class _Data:
         return \
         add_vrad(self, **kwargs)
 
-
 class _Functions:
+    """ARVE _Functions sub-class.
+    """
 
     def __init__(self, arve):
         self.arve = arve
@@ -60,8 +90,9 @@ class _Functions:
         return \
         gls_periodogram(self, **kwargs)
 
-
 class _Planets:
+    """ARVE _Planets sub-class.
+    """
     
     def __init__(self, arve):
         self.arve = arve
@@ -71,8 +102,9 @@ class _Planets:
         return \
         add_planet(self, **kwargs)
 
-
 class _Star:
+    """ARVE _Star sub-class.
+    """
 
     def __init__(self, arve):
         self.arve = arve

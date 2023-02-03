@@ -1,24 +1,28 @@
 """
-fit vpsd coefficients
+fit_vpsd_coefficients
 """
 
-import numpy as np
-from lmfit import Parameters, minimize
+import numpy as     np
+from   lmfit import Parameters, minimize
 
+def fit_vpsd_coefficients(self) -> None:
+    """Fit velocity power spectral density (VPSD) coefficients.
 
-def fit_vpsd_coefficients(star):
+    :return: None
+    :rtype: None
+    """
 
     # read VPSD
-    freq, vpsd, freq_avg, vpsd_avg = [star.vpsd[var] for var in ["freq", "vpsd", "freq_avg", "vpsd_avg"]]
+    freq, vpsd, freq_avg, vpsd_avg = [self.vpsd[key] for key in ["freq", "vpsd", "freq_avg", "vpsd_avg"]]
 
     # LMFIT parameters
     params = Parameters()
 
     # loop components
-    for comp in star.vpsd_components.keys():
+    for comp in self.vpsd_components.keys():
 
         # component dictionary
-        comp_dict = star.vpsd_components[comp]
+        comp_dict = self.vpsd_components[comp]
 
         # coefficients and vary
         coef_val = comp_dict["coef_val"]
@@ -31,13 +35,13 @@ def fit_vpsd_coefficients(star):
             params.add(comp + "_" + str(i), value=coef_val[i], min=coef_val[i]/10, max=coef_val[i]*10, vary=vary[i])
 
     # fit coefficients
-    c = minimize(func_res, params, args=(star, freq_avg, vpsd_avg))
+    c = minimize(_func_res, params, args=(self, freq_avg, vpsd_avg))
 
     # loop components
-    for comp in star.vpsd_components.keys():
+    for comp in self.vpsd_components.keys():
 
         # component dictionary
-        comp_dict = star.vpsd_components[comp]
+        comp_dict = self.vpsd_components[comp]
 
         # coefficients
         coef_val = comp_dict["coef_val"]
@@ -49,21 +53,24 @@ def fit_vpsd_coefficients(star):
             # update coefficients with fitted values
             coef_val[i] = c.params[comp + "_" + str(i)].value
             coef_err[i] = c.params[comp + "_" + str(i)].stderr
+    
+    return None
 
-
-def func_res(params, star, freq_avg, vpsd_avg):
+def _func_res(params, self, freq_avg, vpsd_avg):
 
     # empty array for sum of components
     vpsd_tot = np.zeros(len(freq_avg))
 
     # loop components
-    for comp in star.vpsd_components.keys():
+    for comp in self.vpsd_components.keys():
 
-        comp_dict = star.vpsd_components[comp]
+        # component dictionary
+        comp_dict = self.vpsd_components[comp]
 
+        # component type
         type = comp_dict["type"]
 
-        # component Constant
+        # type Constant
         if type == "Constant":
             
             # unpack coefficients
@@ -72,7 +79,7 @@ def func_res(params, star, freq_avg, vpsd_avg):
             # compute component
             vpsd_comp = c0
 
-        # component Lorentz
+        # type Lorentz
         if type == "Lorentz":
 
             # unpack coefficients
@@ -83,7 +90,7 @@ def func_res(params, star, freq_avg, vpsd_avg):
             # compute component
             vpsd_comp = c0*c1**2/(c1**2+(freq_avg-c2)**2)
 
-        # component Harvey
+        # type Harvey
         if type == "Harvey":
 
             # unpack coefficients

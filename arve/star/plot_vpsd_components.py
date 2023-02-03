@@ -1,19 +1,23 @@
 """
-plot vpsd components
+plot_vpsd_components
 """
 
 import matplotlib.pyplot as plt
-import numpy as np
+import numpy             as np
 
+def plot_vpsd_components(self) -> plt.Figure:
+    """Plot velocity power spectral density (VPSD) components.
 
-def plot_vpsd_components(star):
+    :return: figure with the VPSD, its log-average and its modeled components
+    :rtype: plt.Figure
+    """
 
     # figure
     fig = plt.figure()
 
     # read VPSD and units
-    freq, vpsd, freq_avg, vpsd_avg = [star.vpsd[var] for var in ["freq", "vpsd", "freq_avg", "vpsd_avg"]]
-    time_unit, vrad_unit = [star.arve.data.vrad[var] for var in ["time_unit", "vrad_unit"]]
+    freq, vpsd, freq_avg, vpsd_avg = [self.vpsd[key] for key in ["freq", "vpsd", "freq_avg", "vpsd_avg"]]
+    time_unit, vrad_unit = [self.arve.data.vrad[key] for key in ["time_unit", "vrad_unit"]]
 
     # plot VPSD and average VPSD
     plt.loglog(freq, vpsd, ls="-", c="k", alpha=0.5)
@@ -23,16 +27,16 @@ def plot_vpsd_components(star):
     vpsd_tot = np.zeros(len(freq))
 
     # loop components
-    for comp in star.vpsd_components.keys():
+    for comp in self.vpsd_components.keys():
 
         # component dictionary
-        comp_dict = star.vpsd_components[comp]
+        comp_dict = self.vpsd_components[comp]
 
         # type and coefficients
         type     = comp_dict["type"]
         coef_val = comp_dict["coef_val"]
 
-        # component Constant
+        # type Constant
         if type == "Constant":
 
             # unpack coefficients
@@ -44,7 +48,7 @@ def plot_vpsd_components(star):
             # plot component
             plt.axhline(vpsd_comp, ls="--", label=comp)
 
-        # component Lorentz
+        # type Lorentz
         if type == "Lorentz":
             
             # unpack coefficients
@@ -58,7 +62,7 @@ def plot_vpsd_components(star):
             # plot component
             plt.loglog(freq, vpsd_comp, ls="--", label=comp)
 
-        # component Harvey
+        # type Harvey
         if type == "Harvey":
 
             # unpack coefficients

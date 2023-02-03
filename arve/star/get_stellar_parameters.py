@@ -1,52 +1,58 @@
 """
-get stellar parameters
+get_stellar_parameters
 """
 
 from   astroquery.simbad import Simbad
 import numpy             as     np
 
+def get_stellar_parameters(self) -> None:
+    """Get spectral type from SIMBAD query and stellar parameters from main-sequence table.
 
-def get_stellar_parameters(star):
+    :return: None
+    :rtype: None
+    """
 
     # Sun
-    if star.target == "Sun":
+    if self.target == "Sun":
 
-        star.stellar_parameters["sptype"] = "G2"
-        star.stellar_parameters["Teff"  ] = 5770
-        star.stellar_parameters["logg"  ] = 4.4
-        star.stellar_parameters["Fe_H"  ] = 0.0
-        star.stellar_parameters["M"     ] = 1.0
-        star.stellar_parameters["R"     ] = 1.0
-        star.stellar_parameters["vsini" ] = 1.63
+        # save stellar parameters
+        self.stellar_parameters["sptype"] = "G2"
+        self.stellar_parameters["Teff"  ] = 5770
+        self.stellar_parameters["logg"  ] = 4.4
+        self.stellar_parameters["Fe_H"  ] = 0.0
+        self.stellar_parameters["M"     ] = 1.0
+        self.stellar_parameters["R"     ] = 1.0
+        self.stellar_parameters["vsini" ] = 1.63
 
-    # other stars
+    # other selfs
     else:
 
-        # get spectral type
+        # get spectral type from query
         simbad = Simbad()
         simbad.add_votable_fields("sptype")
-        star.stellar_parameters["sptype"] = simbad.query_object(star.target)["SP_TYPE"][0][:2]
+        self.stellar_parameters["sptype"] = simbad.query_object(self.target)["SP_TYPE"][0][:2]
 
         # convert spectral type to number
-        sptype_num       =  sptype_to_num(star.stellar_parameters["sptype"])
-        sptype_num_table = [sptype_to_num(sptype) for sptype in table["sptype"]]
+        sptype_num       =  _sptype_to_num(self.stellar_parameters["sptype"])
+        sptype_num_table = [_sptype_to_num(sptype) for sptype in _table["sptype"]]
 
-        # interpolate stellar parameters from table
-        keys = ["Teff", "logg", "Fe_H", "M", "R", "vsini"]
-        for key in keys:
-            star.stellar_parameters[key] = np.interp(sptype_num, sptype_num_table, table[key])
+        # interpolate and save stellar parameters from table
+        for key in ["Teff", "logg", "Fe_H", "M", "R", "vsini"]:
+            self.stellar_parameters[key] = np.interp(sptype_num, sptype_num_table, _table[key])
         
-    # compute micro- and macro-turbulence
-    star.stellar_parameters["vmic"] = 0.85
-    star.stellar_parameters["vmac"] = max(0.00, 3.98-(star.stellar_parameters["Teff"]-5770)/650)
+    # compute and save micro- and macro-turbulence
+    self.stellar_parameters["vmic"] = 0.85
+    self.stellar_parameters["vmac"] = max(0.00, 3.98-(self.stellar_parameters["Teff"]-5770)/650)
+
+    return None
 
 # spectral type to number
-def sptype_to_num(sptype):
+def _sptype_to_num(sptype):
     
     return "OBAFGKM".index(sptype[0])*10 + int(sptype[1])
 
-# table with spectral parameters for main sequence stars
-table = np.array(
+# table with spectral parameters for main sequence selfs
+_table = np.array(
 [
 ("A0", 9572, 4.3, 0.0, 2.34, 1.80, 255.0),
 ("A2", 8985, 4.3, 0.0, 2.21, 1.75, 244.0),
