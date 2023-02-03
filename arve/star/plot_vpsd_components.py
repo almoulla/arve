@@ -1,7 +1,3 @@
-"""
-plot_vpsd_components
-"""
-
 import matplotlib.pyplot as plt
 import numpy             as np
 

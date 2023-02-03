@@ -1,7 +1,3 @@
-"""
-__init__
-"""
-
 from .add_vpsd_components    import add_vpsd_components
 from .compute_vpsd           import compute_vpsd
 from .fit_vpsd_coefficients  import fit_vpsd_coefficients

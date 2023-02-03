@@ -1,7 +1,3 @@
-"""
-add_vrad
-"""
-
 def add_vrad(self, time:list, vrad_val:list, vrad_err:list=None, time_unit:str=None, vrad_unit:str=None) -> None:
     """Add radial velocity data.
 

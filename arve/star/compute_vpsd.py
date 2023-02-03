@@ -1,7 +1,3 @@
-"""
-compute_vpsd
-"""
-
 import numpy as np
 
 def compute_vpsd(self) -> None:

@@ -1,7 +1,3 @@
-"""
-add_vpsd_components
-"""
-
 import numpy as np
 
 def add_vpsd_components(self, components:list=["Photon_noise", "Oscillations", "Granulation", "Supergranulation"]) -> None:

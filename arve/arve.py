@@ -1,7 +1,3 @@
-"""
-arve
-"""
-
 from .data      import add_vrad
 
 from .functions import gls_periodogram

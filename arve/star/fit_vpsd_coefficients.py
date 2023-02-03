@@ -1,7 +1,3 @@
-"""
-fit_vpsd_coefficients
-"""
-
 import numpy as     np
 from   lmfit import Parameters, minimize
 

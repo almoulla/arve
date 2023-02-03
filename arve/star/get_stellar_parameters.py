@@ -1,7 +1,3 @@
-"""
-get_stellar_parameters
-"""
-
 from   astroquery.simbad import Simbad
 import numpy             as     np
 

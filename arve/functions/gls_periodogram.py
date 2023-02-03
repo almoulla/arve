@@ -1,7 +1,3 @@
-"""
-gls_periodogram
-"""
-
 from   numba import njit
 import numpy as     np
 

@@ -1,7 +1,3 @@
-"""
-__init__
-"""
-
 __version__ = "0.1.1"
 __author__  = "Khaled Al Moulla"
 

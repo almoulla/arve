@@ -1,7 +1,3 @@
-"""
-add_planet
-"""
-
 def add_planet(self):
 
     # TODO
