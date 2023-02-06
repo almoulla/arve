@@ -1,0 +1,5 @@
+astroquery
+lmfit
+matplotlib
+numba
+numpy
