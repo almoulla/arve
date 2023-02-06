@@ -22,8 +22,8 @@ def add_vpsd_components(self, components:list=["Photon_noise", "Oscillations", "
         # specifications
         name     = "Photon_noise" # name
         type     = "Constant"     # function type
-        coef_val = [c0]           # coefficient values
-        coef_err = [0]            # coefficient errors
+        coef_val = [c0  ]         # coefficient values
+        coef_err = [0   ]         # coefficient errors
         vary     = [True]         # vary when fitted
 
         # check noise is non-negative
