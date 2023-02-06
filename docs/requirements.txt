@@ -1,3 +1,4 @@
+sphinx_rtd_theme
 astroquery
 lmfit
 matplotlib
