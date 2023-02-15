@@ -20,7 +20,7 @@ def get_stellar_parameters(self) -> None:
         self.stellar_parameters["R"     ] = 1.0
         self.stellar_parameters["vsini" ] = 1.63
 
-    # other selfs
+    # other stars
     else:
 
         # get spectral type from query
@@ -28,9 +28,9 @@ def get_stellar_parameters(self) -> None:
         simbad.add_votable_fields("sptype")
         self.stellar_parameters["sptype"] = simbad.query_object(self.target)["SP_TYPE"][0][:2]
 
-        # convert spectral type to number
-        sptype_num       =  _sptype_to_num(self.stellar_parameters["sptype"])
-        sptype_num_table = [_sptype_to_num(sptype) for sptype in _table["sptype"]]
+        # convert spectral types to numbers
+        sptype_num       =  self.arve.functions.sptype_to_num(sptype=self.stellar_parameters["sptype"])
+        sptype_num_table = [self.arve.functions.sptype_to_num(sptype=sptype) for sptype in _table["sptype"]]
 
         # interpolate and save stellar parameters from table
         for key in ["Teff", "logg", "Fe_H", "M", "R", "vsini"]:
@@ -42,12 +42,7 @@ def get_stellar_parameters(self) -> None:
 
     return None
 
-# spectral type to number
-def _sptype_to_num(sptype):
-    
-    return "OBAFGKM".index(sptype[0])*10 + int(sptype[1])
-
-# table with spectral parameters for main sequence selfs
+# table with spectral parameters for main sequence stars
 _table = np.array(
 [
 ("A0", 9572, 4.3, 0.0, 2.34, 1.80, 255.0),

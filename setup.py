@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 setup(
     name="arve",
-    version="0.1.1",
+    version="0.1.2",
     description="Analyzing Radial Velocity Elements",
     url="https://github.com/almoulla/arve",
     author="Khaled Al Moulla",
@@ -14,6 +14,7 @@ setup(
                       "matplotlib",
                       "numba"     ,
                       "numpy"     ,
+                      "scipy"
                      ],
 
     classifiers=[
@@ -22,4 +23,6 @@ setup(
         "License :: OSI Approved :: MIT License",
         "Programming Language :: Python :: 3",
     ],
+    include_package_data=True,
+    package_data={"arve": ["aux_data/masks/*.mask"]}
 )

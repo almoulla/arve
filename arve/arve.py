@@ -1,14 +1,18 @@
-from .data      import add_vrad
+from  .data      import add_spec
+from  .data      import add_vrad
+from  .data      import compute_vrad
 
-from .functions import gls_periodogram
+from  .functions import doppler_shift
+from  .functions import gls_periodogram
+from  .functions import sptype_to_num
 
-from .planets   import add_planet
+from  .planets   import add_planet
 
-from .star      import add_vpsd_components
-from .star      import compute_vpsd
-from .star      import fit_vpsd_coefficients
-from .star      import get_stellar_parameters
-from .star      import plot_vpsd_components
+from  .star      import add_vpsd_components
+from  .star      import compute_vpsd
+from  .star      import fit_vpsd_coefficients
+from  .star      import get_stellar_parameters
+from  .star      import plot_vpsd_components
 
 import gc
 import pickle
@@ -69,11 +73,20 @@ class _Data:
 
     def __init__(self, arve):
         self.arve = arve
+        self.spec: dict = {}
         self.vrad: dict = {}
+
+    def add_spec(self, **kwargs):
+        return \
+        add_spec(self, **kwargs)
 
     def add_vrad(self, **kwargs):
         return \
         add_vrad(self, **kwargs)
+
+    def compute_vrad(self, **kwargs):
+        return \
+        compute_vrad(self, **kwargs)
 
 class _Functions:
     """ARVE _Functions sub-class.
@@ -82,9 +95,17 @@ class _Functions:
     def __init__(self, arve):
         self.arve = arve
     
+    def doppler_shift(self, **kwargs):
+        return \
+        doppler_shift(self, **kwargs)
+
     def gls_periodogram(self, **kwargs):
         return \
         gls_periodogram(self, **kwargs)
+
+    def sptype_to_num(self, **kwargs):
+        return \
+        sptype_to_num(self, **kwargs)
 
 class _Planets:
     """ARVE _Planets sub-class.
