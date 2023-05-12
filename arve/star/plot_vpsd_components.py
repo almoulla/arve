@@ -1,96 +1,98 @@
 import matplotlib.pyplot as plt
 import numpy             as np
 
-def plot_vpsd_components(self) -> plt.Figure:
-    """Plot velocity power spectral density (VPSD) components.
+class plot_vpsd_components:
 
-    :return: figure with the VPSD, its log-average and its modeled components
-    :rtype: plt.Figure
-    """
+    def plot_vpsd_components(self) -> plt.Figure:
+        """Plot velocity power spectral density (VPSD) components.
 
-    # figure
-    fig = plt.figure()
+        :return: figure with the VPSD, its log-average and its modeled components
+        :rtype: plt.Figure
+        """
 
-    # read VPSD and units
-    freq, vpsd, freq_avg, vpsd_avg = [self.vpsd[key] for key in ["freq", "vpsd", "freq_avg", "vpsd_avg"]]
-    time_unit, vrad_unit = [self.arve.data.vrad[key] for key in ["time_unit", "vrad_unit"]]
+        # figure
+        fig = plt.figure()
 
-    # plot VPSD and average VPSD
-    plt.loglog(freq, vpsd, ls="-", c="k", alpha=0.5)
-    plt.loglog(freq_avg, vpsd_avg, ls="None", marker="o", mec="k", mfc="None")
+        # read VPSD and units
+        freq, vpsd, freq_avg, vpsd_avg = [self.vpsd[key] for key in ["freq", "vpsd", "freq_avg", "vpsd_avg"]]
+        time_unit, vrad_unit = [self.arve.data.vrad[key] for key in ["time_unit", "vrad_unit"]]
 
-    # empty array for sum of components
-    vpsd_tot = np.zeros(len(freq))
+        # plot VPSD and average VPSD
+        plt.loglog(freq, vpsd, ls="-", c="k", alpha=0.5)
+        plt.loglog(freq_avg, vpsd_avg, ls="None", marker="o", mec="k", mfc="None")
 
-    # loop components
-    for comp in self.vpsd_components.keys():
+        # empty array for sum of components
+        vpsd_tot = np.zeros(len(freq))
 
-        # component dictionary
-        comp_dict = self.vpsd_components[comp]
+        # loop components
+        for comp in self.vpsd_components.keys():
 
-        # type and coefficients
-        type     = comp_dict["type"]
-        coef_val = comp_dict["coef_val"]
+            # component dictionary
+            comp_dict = self.vpsd_components[comp]
 
-        # type Constant
-        if type == "Constant":
+            # type and coefficients
+            type     = comp_dict["type"]
+            coef_val = comp_dict["coef_val"]
 
-            # unpack coefficients
-            c0 = coef_val[0]
+            # type Constant
+            if type == "Constant":
 
-            # compute component
-            vpsd_comp = c0
+                # unpack coefficients
+                c0 = coef_val[0]
 
-            # plot component
-            plt.axhline(vpsd_comp, ls="--", label=comp)
+                # compute component
+                vpsd_comp = c0
 
-        # type Lorentz
-        if type == "Lorentz":
-            
-            # unpack coefficients
-            c0 = coef_val[0]
-            c1 = coef_val[1]
-            c2 = coef_val[2]
+                # plot component
+                plt.axhline(vpsd_comp, ls="--", label=comp)
 
-            # compute component
-            vpsd_comp = c0*c1**2/(c1**2+(freq-c2)**2)
+            # type Lorentz
+            if type == "Lorentz":
+                
+                # unpack coefficients
+                c0 = coef_val[0]
+                c1 = coef_val[1]
+                c2 = coef_val[2]
 
-            # plot component
-            plt.loglog(freq, vpsd_comp, ls="--", label=comp)
+                # compute component
+                vpsd_comp = c0*c1**2/(c1**2+(freq-c2)**2)
 
-        # type Harvey
-        if type == "Harvey":
+                # plot component
+                plt.loglog(freq, vpsd_comp, ls="--", label=comp)
 
-            # unpack coefficients
-            c0 = coef_val[0]
-            c1 = coef_val[1]
-            c2 = coef_val[2]
+            # type Harvey
+            if type == "Harvey":
 
-            # compute component
-            vpsd_comp = c0/(1+(c1*freq)**c2)
+                # unpack coefficients
+                c0 = coef_val[0]
+                c1 = coef_val[1]
+                c2 = coef_val[2]
 
-            # plot component
-            plt.loglog(freq, vpsd_comp, ls="--", label=comp)
+                # compute component
+                vpsd_comp = c0/(1+(c1*freq)**c2)
 
-        # add component to sum
-        vpsd_tot += vpsd_comp
+                # plot component
+                plt.loglog(freq, vpsd_comp, ls="--", label=comp)
 
-    # plot component sum
-    plt.loglog(freq, vpsd_tot, ls="-", c="k", label="Total")
+            # add component to sum
+            vpsd_tot += vpsd_comp
 
-    # plot limits
-    plt.xlim(freq[0], freq[-1])
+        # plot component sum
+        plt.loglog(freq, vpsd_tot, ls="-", c="k", label="Total")
 
-    # plot labels
-    plt.xlabel("$f$" + " " + f"[{time_unit}" + "$^{-1}$]")
-    plt.ylabel("VPSD" + " " + f"[({vrad_unit})" + "$^{2}$" + " / " + f"{time_unit}" + "$^{-1}$]")
+        # plot limits
+        plt.xlim(freq[0], freq[-1])
 
-    # plot legend
-    leg = plt.legend(loc="lower left")
-    leg.set_zorder(101)
+        # plot labels
+        plt.xlabel("$f$" + " " + f"[{time_unit}" + "$^{-1}$]")
+        plt.ylabel("VPSD" + " " + f"[({vrad_unit})" + "$^{2}$" + " / " + f"{time_unit}" + "$^{-1}$]")
 
-    # plot layout
-    plt.tight_layout()
+        # plot legend
+        leg = plt.legend(loc="lower left")
+        leg.set_zorder(101)
 
-    # return figure
-    return fig
+        # plot layout
+        plt.tight_layout()
+
+        # return figure
+        return fig

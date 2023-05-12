@@ -1,18 +1,7 @@
-from  .data      import add_spec
-from  .data      import add_vrad
-from  .data      import compute_vrad
-
-from  .functions import doppler_shift
-from  .functions import gls_periodogram
-from  .functions import sptype_to_num
-
-from  .planets   import add_planet
-
-from  .star      import add_vpsd_components
-from  .star      import compute_vpsd
-from  .star      import fit_vpsd_coefficients
-from  .star      import get_stellar_parameters
-from  .star      import plot_vpsd_components
+from   .data      import _Data_classes
+from   .functions import _Functions_classes
+from   .planets   import _Planets_classes
+from   .star      import _Star_classes
 
 import gc
 import pickle
@@ -37,8 +26,7 @@ def load(arve:str) -> ARVE:
     :rtype: ARVE
     """
 
-    return \
-    pickle.load(open(arve, 'rb'))
+    return pickle.load(open(arve, 'rb'))
 
 def save(arve:ARVE) -> None:
     """Save ARVE object.
@@ -49,8 +37,7 @@ def save(arve:ARVE) -> None:
     :rtype: None
     """
 
-    return \
-    pickle.dump(arve, open(arve.id+'.arve', 'wb'))
+    return pickle.dump(arve, open(arve.id+'.arve', 'wb'))
 
 def delete(arve:ARVE) -> None:
     """Delete ARVE object.
@@ -64,10 +51,9 @@ def delete(arve:ARVE) -> None:
     del arve
     gc.collect()
     
-    return \
-    None
+    return None
 
-class _Data:
+class _Data(_Data_classes):
     """ARVE _Data sub-class.
     """
 
@@ -76,38 +62,14 @@ class _Data:
         self.spec: dict = {}
         self.vrad: dict = {}
 
-    def add_spec(self, **kwargs):
-        return \
-        add_spec(self, **kwargs)
-
-    def add_vrad(self, **kwargs):
-        return \
-        add_vrad(self, **kwargs)
-
-    def compute_vrad(self, **kwargs):
-        return \
-        compute_vrad(self, **kwargs)
-
-class _Functions:
+class _Functions(_Functions_classes):
     """ARVE _Functions sub-class.
     """
 
     def __init__(self, arve):
         self.arve = arve
-    
-    def doppler_shift(self, **kwargs):
-        return \
-        doppler_shift(self, **kwargs)
 
-    def gls_periodogram(self, **kwargs):
-        return \
-        gls_periodogram(self, **kwargs)
-
-    def sptype_to_num(self, **kwargs):
-        return \
-        sptype_to_num(self, **kwargs)
-
-class _Planets:
+class _Planets(_Planets_classes):
     """ARVE _Planets sub-class.
     """
     
@@ -115,11 +77,7 @@ class _Planets:
         self.arve = arve
         self.parameters: dict = {}
 
-    def add_planet(self, **kwargs):
-        return \
-        add_planet(self, **kwargs)
-
-class _Star:
+class _Star(_Star_classes):
     """ARVE _Star sub-class.
     """
 
@@ -129,23 +87,3 @@ class _Star:
         self.stellar_parameters: dict = {}
         self.vpsd: dict = {}
         self.vpsd_components: dict = {}
-
-    def add_vpsd_components(self, **kwargs):
-        return \
-        add_vpsd_components(self, **kwargs)
-
-    def compute_vpsd(self, **kwargs):
-        return \
-        compute_vpsd(self, **kwargs)
-
-    def fit_vpsd_coefficients(self, **kwargs):
-        return \
-        fit_vpsd_coefficients(self, **kwargs)
-
-    def get_stellar_parameters(self, **kwargs):
-        return \
-        get_stellar_parameters(self, **kwargs)
-
-    def plot_vpsd_components(self, **kwargs):
-        return \
-        plot_vpsd_components(self, **kwargs)

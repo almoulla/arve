@@ -20,6 +20,14 @@ arve.functions.gls\_periodogram module
    :undoc-members:
    :show-inheritance:
 
+arve.functions.inverted\_gaussian module
+----------------------------------------
+
+.. automodule:: arve.functions.inverted_gaussian
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 arve.functions.sptype\_to\_num module
 -------------------------------------
 

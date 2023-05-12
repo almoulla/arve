@@ -20,10 +20,10 @@ arve.data.add\_vrad module
    :undoc-members:
    :show-inheritance:
 
-arve.data.compute\_vrad module
-------------------------------
+arve.data.compute\_vrad\_ccf module
+-----------------------------------
 
-.. automodule:: arve.data.compute_vrad
+.. automodule:: arve.data.compute_vrad_ccf
    :members:
    :undoc-members:
    :show-inheritance:

@@ -1,5 +1,7 @@
-def add_planet(self):
+class add_planet:
 
-    # TODO
+    def add_planet(self):
 
-    return None
+        # TODO
+
+        return None

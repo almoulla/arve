@@ -1,56 +1,58 @@
 import numpy as     np
 from   lmfit import Parameters, minimize
 
-def fit_vpsd_coefficients(self) -> None:
-    """Fit velocity power spectral density (VPSD) coefficients.
+class fit_vpsd_coefficients:
 
-    :return: None
-    :rtype: None
-    """
+    def fit_vpsd_coefficients(self) -> None:
+        """Fit velocity power spectral density (VPSD) coefficients.
 
-    # read VPSD
-    freq, vpsd, freq_avg, vpsd_avg = [self.vpsd[key] for key in ["freq", "vpsd", "freq_avg", "vpsd_avg"]]
+        :return: None
+        :rtype: None
+        """
 
-    # LMFIT parameters
-    params = Parameters()
+        # read VPSD
+        freq, vpsd, freq_avg, vpsd_avg = [self.vpsd[key] for key in ["freq", "vpsd", "freq_avg", "vpsd_avg"]]
 
-    # loop components
-    for comp in self.vpsd_components.keys():
+        # LMFIT parameters
+        params = Parameters()
 
-        # component dictionary
-        comp_dict = self.vpsd_components[comp]
+        # loop components
+        for comp in self.vpsd_components.keys():
 
-        # coefficients and vary
-        coef_val = comp_dict["coef_val"]
-        vary     = comp_dict["vary"]
+            # component dictionary
+            comp_dict = self.vpsd_components[comp]
 
-        # loop coefficients
-        for i in range(len(coef_val)):
+            # coefficients and vary
+            coef_val = comp_dict["coef_val"]
+            vary     = comp_dict["vary"]
 
-            # add parameters
-            params.add(comp + "_" + str(i), value=coef_val[i], min=coef_val[i]/10, max=coef_val[i]*10, vary=vary[i])
+            # loop coefficients
+            for i in range(len(coef_val)):
 
-    # fit coefficients
-    c = minimize(_func_res, params, args=(self, freq_avg, vpsd_avg))
+                # add parameters
+                params.add(comp + "_" + str(i), value=coef_val[i], min=coef_val[i]/10, max=coef_val[i]*10, vary=vary[i])
 
-    # loop components
-    for comp in self.vpsd_components.keys():
+        # fit coefficients
+        c = minimize(_func_res, params, args=(self, freq_avg, vpsd_avg))
 
-        # component dictionary
-        comp_dict = self.vpsd_components[comp]
+        # loop components
+        for comp in self.vpsd_components.keys():
 
-        # coefficients
-        coef_val = comp_dict["coef_val"]
-        coef_err = comp_dict["coef_err"]
+            # component dictionary
+            comp_dict = self.vpsd_components[comp]
 
-        # loop coefficients
-        for i in range(len(coef_val)):
+            # coefficients
+            coef_val = comp_dict["coef_val"]
+            coef_err = comp_dict["coef_err"]
 
-            # update coefficients with fitted values
-            coef_val[i] = c.params[comp + "_" + str(i)].value
-            coef_err[i] = c.params[comp + "_" + str(i)].stderr
-    
-    return None
+            # loop coefficients
+            for i in range(len(coef_val)):
+
+                # update coefficients with fitted values
+                coef_val[i] = c.params[comp + "_" + str(i)].value
+                coef_err[i] = c.params[comp + "_" + str(i)].stderr
+        
+        return None
 
 def _func_res(params, self, freq_avg, vpsd_avg):
 
