@@ -19,6 +19,7 @@ setup(
                       "matplotlib",
                       "numba"     ,
                       "numpy"     ,
+                      "pandas"    ,
                       "scipy"     ,
                       "tqdm"      ,
                      ],

@@ -4,5 +4,6 @@ lmfit
 matplotlib
 numba
 numpy
+pandas
 scipy
 tqdm
