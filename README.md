@@ -1,4 +1,4 @@
-![Logo](arve/_logo/logo.png)
+![Logo](https://github.com/almoulla/arve/blob/main/arve/_logo/logo.png)
 # ARVE ~ Analyzing Radial Velocity Elements
 
 ## Installation
