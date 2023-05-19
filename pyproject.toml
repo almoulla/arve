@@ -1,16 +1,30 @@
 [project]
 name = "arve"
-version = "0.1.0"
-requires-python = ">=3.11"
-description = "Package for spectroscopy of stars and analyzing radial velocity elements for exoplanet identification"
 authors = [
     {name = "Khaled Al Moulla", email = "almoulla@noreply.github.com"},
 ]
+version = "0.1.3"
+requires-python = ">=3.11"
+description = "Package for spectroscopy of stars and analyzing radial velocity elements for exoplanet identification"
+readme = "README.md"
+liscense = "MIT"
+classifiers = [
+    "Development Status :: 1 - Planning",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Scientific/Engineering :: Astronomy",
+    "Topic :: Scientific/Engineering :: Physics",
+]
 dependencies = [
+    "astroquery",
+    "lmfit",
+    "numba",
     "scipy",
     "numpy",
     "matplotlib",
-    "astropy",
     "pandas",
     "tqdm",
 ]
