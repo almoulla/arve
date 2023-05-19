@@ -28,7 +28,7 @@ jobs:
           pip install .[lint]
       - name: MyPy
         run: |
-          mypy src/ --install-types --non-interactive
+          mypy arve/ --install-types --non-interactive
       - name: Black check
         run: |
           (black --check . ; echo "black=$?" >> $GITHUB_ENV) || true
