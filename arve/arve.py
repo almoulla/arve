@@ -11,7 +11,7 @@ class ARVE:
     """ARVE main class."""
 
     def __init__(self) -> None:
-        self.id: str = None
+        self.id: str | None = None
         self.data = _Data(self)
         self.functions = _Functions(self)
         self.planets = _Planets(self)
@@ -37,7 +37,7 @@ def save(arve: ARVE) -> None:
     :return: None
     :rtype: None
     """
-    return pickle.dump(arve, open(arve.id + ".arve", "wb"))
+    pickle.dump(arve, open(arve.id + ".arve", "wb"))
 
 
 def delete(arve: ARVE) -> None:
@@ -50,7 +50,6 @@ def delete(arve: ARVE) -> None:
     """
     del arve
     gc.collect()
-
 
 
 class _Data(_Data_classes):
@@ -82,7 +81,7 @@ class _Star(_Star_classes):
 
     def __init__(self, arve) -> None:
         self.arve = arve
-        self.target: str = None
+        self.target: str | None = None
         self.stellar_parameters: dict = {}
         self.vpsd: dict = {}
         self.vpsd_components: dict = {}

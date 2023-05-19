@@ -3,9 +3,9 @@ class add_vrad:
         self,
         time: list,
         vrad_val: list,
-        vrad_err: list = None,
-        time_unit: str = None,
-        vrad_unit: str = None,
+        vrad_err: list | None = None,
+        time_unit: str | None = None,
+        vrad_unit: str | None = None,
     ) -> None:
         """Add radial velocity data.
 
@@ -30,4 +30,3 @@ class add_vrad:
             "time_unit": time_unit,
             "vrad_unit": vrad_unit,
         }
-

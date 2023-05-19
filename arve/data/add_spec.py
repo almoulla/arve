@@ -4,10 +4,10 @@ class add_spec:
         time: list,
         wave: list,
         flux_val: list,
-        flux_err: list = None,
-        time_unit: str = None,
-        wave_unit: str = None,
-        flux_unit: str = None,
+        flux_err: list | None = None,
+        time_unit: str | None = None,
+        wave_unit: str | None = None,
+        flux_unit: str | None = None,
     ) -> None:
         """Add spectral data.
 
@@ -38,4 +38,3 @@ class add_spec:
             "wave_unit": wave_unit,
             "flux_unit": flux_unit,
         }
-

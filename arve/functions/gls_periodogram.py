@@ -7,7 +7,7 @@ class gls_periodogram:
         self,
         time: list,
         val: list,
-        err: list = None,
+        err: list | None = None,
         ofac: int = 1,
         normalize: bool = True,
         win_func: bool = False,

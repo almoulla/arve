@@ -2,7 +2,7 @@ import numpy as np
 
 
 class inverted_gaussian:
-    def inverted_gaussian(self, x: list, *params: tuple) -> list:
+    def inverted_gaussian(self, x: np.NDArray, *params: tuple) -> list:
         """Inverted Gaussian.
 
         :param x: RV array
