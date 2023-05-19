@@ -1,0 +1,48 @@
+[project]
+name = "arve"
+version = "0.1.0"
+requires-python = ">=3.11"
+description = "Package for spectroscopy of stars and analyzing radial velocity elements for exoplanet identification"
+authors = [
+    {name = "Khaled Al Moulla", email = "almoulla@noreply.github.com"},
+]
+dependencies = [
+    "scipy",
+    "numpy",
+    "matplotlib",
+    "astropy",
+    "pandas",
+    "tqdm",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+    "pytest-cov",
+    "pytest-github-actions-annotate-failures",
+]
+lint = [
+    "mypy",
+    "mypy-extensions",
+    "black",
+    "ruff",
+]
+docs = [
+    "sphinx",
+    "sphinx-rtd-theme",
+    "sphinx-autodoc-typehints",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+norecursedirs = ["dist", "build", "dev", "typings"]
+addopts = ["--cov=./"]
+
+[tool.coverage.run]
+source = ["./*"]
+omit = ["dev/*", "tests/*", "*types.py", "*/__init__.py"]
+
+[tool.ruff]
+extend-select = ["ALL"]
+ignore = ["COM", "S101"]
+src = ["./src"]
