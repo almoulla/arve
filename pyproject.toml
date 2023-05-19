@@ -3,6 +3,9 @@ name = "arve"
 authors = [
     {name = "Khaled Al Moulla", email = "almoulla@noreply.github.com"},
 ]
+maintainers = [
+    {name = "Khaled Al Moulla", email = "almoulla@noreply.github.com"},
+]
 version = "0.1.3"
 requires-python = ">=3.11"
 description = "Package for spectroscopy of stars and analyzing radial velocity elements for exoplanet identification"
