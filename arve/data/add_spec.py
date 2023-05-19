@@ -1,6 +1,14 @@
 class add_spec:
-
-    def add_spec(self, time:list, wave:list, flux_val:list, flux_err:list=None, time_unit:str=None, wave_unit:str=None, flux_unit:str=None) -> None:
+    def add_spec(
+        self,
+        time: list,
+        wave: list,
+        flux_val: list,
+        flux_err: list = None,
+        time_unit: str = None,
+        wave_unit: str = None,
+        flux_unit: str = None,
+    ) -> None:
         """Add spectral data.
 
         :param time: time values
@@ -20,8 +28,14 @@ class add_spec:
         :return: None
         :rtype: None
         """
-
         # add dictionary with spectral data
-        self.spec = {"time": time, "wave": wave, "flux_val": flux_val, "flux_err": flux_err, "time_unit": time_unit, "wave_unit": wave_unit, "flux_unit": flux_unit}
-        
-        return None
+        self.spec = {
+            "time": time,
+            "wave": wave,
+            "flux_val": flux_val,
+            "flux_err": flux_err,
+            "time_unit": time_unit,
+            "wave_unit": wave_unit,
+            "flux_unit": flux_unit,
+        }
+
