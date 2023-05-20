@@ -59,6 +59,9 @@ addopts = ["--cov=./"]
 source = ["./*"]
 omit = ["dev/*", "tests/*", "*types.py", "*/__init__.py"]
 
+[tool.mypy]
+strict = "true"
+
 [tool.ruff]
 extend-select = ["ALL"]
 ignore = ["COM", "S101"]
