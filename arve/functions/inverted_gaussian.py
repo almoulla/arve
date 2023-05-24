@@ -1,8 +1,8 @@
 import numpy as np
 
-class inverted_gaussian:
 
-    def inverted_gaussian(self, x:list, *params:tuple) -> list:
+class inverted_gaussian:
+    def inverted_gaussian(self, x: np.NDArray, *params: tuple) -> list:
         """Inverted Gaussian.
 
         :param x: RV array
@@ -12,17 +12,16 @@ class inverted_gaussian:
         :return: inverted Gaussian evaluated at x
         :rtype: list
         """
-        
         # unpack parameters
         continuum, contrast, RV, FWHM = params
-        
+
         # rename parameters
         C = continuum
         a = contrast
         b = RV
         c = FWHM
-        
-        # scale FWHM into sigma
-        c /= 2*np.sqrt(2*np.log(2))
 
-        return C - a*np.exp(-((x-b)/c)**2/2)
+        # scale FWHM into sigma
+        c /= 2 * np.sqrt(2 * np.log(2))
+
+        return C - a * np.exp(-(((x - b) / c) ** 2) / 2)

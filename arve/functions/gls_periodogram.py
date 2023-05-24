@@ -1,9 +1,19 @@
-from   numba import njit
-import numpy as     np
+from typing import Optional
+
+import numpy as np
+from numba import njit
+
 
 class gls_periodogram:
-
-    def gls_periodogram(self, time:list, val:list, err:list=None, ofac:int=1, normalize:bool=True, win_func:bool=False) -> tuple:
+    def gls_periodogram(
+        self,
+        time: list,
+        val: list,
+        err: Optional[list] = None,
+        ofac: int = 1,
+        normalize: bool = True,
+        win_func: bool = False,
+    ) -> tuple:
         """Generalized Lomb-Scargle (GLS) periodogram.
 
         :param time: time values
@@ -21,7 +31,6 @@ class gls_periodogram:
         :return: frequency, power spectrum and phase of periodogram; if win_func is True, the frequency, power spectrum and phase of the window function are returned as well
         :rtype: tuple
         """
-
         # if not provided, set uncertainties to unity
         if err is None:
             err = np.ones(len(time))
@@ -31,12 +40,11 @@ class gls_periodogram:
 
         # spectral window function
         if win_func:
-
             # central frequency
-            freq_c = freq[int(len(freq)/2)]
+            freq_c = freq[int(len(freq) / 2)]
 
             # sinusoid with unit amplitude at central frequency
-            win_val = np.sin(2*np.pi*freq_c*time)
+            win_val = np.sin(2 * np.pi * freq_c * time)
             win_err = err
 
             # power spectrum of window function
@@ -46,8 +54,8 @@ class gls_periodogram:
             win_freq -= freq_c
 
             # area of window function
-            win_dfreq = np.mean(win_freq[1:]-win_freq[:-1])
-            win_area = np.sum(win_ps)*win_dfreq
+            win_dfreq = np.mean(win_freq[1:] - win_freq[:-1])
+            win_area = np.sum(win_ps) * win_dfreq
 
         # return periodogram parameters
         if win_func:
@@ -55,20 +63,20 @@ class gls_periodogram:
         else:
             return freq, ps, phi
 
-def _gls(time, val, err, ofac, normalize=True):
 
+def _gls(time, val, err, ofac, normalize=True):
     # time span and steps
     Time = time[-1] - time[0]
     dtime = time[1:] - time[:-1]
 
     # linear and angular frequencies
-    dfreq = 1/(Time*ofac)
-    freq = np.arange(1/Time, 1/(2*np.median(dtime)), dfreq)
-    omega = 2*np.pi*freq
+    dfreq = 1 / (Time * ofac)
+    freq = np.arange(1 / Time, 1 / (2 * np.median(dtime)), dfreq)
+    omega = 2 * np.pi * freq
 
     # weights
-    W = np.sum(1/err**2)
-    w = 1/(W*err**2)
+    W = np.sum(1 / err**2)
+    w = 1 / (W * err**2)
 
     # empty arrays for powers and phases
     N = len(freq)
@@ -77,7 +85,6 @@ def _gls(time, val, err, ofac, normalize=True):
 
     # loop through frequencies
     for i in range(N):
-
         # trigonometric terms
         arg = omega[i] * time
         cosarg = np.cos(arg)
@@ -105,16 +112,16 @@ def _gls(time, val, err, ofac, normalize=True):
         CS = CShat - C * S
 
         # normalization
-        D = CC * SS - CS ** 2
+        D = CC * SS - CS**2
 
         # amplitudes
         a = (YC * SS - YS * CS) / D
         b = (YS * CC - YC * CS) / D
 
         # power spectrum
-        if normalize == True:
-            ps[i] = (SS*YC**2 + CC*YS**2 - 2*CS*YC*YS) / (YY*D)
-        if normalize == False:
+        if normalize is True:
+            ps[i] = (SS * YC**2 + CC * YS**2 - 2 * CS * YC * YS) / (YY * D)
+        if normalize is False:
             ps[i] = a**2 + b**2
 
         # phases
@@ -123,12 +130,14 @@ def _gls(time, val, err, ofac, normalize=True):
     # return frequencies, power spectrum and phases
     return freq, ps, phi
 
+
 @njit()
 def _weight_sum1(w, arr):
     sumw = 0
     for i in range(len(w)):
         sumw += w[i] * arr[i]
     return sumw
+
 
 @njit()
 def _weight_sum2(w, arr1, arr2):
