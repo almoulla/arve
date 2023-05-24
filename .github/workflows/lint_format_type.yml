@@ -1,4 +1,4 @@
-name: Linting
+name: Linting, formatting, and type checking
 
 on: [push, pull_request]
 
