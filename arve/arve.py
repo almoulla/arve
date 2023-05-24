@@ -1,5 +1,6 @@
 import gc
 import pickle
+from typing import Optional
 
 from .data import _Data_classes
 from .functions import _Functions_classes
@@ -81,7 +82,7 @@ class _Star(_Star_classes):
 
     def __init__(self, arve) -> None:
         self.arve = arve
-        self.target: str | None = None
+        self.target: Optional[str] = None
         self.stellar_parameters: dict = {}
         self.vpsd: dict = {}
         self.vpsd_components: dict = {}

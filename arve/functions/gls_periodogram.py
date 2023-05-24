@@ -1,3 +1,5 @@
+from typing import Optional
+
 import numpy as np
 from numba import njit
 
@@ -7,7 +9,7 @@ class gls_periodogram:
         self,
         time: list,
         val: list,
-        err: list | None = None,
+        err: Optional[list] = None,
         ofac: int = 1,
         normalize: bool = True,
         win_func: bool = False,

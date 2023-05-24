@@ -1,13 +1,16 @@
+from typing import Optional
+
+
 class add_spec:
     def add_spec(
         self,
         time: list,
         wave: list,
         flux_val: list,
-        flux_err: list | None = None,
-        time_unit: str | None = None,
-        wave_unit: str | None = None,
-        flux_unit: str | None = None,
+        flux_err: Optional[list] = None,
+        time_unit: Optional[str] = None,
+        wave_unit: Optional[str] = None,
+        flux_unit: Optional[str] = None,
     ) -> None:
         """Add spectral data.
 

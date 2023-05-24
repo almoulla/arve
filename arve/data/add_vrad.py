@@ -1,11 +1,14 @@
+from typing import Optional
+
+
 class add_vrad:
     def add_vrad(
         self,
         time: list,
         vrad_val: list,
-        vrad_err: list | None = None,
-        time_unit: str | None = None,
-        vrad_unit: str | None = None,
+        vrad_err: Optional[list] = None,
+        time_unit: Optional[str] = None,
+        vrad_unit: Optional[str] = None,
     ) -> None:
         """Add radial velocity data.
 
