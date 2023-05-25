@@ -18,19 +18,12 @@ class gls_periodogram:
         """Generalized Lomb-Scargle (GLS) periodogram.
 
         :param time: time values
-        :type time: list
         :param val: values
-        :type val: list
         :param err: errors, defaults to None
-        :type err: list, optional
         :param ofac: over-factorization, defaults to 1
-        :type ofac: int, optional
         :param normalize: normalization of periodogram, defaults to True
-        :type normalize: bool, optional
         :param win_func: return window function, defaults to False
-        :type win_func: bool, optional
         :return: frequency, power spectrum and phase of periodogram; if win_func is True, the frequency, power spectrum and phase of the window function are returned as well
-        :rtype: tuple
         """
         # if not provided, set uncertainties to unity
         if err is None:
@@ -61,8 +54,8 @@ class gls_periodogram:
         # return periodogram parameters
         if win_func:
             return freq, ps, phi, win_freq, win_ps, win_area
-        else:
-            return freq, ps, phi
+
+        return freq, ps, phi
 
 
 def _gls(

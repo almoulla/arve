@@ -1,4 +1,5 @@
 import os
+from typing import Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -10,10 +11,10 @@ from tqdm import tqdm
 class compute_vrad_ccf:
     def compute_vrad_ccf(
         self,
-        mask_path: str = None,
-        weight: str = None,
-        criteria: list = None,
-        vgrid: list = [-20, 20, 0.25],
+        mask_path: Optional[str] = None,
+        weight: Optional[str] = None,
+        criteria: Optional[np.ndarray] = None,
+        vgrid: list[float] = [-20, 20, 0.25],
     ) -> None:
         """Compute radial velocities (RVs) from spectral data.
 
@@ -170,4 +171,3 @@ class compute_vrad_ccf:
             "mask": mask_name,
         }
         self.ccf = {"time": time, "fwhm_val": fwhm_val}
-

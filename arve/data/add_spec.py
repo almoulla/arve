@@ -1,13 +1,17 @@
+from typing import Optional
+import numpy as np
+
+
 class add_spec:
     def add_spec(
         self,
-        time: list,
-        wave: list,
-        flux_val: list,
-        flux_err: list = None,
-        time_unit: str = None,
-        wave_unit: str = None,
-        flux_unit: str = None,
+        time: np.ndarray,
+        wave: np.ndarray,
+        flux_val: np.ndarray,
+        flux_err: Optional[np.ndarray] = None,
+        time_unit: Optional[str] = None,
+        wave_unit: Optional[str] = None,
+        flux_unit: Optional[str] = None,
     ) -> None:
         """Add spectral data.
 
@@ -38,4 +42,3 @@ class add_spec:
             "wave_unit": wave_unit,
             "flux_unit": flux_unit,
         }
-

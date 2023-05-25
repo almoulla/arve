@@ -1,15 +1,16 @@
+import numpy as np
+
+
 class doppler_shift:
-    def doppler_shift(self, wave: list, v: float) -> list:
+    def doppler_shift(self, wave: np.ndarray, v: np.float64) -> np.ndarray:
         """Doppler shift.
 
         :param wave: wavelengths
-        :type wave: list
         :param v: velocity in km/s
-        :type v: float
         :return: Doppler-shifted wavelengths
-        :rtype: list
         """
         # vacuum speed of light
-        c = 2.99792458e5  # [km/s]
+        c: float = 2.99792458e5  # [km/s]
 
-        return wave * ((1 + v / c) / (1 - v / c)) ** (1 / 2)
+        gamma_factor = (1 + v / c) / (1 - v / c)
+        return wave * (gamma_factor) ** (1 / 2)
