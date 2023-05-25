@@ -6,9 +6,10 @@ import pandas as pd
 import pkg_resources
 from scipy.optimize import curve_fit
 from tqdm import tqdm
+from base_data import BaseData
 
 
-class compute_vrad_ccf:
+class Data(BaseData):
     def compute_vrad_ccf(
         self,
         mask_path: Optional[str] = None,
@@ -19,15 +20,10 @@ class compute_vrad_ccf:
         """Compute radial velocities (RVs) from spectral data.
 
         :param mask_path: path to line mask (must be a CSV file where the wavelength column is "wave"), defaults to None
-        :type mask_path: str, optional
         :param weight: column name of weight, defaults to None
-        :type weight: str, optional
         :param criteria: criteria to apply (must be columns with prefix "crit_"), defaults to None
-        :type criteria: list, optional
         :param vgrid: velocity grid, in the format [start,stop,step] and in units of km/s, on which to evaluate the CCF, defaults to [-20,20,0.25]
-        :type vgrid: list, optional
         :return: None
-        :rtype: None
         """
         # read spectral data and units
         time, wave, flux_val, flux_err = (
