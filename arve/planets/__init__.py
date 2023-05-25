@@ -1,5 +1,3 @@
-from .add_planet import add_planet
+from planets import Planets
 
-
-class _Planets_classes(add_planet):
-    pass
+__all__ = ["Planets"]

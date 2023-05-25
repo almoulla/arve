@@ -1,23 +1,22 @@
-import gc
 import pickle
-from typing import Optional
+import random
+from pathlib import Path
 
 from data import Data
-
 from functions import Functions
-from .planets import _Planets_classes
-from .star import _Star_classes
+from planets import Planets
+from star import Star
 
 
 class ARVE:
     """ARVE main class."""
 
     def __init__(self) -> None:
-        self.id: Optional[str] = None
+        self.id: str = str(random.randint(0, 10**8))
         self.data = Data(self)
         self.functions = Functions(self)
-        self.planets = _Planets(self)
-        self.star = _Star(self)
+        self.planets = Planets(self)
+        self.star = Star(self)
 
 
 def load(arve: str) -> ARVE:
@@ -28,7 +27,11 @@ def load(arve: str) -> ARVE:
     :return: loaded ARVE object
     :rtype: ARVE
     """
-    return pickle.load(open(arve, "rb"))
+    with Path(arve).open("rb") as file:
+        arve = pickle.load(file)
+        if not isinstance(arve, ARVE):
+            raise TypeError(f"{arve} is not an ARVE object.")
+    return arve
 
 
 def save(arve: ARVE) -> None:
@@ -39,7 +42,8 @@ def save(arve: ARVE) -> None:
     :return: None
     :rtype: None
     """
-    return pickle.dump(arve, open(arve.id + ".arve", "wb"))
+    with Path(f"{arve.id}.arve").open("wb") as file:
+        pickle.dump(arve, file)
 
 
 def delete(arve: ARVE) -> None:
@@ -51,23 +55,3 @@ def delete(arve: ARVE) -> None:
     :rtype: None
     """
     del arve
-    gc.collect()
-
-
-class _Planets(_Planets_classes):
-    """ARVE _Planets sub-class."""
-
-    def __init__(self, arve) -> None:
-        self.arve = arve
-        self.parameters: dict = {}
-
-
-class _Star(_Star_classes):
-    """ARVE _Star sub-class."""
-
-    def __init__(self, arve) -> None:
-        self.arve = arve
-        self.target: str = None
-        self.stellar_parameters: dict = {}
-        self.vpsd: dict = {}
-        self.vpsd_components: dict = {}

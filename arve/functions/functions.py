@@ -1,5 +1,5 @@
 import math
-from typing import Callable, TypeVar
+from typing import Callable, Type, TypeVar
 
 import numpy as np
 
@@ -10,15 +10,18 @@ TFunctions = TypeVar("TFunctions", bound="Functions")
 RT = TypeVar("RT")
 
 
-def add_method(cls: TFunctions) -> Callable[[Callable[..., RT]], Callable[..., RT]]:
-    def decorator(func: Callable[..., RT]) -> Callable[..., RT]:
-        setattr(cls, func.__name__, func)
-        return func
+def add_methods(functions: list[Callable[..., RT]]) -> Callable[..., Type["Functions"]]:
+    """Add methods to the base class."""
+
+    def decorator(cls: Type[Functions]) -> Type[Functions]:
+        for function in functions:
+            setattr(cls, function.__name__, function)
+        return cls
 
     return decorator
 
 
-@add_method(gls_periodogram)
+@add_methods(gls_periodogram)
 class Functions:
     """ARVE Functions base-class."""
 
@@ -91,6 +94,7 @@ class Functions:
         # scale FWHM into sigma
         c = np.float64(FWHM * scale_factor)
 
+        # how the f to type this correctly?
         return C - np.exp(-(((x - b) / c) ** 2) / 2) * a
 
     def sptype_to_num(self: TFunctions, sptype: str) -> int:

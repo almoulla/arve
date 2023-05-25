@@ -1,4 +1,4 @@
-from typing import Callable, Optional, TypeVar, Union
+from typing import Callable, Optional, Type, TypeVar, Union
 
 import numpy as np
 
@@ -9,15 +9,18 @@ TData = TypeVar("TData", bound="Data")
 RT = TypeVar("RT")
 
 
-def add_method(cls: TData) -> Callable[[Callable[..., RT]], Callable[..., RT]]:
-    def decorator(func: Callable[..., RT]) -> Callable[..., RT]:
-        setattr(cls, func.__name__, func)
-        return func
+def add_methods(functions: list[Callable[..., RT]]) -> Callable[..., Type["Data"]]:
+    """Add methods to the base class."""
+
+    def decorator(cls: Type[Data]) -> Type[Data]:
+        for function in functions:
+            setattr(cls, function.__name__, function)
+        return cls
 
     return decorator
 
 
-@add_method(compute_vrad_ccf)
+@add_methods([compute_vrad_ccf])
 class Data:
     """ARVE Data base-class."""
 

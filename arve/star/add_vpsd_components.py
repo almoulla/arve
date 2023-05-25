@@ -1,8 +1,10 @@
 import numpy as np
 
+from star import Star
+
 
 def add_vpsd_components(
-    self,
+    self: Star,
     components: list[str] = [
         "Photon_noise",
         "Oscillations",
@@ -32,7 +34,7 @@ def add_vpsd_components(
 
         # specifications
         name = "Photon_noise"  # name
-        type = "Constant"  # function type
+        func_type = "Constant"  # function type
         coef_val = [c0]  # coefficient values
         coef_err = [0]  # coefficient errors
         vary = [True]  # vary when fitted
@@ -41,7 +43,7 @@ def add_vpsd_components(
         if c0 >= 0:
             # save VPSD component
             self.vpsd_components[name] = {
-                "type": type,
+                "func_type": func_type,
                 "coef_val": coef_val,
                 "coef_err": coef_err,
                 "vary": vary,
@@ -60,7 +62,7 @@ def add_vpsd_components(
 
         # specifications
         name = "Oscillations"  # name
-        type = "Lorentz"  # function type
+        func_type = "Lorentz"  # function type
         coef_val = [c0, c1, c2]  # coefficient values
         coef_err = [0, 0, 0]  # coefficient errors
         vary = [True, True, True]  # vary when fitted
@@ -69,7 +71,7 @@ def add_vpsd_components(
         if (c2 > min(freq)) & (c2 < max(freq)):
             # save VPSD component
             self.vpsd_components[name] = {
-                "type": type,
+                "func_type": func_type,
                 "coef_val": coef_val,
                 "coef_err": coef_err,
                 "vary": vary,
@@ -86,7 +88,7 @@ def add_vpsd_components(
 
         # specifications
         name = "Granulation"  # name
-        type = "Harvey"  # function type
+        func_type = "Harvey"  # function type
         coef_val = [c0, c1, c2]  # coefficient values
         coef_err = [0, 0, 0]  # coefficient errors
         vary = [True, True, False]  # vary when fitted
@@ -95,7 +97,7 @@ def add_vpsd_components(
         if (1 / c1 > min(freq)) & (1 / c1 < max(freq)):
             # save VPSD component
             self.vpsd_components[name] = {
-                "type": type,
+                "func_type": func_type,
                 "coef_val": coef_val,
                 "coef_err": coef_err,
                 "vary": vary,
@@ -112,7 +114,7 @@ def add_vpsd_components(
 
         # specifications
         name = "Supergranulation"  # name
-        type = "Harvey"  # function type
+        func_type = "Harvey"  # function type
         coef_val = [c0, c1, c2]  # coefficient values
         coef_err = [0, 0, 0]  # coefficient errors
         vary = [True, True, False]  # vary when fitted
@@ -121,7 +123,7 @@ def add_vpsd_components(
         if (1 / c1 > min(freq)) & (1 / c1 < max(freq)):
             # save VPSD component
             self.vpsd_components[name] = {
-                "type": type,
+                "func_type": func_type,
                 "coef_val": coef_val,
                 "coef_err": coef_err,
                 "vary": vary,
