@@ -1,6 +1,5 @@
 class sptype_to_num:
-
-    def sptype_to_num(self, sptype:str) -> int:
+    def sptype_to_num(self, sptype: str) -> int:
         """Spectral type to number.
 
         :param sptype: spectral type
@@ -8,5 +7,4 @@ class sptype_to_num:
         :return: spectral type represented as a number
         :rtype: int
         """
-
-        return "OBAFGKM".index(sptype[0])*10 + int(sptype[1])
+        return "OBAFGKM".index(sptype[0]) * 10 + int(sptype[1])

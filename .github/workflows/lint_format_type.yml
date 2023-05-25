@@ -1,0 +1,53 @@
+name: Linting, formatting, and type checking
+
+on: [push, pull_request]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.8", "3.9", "3.10", "3.11"]
+
+    steps:
+      - name: Checkout repository
+        if: github.event_name == 'push'
+        uses: actions/checkout@v3
+      - name: Checkout PR
+        if: github.event_name == 'pull_request'
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install .[lint]
+      - name: MyPy
+        run: |
+          mypy arve/ --install-types --non-interactive
+      - name: Black check
+        run: |
+          (black --check . ; echo "black=$?" >> $GITHUB_ENV) || true
+      - name: Black format
+        if: ${{ env.black != 0 }}
+        run: |
+          black .
+      - name: Ruff check
+        run: |
+          (ruff check . ; echo "ruff=$?" >> $GITHUB_ENV) || true
+      - name: Ruff format
+        if: ${{ env.ruff != 0 }}
+        run: |
+          ruff --fix .
+      - name: Commit
+        if: ${{ (env.black != 0) || (env.ruff != 0) }}
+        uses: EndBug/add-and-commit@v9
+        with:
+          author_name: ${{ github.actor }}
+          author_email: ${{ github.actor }}@users.noreply.github.com
+          add: .
+          message: "chore: formatting"
