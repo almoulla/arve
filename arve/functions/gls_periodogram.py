@@ -1,61 +1,63 @@
-import numpy as np
 from typing import Optional, Union
 
+import numpy as np
 
-class gls_periodogram:
-    def gls_periodogram(
-        self,
-        time: np.ndarray,
-        val: np.ndarray,
-        err: Optional[np.ndarray] = None,
-        ofac: int = 1,
-        normalize: bool = True,
-        win_func: bool = False,
-    ) -> Union[
-        tuple[np.ndarray, np.ndarray, np.ndarray],
-        tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, float],
-    ]:
-        """Generalized Lomb-Scargle (GLS) periodogram.
+from functions import Functions
 
-        :param time: time values
-        :param val: values
-        :param err: errors, defaults to None
-        :param ofac: over-factorization, defaults to 1
-        :param normalize: normalization of periodogram, defaults to True
-        :param win_func: return window function, defaults to False
-        :return: frequency, power spectrum and phase of periodogram; if win_func is True, the frequency, power spectrum and phase of the window function are returned as well
-        """
-        # if not provided, set uncertainties to unity
-        if err is None:
-            err = np.ones(len(time))
 
-        # frequencies, power spectrum and phases of data
-        freq, ps, phi = _gls(time, val, err, ofac, normalize)
+def gls_periodogram(
+    self: Functions,
+    time: np.ndarray,
+    val: np.ndarray,
+    err: Optional[np.ndarray] = None,
+    ofac: int = 1,
+    normalize: bool = True,
+    win_func: bool = False,
+) -> Union[
+    tuple[np.ndarray, np.ndarray, np.ndarray],
+    tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, float],
+]:
+    """Generalized Lomb-Scargle (GLS) periodogram.
 
-        # spectral window function
-        if win_func:
-            # central frequency
-            freq_c = freq[len(freq) // 2]
+    :param time: time values
+    :param val: values
+    :param err: errors, defaults to None
+    :param ofac: over-factorization, defaults to 1
+    :param normalize: normalization of periodogram, defaults to True
+    :param win_func: return window function, defaults to False
+    :return: frequency, power spectrum and phase of periodogram; if win_func is True, the frequency, power spectrum and phase of the window function are returned as well
+    """
+    # if not provided, set uncertainties to unity
+    if err is None:
+        err = np.ones(len(time))
 
-            # sinusoid with unit amplitude at central frequency
-            win_val = np.sin(2 * np.pi * freq_c * time)
-            win_err = err
+    # frequencies, power spectrum and phases of data
+    freq, ps, phi = _gls(time, val, err, ofac, normalize)
 
-            # power spectrum of window function
-            win_freq, win_ps, _ = _gls(time, win_val, win_err, ofac)
+    # spectral window function
+    if win_func:
+        # central frequency
+        freq_c = freq[len(freq) // 2]
 
-            # recenter window function frequencies
-            win_freq -= freq_c
+        # sinusoid with unit amplitude at central frequency
+        win_val = np.sin(2 * np.pi * freq_c * time)
+        win_err = err
 
-            # area of window function
-            win_dfreq = np.mean(win_freq[1:] - win_freq[:-1])
-            win_area = np.sum(win_ps) * win_dfreq
+        # power spectrum of window function
+        win_freq, win_ps, _ = _gls(time, win_val, win_err, ofac)
 
-        # return periodogram parameters
-        if win_func:
-            return freq, ps, phi, win_freq, win_ps, win_area
+        # recenter window function frequencies
+        win_freq -= freq_c
 
-        return freq, ps, phi
+        # area of window function
+        win_dfreq = np.mean(win_freq[1:] - win_freq[:-1])
+        win_area = np.sum(win_ps) * win_dfreq
+
+    # return periodogram parameters
+    if win_func:
+        return freq, ps, phi, win_freq, win_ps, win_area
+
+    return freq, ps, phi
 
 
 def _gls(

@@ -6,6 +6,7 @@ import pandas as pd
 import pkg_resources
 from scipy.optimize import curve_fit
 from tqdm import tqdm
+
 from arve.data.data import Data
 
 

@@ -3,7 +3,8 @@ import pickle
 from typing import Optional
 
 from data import Data
-from .functions import _Functions_classes
+
+from functions import Functions
 from .planets import _Planets_classes
 from .star import _Star_classes
 
@@ -14,7 +15,7 @@ class ARVE:
     def __init__(self) -> None:
         self.id: Optional[str] = None
         self.data = Data(self)
-        self.functions = _Functions(self)
+        self.functions = Functions(self)
         self.planets = _Planets(self)
         self.star = _Star(self)
 
@@ -51,13 +52,6 @@ def delete(arve: ARVE) -> None:
     """
     del arve
     gc.collect()
-
-
-class _Functions(_Functions_classes):
-    """ARVE _Functions sub-class."""
-
-    def __init__(self, arve) -> None:
-        self.arve = arve
 
 
 class _Planets(_Planets_classes):

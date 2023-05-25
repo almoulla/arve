@@ -1,14 +1,15 @@
-from arve import ARVE
-from typing import Optional, Union, TypeVar, Callable, Type
+from typing import Callable, Optional, TypeVar, Union
+
 import numpy as np
+
+from arve import ARVE
 from data import compute_vrad_ccf
 
 TData = TypeVar("TData", bound="Data")
 RT = TypeVar("RT")
-TClass = TypeVar("TClass", bound="Data")
 
 
-def add_method(cls: TClass) -> Callable[[Callable[..., RT]], Callable[..., RT]]:
+def add_method(cls: TData) -> Callable[[Callable[..., RT]], Callable[..., RT]]:
     def decorator(func: Callable[..., RT]) -> Callable[..., RT]:
         setattr(cls, func.__name__, func)
         return func
