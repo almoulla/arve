@@ -1,17 +1,20 @@
 import pickle
 import random
 from pathlib import Path
+from typing import TypeVar
 
 from data import Data
 from functions import Functions
 from planets import Planets
 from star import Star
 
+TARVE = TypeVar("TARVE", bound="ARVE")
+
 
 class ARVE:
     """ARVE main class."""
 
-    def __init__(self) -> None:
+    def __init__(self: TARVE) -> None:
         self.id: str = str(random.randint(0, 10**8))
         self.data = Data(self)
         self.functions = Functions(self)
