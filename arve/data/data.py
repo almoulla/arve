@@ -1,18 +1,32 @@
 from arve import ARVE
-from typing import Optional, Union
+from typing import Optional, Union, TypeVar, Callable, Type
 import numpy as np
+from data import compute_vrad_ccf
+
+TData = TypeVar("TData", bound="Data")
+RT = TypeVar("RT")
+TClass = TypeVar("TClass", bound="Data")
 
 
-class BaseData:
+def add_method(cls: TClass) -> Callable[[Callable[..., RT]], Callable[..., RT]]:
+    def decorator(func: Callable[..., RT]) -> Callable[..., RT]:
+        setattr(cls, func.__name__, func)
+        return func
+
+    return decorator
+
+
+@add_method(compute_vrad_ccf)
+class Data:
     """ARVE Data base-class."""
 
-    def __init__(self, arve: ARVE) -> None:
+    def __init__(self: TData, arve: ARVE) -> None:
         self.arve = arve
         self.spec: dict[str, Union[np.ndarray, str, None]] = {}
         self.vrad: dict[str, Union[np.ndarray, str, None]] = {}
 
     def add_spec(
-        self,
+        self: TData,
         time: np.ndarray,
         wave: np.ndarray,
         flux_val: np.ndarray,
@@ -24,21 +38,13 @@ class BaseData:
         """Add spectral data.
 
         :param time: time values
-        :type time: list
         :param wave: wavelength values
-        :type wave: list
         :param flux_val: flux values
-        :type flux_val: list
         :param flux_err: flux errors, defaults to None
-        :type flux_err: list, optional
         :param time_unit: time unit, defaults to None
-        :type time_unit: str, optional
         :param wave_unit: wavelength unit, defaults to None
-        :type time_unit: str, optional
         :param flux_unit: flux unit, defaults to None
-        :type flux_unit: str, optional
         :return: None
-        :rtype: None
         """
         # add dictionary with spectral data
         self.spec = {
@@ -52,7 +58,7 @@ class BaseData:
         }
 
     def add_vrad(
-        self,
+        self: TData,
         time: np.ndarray,
         vrad_val: np.ndarray,
         vrad_err: Optional[np.ndarray] = None,

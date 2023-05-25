@@ -1,7 +1,8 @@
 import gc
 import pickle
+from typing import Optional
 
-from .data import _Data_classes
+from data import Data
 from .functions import _Functions_classes
 from .planets import _Planets_classes
 from .star import _Star_classes
@@ -11,8 +12,8 @@ class ARVE:
     """ARVE main class."""
 
     def __init__(self) -> None:
-        self.id: str = None
-        self.data = _Data(self)
+        self.id: Optional[str] = None
+        self.data = Data(self)
         self.functions = _Functions(self)
         self.planets = _Planets(self)
         self.star = _Star(self)
@@ -50,16 +51,6 @@ def delete(arve: ARVE) -> None:
     """
     del arve
     gc.collect()
-
-
-
-class _Data(_Data_classes):
-    """ARVE _Data sub-class."""
-
-    def __init__(self, arve) -> None:
-        self.arve = arve
-        self.spec: dict = {}
-        self.vrad: dict = {}
 
 
 class _Functions(_Functions_classes):
