@@ -3,10 +3,10 @@ import random
 from pathlib import Path
 from typing import TypeVar
 
-from data import Data
-from functions import Functions
-from planets import Planets
-from star import Star
+from .data import Data
+from .functions import Functions
+from .planets import Planets
+from .star import Star
 
 TARVE = TypeVar("TARVE", bound="ARVE")
 

@@ -59,6 +59,7 @@ omit = ["dev/*", "tests/*", "*types.py", "*/__init__.py"]
 
 [tool.mypy]
 strict = "true"
+plugins = ["numpy.typing.mypy_plugin"]
 
 [tool.ruff]
 extend-select = ["ALL"]
