@@ -62,6 +62,6 @@ strict = "true"
 plugins = ["numpy.typing.mypy_plugin"]
 
 [tool.ruff]
-extend-select = ["ALL"]
+select = ["ALL"]
 ignore = ["COM", "S101"]
 src = ["./arve"]
