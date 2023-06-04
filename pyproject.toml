@@ -64,3 +64,6 @@ plugins = ["numpy.typing.mypy_plugin"]
 select = ["ALL"]
 ignore = ["COM", "S101"]
 src = ["./arve"]
+
+[tool.septuptools.packages.find]
+include = ["arve/aux_data/masks/*.csv"]
