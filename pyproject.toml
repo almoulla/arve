@@ -22,7 +22,6 @@ classifiers = [
 dependencies = [
     "astroquery",
     "lmfit",
-    "numba",
     "scipy",
     "numpy",
     "matplotlib",
