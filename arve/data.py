@@ -103,15 +103,20 @@ class Data:
         (time_unit,) = (self.spec[key] for key in ["time_unit"])
 
         if not (time and wave and flux_val and flux_err):
-            raise ValueError("Spectral data must be added first.")
+            msg = "Spectral data must be added first."
+            raise ValueError(msg)
         if not isinstance(time, np.ndarray):
-            raise TypeError("Time must be a numpy array.")
+            msg = "Time must be a numpy array."
+            raise TypeError(msg)
         if not isinstance(wave, np.ndarray):
-            raise TypeError("Wavelength must be a numpy array.")
+            msg = "Wavelength must be a numpy array."
+            raise TypeError(msg)
         if not isinstance(flux_val, np.ndarray):
-            raise TypeError("Flux values must be a numpy array.")
+            msg = "Flux values must be a numpy array."
+            raise TypeError(msg)
         if not isinstance(flux_err, np.ndarray):
-            raise TypeError("Flux errors must be a numpy array.")
+            msg = "Flux errors must be a numpy array."
+            raise TypeError(msg)
 
         # mask from VALD
         if mask_path is None:

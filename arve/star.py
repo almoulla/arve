@@ -78,7 +78,8 @@ class Star:
 
         # compute velocity power spectrum
         if not hasattr(self.arve.functions, "gls_periodogram"):
-            raise AttributeError("The function 'gls_periodogram' is not available.")
+            msg = "The function 'gls_periodogram' is not available."
+            raise AttributeError(msg)
         (
             freq,
             vps,

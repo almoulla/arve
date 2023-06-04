@@ -33,7 +33,8 @@ def load(arve: str) -> ARVE:
     with Path(arve).open("rb") as file:
         arve = pickle.load(file)
         if not isinstance(arve, ARVE):
-            raise TypeError(f"{arve} is not an ARVE object.")
+            msg = f"{arve} is not an ARVE object."
+            raise TypeError(msg)
     return arve
 
 
