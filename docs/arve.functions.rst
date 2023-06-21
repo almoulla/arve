@@ -4,6 +4,22 @@ arve.functions package
 Submodules
 ----------
 
+arve.functions.convert\_air\_to\_vac module
+-------------------------------------------
+
+.. automodule:: arve.functions.convert_air_to_vac
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+arve.functions.convert\_vac\_to\_air module
+-------------------------------------------
+
+.. automodule:: arve.functions.convert_vac_to_air
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 arve.functions.doppler\_shift module
 ------------------------------------
 

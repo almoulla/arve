@@ -15,7 +15,7 @@ sys.path.insert(0, os.path.abspath(".."))
 project = "arve"
 copyright = "2023, Khaled Al Moulla"
 author = "Khaled Al Moulla"
-release = "0.1.3"
+release = "0.1.4"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -29,4 +29,3 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 html_theme = "sphinx_rtd_theme"
 html_static_path = ["_static"]
-html_css_files = ["css/custom.css"]

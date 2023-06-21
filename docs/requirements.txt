@@ -1,9 +1,0 @@
-sphinx_rtd_theme
-astroquery
-lmfit
-matplotlib
-numba
-numpy
-pandas
-scipy
-tqdm
