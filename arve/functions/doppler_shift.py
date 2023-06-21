@@ -11,7 +11,7 @@ class doppler_shift:
         :rtype: list
         """
 
-        # vacuum speed of light
-        c = 2.99792458e5 # [km/s]
+        # read constants
+        c = self.constants["c"] # [km/s] speed of light in vacuum
 
         return wave*((1+v/c)/(1-v/c))**(1/2)

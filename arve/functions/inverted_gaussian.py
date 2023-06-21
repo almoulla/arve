@@ -14,15 +14,15 @@ class inverted_gaussian:
         """
         
         # unpack parameters
-        continuum, contrast, RV, FWHM = params
+        continuum, contrast, vrad, fwhm = params
         
         # rename parameters
         C = continuum
         a = contrast
-        b = RV
-        c = FWHM
+        b = vrad
+        c = fwhm
         
         # scale FWHM into sigma
         c /= 2*np.sqrt(2*np.log(2))
 
-        return C - a*np.exp(-((x-b)/c)**2/2)
+        return C*(1-a*np.exp(-((x-b)/c)**2/2))

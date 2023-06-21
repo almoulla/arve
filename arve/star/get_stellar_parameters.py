@@ -10,25 +10,31 @@ class get_stellar_parameters:
         :rtype: None
         """
 
+        # initiate dictionarty with stellar parameters
+        self.stellar_parameters = {}
+
         # Sun
         if self.target == "Sun":
 
             # save stellar parameters
-            self.stellar_parameters["sptype"] = "G2"
-            self.stellar_parameters["Teff"  ] = 5770
-            self.stellar_parameters["logg"  ] = 4.4
-            self.stellar_parameters["Fe_H"  ] = 0.0
-            self.stellar_parameters["M"     ] = 1.0
-            self.stellar_parameters["R"     ] = 1.0
-            self.stellar_parameters["vsini" ] = 1.63
+            self.stellar_parameters["sptype"  ] = "G2"
+            self.stellar_parameters["vrad_sys"] = 0.0
+            self.stellar_parameters["Teff"    ] = 5770
+            self.stellar_parameters["logg"    ] = 4.4
+            self.stellar_parameters["Fe_H"    ] = 0.0
+            self.stellar_parameters["M"       ] = 1.0
+            self.stellar_parameters["R"       ] = 1.0
+            self.stellar_parameters["vsini"   ] = 1.63
 
         # other stars
         else:
 
             # get spectral type from query
             simbad = Simbad()
-            simbad.add_votable_fields("sptype")
-            self.stellar_parameters["sptype"] = simbad.query_object(self.target)["SP_TYPE"][0][:2]
+            simbad.add_votable_fields("sptype"  )
+            simbad.add_votable_fields("velocity")
+            self.stellar_parameters["sptype"  ] = simbad.query_object(self.target)["SP_TYPE"   ][0][:2]
+            self.stellar_parameters["vrad_sys"] = simbad.query_object(self.target)["RVZ_RADVEL"][0]
 
             # convert spectral types to numbers
             sptype_num       =  self.arve.functions.sptype_to_num(sptype=self.stellar_parameters["sptype"])
