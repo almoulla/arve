@@ -5,7 +5,7 @@ with open("README.md") as file:
 
 setup(
     name="arve",
-    version="0.1.4",
+    version="0.1.5",
     author="Khaled Al Moulla",
     author_email="khaled.almoulla@gmail.com",
     description="Analyzing Radial Velocity Elements",
@@ -30,6 +30,6 @@ setup(
                  ],
     include_package_data=True,
     package_data={"arve": ["aux_data/masks/*.csv.zip",
-                           "aux_data/spectra/*.csv.zip"
+                           "aux_data/spectra/*.csv.zip",
                            "aux_data/tellurics/*.csv.zip"]}
 )
