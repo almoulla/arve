@@ -17,8 +17,8 @@ class Data(
     """
 
     def __init__(self, arve):
-        self.arve                 = arve
-        self.time: Optional[dict] = None
-        self.vrad: Optional[dict] = None
-        self.spec: Optional[dict] = None
-        self.aux_data = None
+        self.arve                     = arve
+        self.time    : Optional[dict] = None
+        self.vrad    : Optional[dict] = None
+        self.spec    : Optional[dict] = None
+        self.aux_data: Optional[dict] = None
