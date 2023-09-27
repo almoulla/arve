@@ -21,4 +21,4 @@ class Star(
         self.target            : Optional[str]  = None
         self.stellar_parameters: Optional[dict] = None
         self.vpsd              : Optional[dict] = None
-        self.vpsd_components   : Optional[dict] = None
+        self.vpsd_components   : Optional[dict] = {}

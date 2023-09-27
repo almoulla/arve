@@ -15,7 +15,6 @@ class plot_vpsd_components:
 
         # read VPSD and units
         freq, vpsd, freq_avg, vpsd_avg = [self.vpsd[key] for key in ["freq", "vpsd", "freq_avg", "vpsd_avg"]]
-        time_unit, vrad_unit = [self.arve.data.vrad[key] for key in ["time_unit", "vrad_unit"]]
 
         # plot VPSD and average VPSD
         plt.loglog(freq, vpsd, ls="-", c="k", alpha=0.5)
@@ -84,8 +83,10 @@ class plot_vpsd_components:
         plt.xlim(freq[0], freq[-1])
 
         # plot labels
-        plt.xlabel("$f$" + " " + f"[{time_unit}" + "$^{-1}$]")
-        plt.ylabel("VPSD" + " " + f"[({vrad_unit})" + "$^{2}$" + " / " + f"{time_unit}" + "$^{-1}$]")
+        #plt.xlabel("$f$" + " " + f"[{time_unit}" + "$^{-1}$]")
+        #plt.ylabel("VPSD" + " " + f"[({vrad_unit})" + "$^{2}$" + " / " + f"{time_unit}" + "$^{-1}$]")
+        plt.xlabel("$f$ [d$^{-1}$]")
+        plt.ylabel("VPSD [(km/s)$^{2}$ / d$^{-1}$]")
 
         # plot legend
         leg = plt.legend(loc="lower left")

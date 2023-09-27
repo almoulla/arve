@@ -1,4 +1,4 @@
-from   numba import njit
+#from   numba import njit
 import numpy as     np
 
 class gls_periodogram:
@@ -84,17 +84,26 @@ def _gls(time, val, err, ofac, normalize=True):
         sinarg = np.sin(arg)
 
         # weighted sums
-        Y = _weight_sum1(w, val)
-        C = _weight_sum1(w, cosarg)
-        S = _weight_sum1(w, sinarg)
+        #Y = _weight_sum1(w, val)
+        #C = _weight_sum1(w, cosarg)
+        #S = _weight_sum1(w, sinarg)
+        Y = np.sum(w*val)
+        C = np.sum(w*cosarg)
+        S = np.sum(w*sinarg)
 
         # weighted sums of cross-terms
-        YYhat = _weight_sum2(w, val, val)
-        YChat = _weight_sum2(w, val, cosarg)
-        YShat = _weight_sum2(w, val, sinarg)
-        CChat = _weight_sum2(w, cosarg, cosarg)
-        SShat = _weight_sum2(w, sinarg, sinarg)
-        CShat = _weight_sum2(w, cosarg, sinarg)
+        #YYhat = _weight_sum2(w, val, val)
+        #YChat = _weight_sum2(w, val, cosarg)
+        #YShat = _weight_sum2(w, val, sinarg)
+        #CChat = _weight_sum2(w, cosarg, cosarg)
+        #SShat = _weight_sum2(w, sinarg, sinarg)
+        #CShat = _weight_sum2(w, cosarg, sinarg)
+        YYhat = np.sum(w*val*val)
+        YChat = np.sum(w*val*cosarg)
+        YShat = np.sum(w*val*sinarg)
+        CChat = np.sum(w*cosarg*cosarg)
+        SShat = np.sum(w*sinarg*sinarg)
+        CShat = np.sum(w*cosarg*sinarg)
 
         # differences of sums
         YY = YYhat - Y * Y
@@ -123,14 +132,14 @@ def _gls(time, val, err, ofac, normalize=True):
     # return frequencies, power spectrum and phases
     return freq, ps, phi
 
-@njit()
+#@njit()
 def _weight_sum1(w, arr):
     sumw = 0
     for i in range(len(w)):
         sumw += w[i] * arr[i]
     return sumw
 
-@njit()
+#@njit()
 def _weight_sum2(w, arr1, arr2):
     sumw = 0
     for i in range(len(w)):

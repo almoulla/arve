@@ -10,10 +10,11 @@ class compute_vpsd:
         """
 
         # read RV time series
-        time, vrad_val, vrad_err, time_unit, vrad_unit = [self.arve.data.vrad[key] for key in ["time", "vrad_val", "vrad_err", "time_unit", "vrad_unit"]]
+        time_val,          = [self.arve.data.time[key] for key in ["time_val"]]
+        vrad_val, vrad_err = [self.arve.data.vrad[key] for key in ["vrad_val", "vrad_err"]]
 
         # compute velocity power spectrum
-        freq, vps, phi, win_freq, win_vps, win_area = self.arve.functions.gls_periodogram(time=time, val=vrad_val, err=vrad_err, normalize=False, win_func=True)
+        freq, vps, phi, win_freq, win_vps, win_area = self.arve.functions.gls_periodogram(time=time_val, val=vrad_val, err=vrad_err, normalize=False, win_func=True)
 
         # compute log-average VPS
         freq_bin = 10 ** (np.linspace(np.log10(freq[0]), np.log10(freq[-1]), 51))
