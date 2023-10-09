@@ -86,16 +86,12 @@ class compute_vrad_ccf:
         # normalize weights
         w = w/np.sum(w)
         
-        # nr. of spectra
+        # nr. of spectra, RV shifts and lines
         if self.spec["path"] is None:
             Nspec = len(flux_val_arr)
         else:
             Nspec = len(self.spec["files"])
-        
-        # nr. of RV shifts
         Nvrad = len(vrads)
-        
-        # nr. of lines
         Nline = len(wc)
 
         # empty arrays for indices
@@ -121,69 +117,74 @@ class compute_vrad_ccf:
             fl[i] = 1 - fr[i]
 
         # empty arrays for RV values and errors
-        vrad_val = np.zeros(Nspec)
-        vrad_err = np.zeros(Nspec)
+        vrad_val = np.zeros(Nspec)*np.nan
+        vrad_err = np.zeros(Nspec)*np.nan
 
         # empty arrays for FWHM values and errors
-        fwhm_val = np.zeros(Nspec)
+        fwhm_val = np.zeros(Nspec)*np.nan
 
         # loop spectra
         print("Analyzed spectra:")
         for i in tqdm(range(Nspec)):
 
-            # read data from input
-            if self.spec["path"] is None:
-                flux_val = flux_val_arr[i]
-                flux_err = flux_err_arr[i]
-            
-            # read data from path
-            else:
+            try:
 
-                # read CSV file
-                df = pd.read_csv(self.spec["files"][i])
+                # read data from input
+                if self.spec["path"] is None:
+                    flux_val = flux_val_arr[i]
+                    flux_err = flux_err_arr[i]
                 
-                # get flux and flux error if same wavelength grid
-                if self.spec["same_wave_grid"]:
-                    flux_val   = df["flux_val"].to_numpy()
-                    flux_err   = df["flux_err"].to_numpy()
-                
-                # interpolate flux and flux error on reference wavelength grid
+                # read data from path
                 else:
-                    wave_val_i = df["wave_val"].to_numpy()
-                    flux_val_i = df["flux_val"].to_numpy()
-                    flux_err_i = df["flux_err"].to_numpy()
-                    flux_val   = interp1d(wave_val_i, flux_val_i, kind="cubic", bounds_error=False)(wave_val)
-                    flux_err   = interp1d(wave_val_i, flux_err_i, kind="cubic", bounds_error=False)(wave_val)
 
-            # empty arrays for CCF values and errors
-            ccf_val = np.zeros(Nvrad)
-            ccf_err = np.zeros(Nvrad)
+                    # read CSV file
+                    df = pd.read_csv(self.spec["files"][i])
+                    
+                    # get flux and flux error if same wavelength grid
+                    if self.spec["same_wave_grid"]:
+                        flux_val   = df["flux_val"].to_numpy()
+                        flux_err   = df["flux_err"].to_numpy()
+                    
+                    # interpolate flux and flux error on reference wavelength grid
+                    else:
+                        wave_val_i = df["wave_val"].to_numpy()
+                        flux_val_i = df["flux_val"].to_numpy()
+                        flux_err_i = df["flux_err"].to_numpy()
+                        flux_val   = interp1d(wave_val_i, flux_val_i, kind="cubic", bounds_error=False)(wave_val)
+                        flux_err   = interp1d(wave_val_i, flux_err_i, kind="cubic", bounds_error=False)(wave_val)
 
-            # loop RV shifts
-            for j in range(Nvrad):
+                # empty arrays for CCF values and errors
+                ccf_val = np.zeros(Nvrad)
+                ccf_err = np.zeros(Nvrad)
 
-                # CCF value and error
-                ccf_val[j] = np.nansum((flux_val[il[j]]   *fl[j]+flux_val[ir[j]]   *fr[j])*w   )
-                ccf_err[j] = np.nansum((flux_err[il[j]]**2*fl[j]+flux_err[ir[j]]**2*fr[j])*w**2)**(1/2)
+                # loop RV shifts
+                for j in range(Nvrad):
 
-            # initial guess on Gaussian parameters
-            i_min = np.argmin(ccf_val)
-            i_max = np.argmax(ccf_val)
-            C0 = ccf_val[i_max]
-            a0 = 1-ccf_val[i_min]/C0
-            b0 = vrads[i_min]
-            c0 = (b0-interp1d(ccf_val[:i_min], vrads[:i_min], kind="cubic")((ccf_val[i_min]+ccf_val[i_max])/2))*2
-            p0 = (C0, a0, b0, c0)
+                    # CCF value and error
+                    ccf_val[j] = np.nansum((flux_val[il[j]]   *fl[j]+flux_val[ir[j]]   *fr[j])*w   )
+                    ccf_err[j] = np.nansum((flux_err[il[j]]**2*fl[j]+flux_err[ir[j]]**2*fr[j])*w**2)**(1/2)
 
-            # CCF parameters with fitted Gaussian
-            param, _ = curve_fit(self.arve.functions.inverted_gaussian, vrads, ccf_val, sigma=ccf_err, p0=p0)
+                # initial guess on Gaussian parameters
+                i_min = np.argmin(ccf_val)
+                i_max = np.argmax(ccf_val)
+                C0 = ccf_val[i_max]
+                a0 = 1-ccf_val[i_min]/C0
+                b0 = vrads[i_min]
+                c0 = (b0-interp1d(ccf_val[:i_min], vrads[:i_min], kind="cubic")((ccf_val[i_min]+ccf_val[i_max])/2))*2
+                p0 = (C0, a0, b0, c0)
 
-            # RV value and error
-            vrad_val[i] = param[2]
-            vrad_err[i] = 1/np.sqrt(np.sum(1/np.abs(ccf_err*np.gradient(vrads)/np.gradient(ccf_val))**2))
+                # CCF parameters with fitted Gaussian
+                param, _ = curve_fit(self.arve.functions.inverted_gaussian, vrads, ccf_val, sigma=ccf_err, p0=p0)
 
-            # FWHM value and error
-            fwhm_val[i] = param[3]
+                # RV value and error
+                vrad_val[i] = param[2]
+                vrad_err[i] = 1/np.sqrt(np.sum(1/np.abs(ccf_err*np.gradient(vrads)/np.gradient(ccf_val))**2))
+
+                # FWHM value and error
+                fwhm_val[i] = param[3]
+            
+            except:
+                continue
 
         # save RV data
         self.vrad = {"vrad_val": vrad_val, "vrad_err": vrad_err, "method": "CCF", "mask": mask_name}
