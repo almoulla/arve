@@ -27,16 +27,16 @@ class get_aux_data:
         path_aux_data = pkg_resources.resource_filename("arve", "aux_data/")
 
         # search masks
-        masks            = os.listdir(path_aux_data+"masks/")
+        masks            = sorted(os.listdir(path_aux_data+"masks/"))
         masks            = [mask for mask in masks if mask.endswith(".csv.zip")]
         sptype_masks     = [mask.split(".")[0] for mask in masks]
         sptype_num_masks = np.array([self.arve.functions.sptype_to_num(sptype=sptype) for sptype in sptype_masks])
 
         # search spec
-        specs            = os.listdir(path_aux_data+"spectra/")
+        specs            = sorted(os.listdir(path_aux_data+"spectra/"))
         specs            = [spec for spec in specs if spec.endswith(".csv.zip")]
+        specs.remove("WAVE.csv.zip")
         sptype_specs     = [spec.split(".")[0] for spec in specs]
-        sptype_specs.remove('WAVE')
         sptype_num_specs = np.array([self.arve.functions.sptype_to_num(sptype=sptype) for sptype in sptype_specs])
 
         # spectral type as number
