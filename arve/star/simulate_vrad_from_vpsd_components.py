@@ -59,8 +59,11 @@ class simulate_vrad_from_vpsd_components:
         # velocity amplitudes
         vamp_arr = np.sqrt(vpsd_arr*df)
 
-        # empty array for RV components
-        vrad_comp = np.zeros((Ntime,Nvpsd_comp))
+        # empty array for RV components + total + total without noise
+        vrad_comp = np.zeros((Ntime,Nvpsd_comp+2))
+
+        # Index of all components except photon noise
+        idx_tot = [comp_name[i] != 'Photon_noise' for i in range(Nvpsd_comp)]
 
         # loop times
         for i in range(Ntime):
@@ -73,12 +76,18 @@ class simulate_vrad_from_vpsd_components:
             
                 # simulated RV components
                 vrad_comp[i,j] = np.dot(vamp_arr[j], sin_arr)
+            
+            # total RV
+            vrad_comp[i,-2] = np.dot(np.sum(vamp_arr         ,axis=0), sin_arr)
+            vrad_comp[i,-1] = np.dot(np.sum(vamp_arr[idx_tot],axis=0), sin_arr)
         
         # dictionary with RV components
         vrad_dict = {}
         vrad_dict["time_val"] = time
         for i in range(Nvpsd_comp):
             vrad_dict[comp_name[i]] = vrad_comp[:,i]
+        vrad_dict['Total'              ] = vrad_comp[:,-2]
+        vrad_dict['Total_without_noise'] = vrad_comp[:,-1]
         
         # save RV components
         self.arve.data.vrad["vrad_comp"] = vrad_dict
