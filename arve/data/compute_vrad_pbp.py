@@ -8,13 +8,11 @@ warnings.filterwarnings('ignore')
 
 class compute_vrad_pbp:
 
-    def compute_vrad_pbp(self, mask_path:str=None, weight:str=None, criteria:list=None, exclude_tellurics=True, scale=True, Niter=1, bins:"list[list]"=[[4000,5500]]) -> None:
+    def compute_vrad_pbp(self, mask_path:str=None, criteria:list=None, exclude_tellurics=True, scale=True, Niter=1, bins:"list[list]"=None) -> None:
         """Compute radial velocities (RVs) from spectral data.
 
         :param mask_path: path to line mask (must be a CSV file where the wavelength column is "wave"), defaults to None
         :type mask_path: str, optional
-        :param weight: column name of weight, defaults to None
-        :type weight: str, optional
         :param criteria: criteria to apply (must be columns with prefix "crit_"), defaults to None
         :type criteria: list, optional
         :param exclude_tellurics: exclude telluric bands, defaults to True
@@ -23,7 +21,7 @@ class compute_vrad_pbp:
         :type scale: bool, optional
         :param Niter: number of iterations per line, defaults to 1
         :type Niter: int, optional
-        :param bins: temperature ranges with which to segment each line, defaults to [[4000,5500]]
+        :param bins: temperature ranges with which to segment each line, defaults to None
         :type bins: list[list], optional
         :return: None
         :rtype: None
@@ -35,7 +33,7 @@ class compute_vrad_pbp:
         temp                         =  self.aux_data["spec"]["temp"]
         if self.spec["path"] is None:
             flux_val_arr, flux_err_arr = [self.spec[key] for key in ["flux_val", "flux_err"]]
-        
+
         # master spectrum gradient
         mast_grad_val = np.gradient(mast_flux_val)/np.gradient(mast_wave_val)
         
@@ -65,17 +63,27 @@ class compute_vrad_pbp:
         wl = np.array(mask["wave_l"])
         wr = np.array(mask["wave_r"])
 
-        # keep mask lines which satisfy criteria
+        # temperature bins
+        if bins is None:
+            bins = [np.min(temp),np.max(temp)]
+
+        # nr. of spectra, lines and temperature bins
+        if self.spec["path"] is None:
+            Nspec = len(flux_val_arr)
+        else:
+            Nspec = len(self.spec["files"])
+        Nline = len(wc)
+        Ntemp = len(bins)
+
+        # lines which satisfy criteria
+        idx_crit = np.ones_like(wc, dtype=bool)
         if criteria is not None:
-            idx = np.ones_like(wc, dtype=bool)
             for i in range(len(criteria)):
                 crit = np.array(mask["crit_"+criteria[i]])
-                idx *= crit
-            wc  = wc[idx]
-            wl  = wl[idx]
-            wr  = wr[idx]
+                idx_crit *= crit
 
         # exclude tellurics
+        idx_tell = np.ones_like(wc, dtype=bool)
         if exclude_tellurics:
 
             # read telluric bands
@@ -85,18 +93,7 @@ class compute_vrad_pbp:
             wave_band = np.array([wave_l,wave_r]).T
 
             # keep lines outside of bands
-            idx = np.sum([(wc > wave_band[i,0]) & (wc < wave_band[i,1]) for i in range(len(wave_band))], axis=0).astype(bool) == False
-            wc  = wc[idx]
-            wl  = wl[idx]
-            wr  = wr[idx]
-        
-        # nr. of spectra, lines and temperature bins
-        if self.spec["path"] is None:
-            Nspec = len(flux_val_arr)
-        else:
-            Nspec = len(self.spec["files"])
-        Nline = len(wc)
-        Ntemp = len(bins)
+            idx_tell = np.sum([(wc > wave_band[i,0]) & (wc < wave_band[i,1]) for i in range(len(wave_band))], axis=0).astype(bool) == False
 
         # index of lines
         idx_line = np.zeros(Nline, dtype=object)
@@ -134,76 +131,109 @@ class compute_vrad_pbp:
             # read data from path
             else:
 
-                # read CSV file
-                df = pd.read_csv(self.spec["files"][i])
-                
-                # get flux and flux error if same wavelength grid
-                if self.spec["same_wave_grid"]:
-                    flux_val   = df["flux_val"].to_numpy()
-                    flux_err   = df["flux_err"].to_numpy()
-                
-                # interpolate flux and flux error on reference wavelength grid
-                else:
-                    wave_val_i = df["wave_val"].to_numpy()
-                    flux_val_i = df["flux_val"].to_numpy()
-                    flux_err_i = df["flux_err"].to_numpy()
-                    flux_val   = interp1d(wave_val_i, flux_val_i, kind="cubic", bounds_error=False)(wave_val)
-                    flux_err   = interp1d(wave_val_i, flux_err_i, kind="cubic", bounds_error=False)(wave_val)
+                # read CSV files
+                if self.spec["extension"] == "csv":
+
+                    # read CSV file
+                    df = pd.read_csv(self.spec["files"][i])
+                    
+                    # get flux and flux error if same wavelength grid
+                    if self.spec["same_wave_grid"]:
+                        flux_val   = df["flux_val"].to_numpy()
+                        flux_err   = df["flux_err"].to_numpy()
+                    
+                    # interpolate flux and flux error on reference wavelength grid
+                    else:
+                        wave_val_i = df["wave_val"].to_numpy()
+                        flux_val_i = df["flux_val"].to_numpy()
+                        flux_err_i = df["flux_err"].to_numpy()
+                        flux_val   = interp1d(wave_val_i, flux_val_i, kind="cubic", bounds_error=False)(wave_val)
+                        flux_err   = interp1d(wave_val_i, flux_err_i, kind="cubic", bounds_error=False)(wave_val)
+                    
+                # read NPZ files
+                if self.spec["extension"] == "npz":
+
+                    # read NPZ file
+                    file = np.load(self.spec["files"][i])
+                    
+                    # get flux and flux error if same wavelength grid
+                    if self.spec["same_wave_grid"]:
+                        flux_val   = file["flux_val"]
+                        flux_err   = file["flux_err"]
+                    
+                    # interpolate flux and flux error on reference wavelength grid
+                    else:
+                        self.time["time_val"][i] = float(file["time_val"])
+                        wave_val_i = file["wave_val"]
+                        flux_val_i = file["flux_val"]
+                        flux_err_i = file["flux_err"]
+                        flux_val   = interp1d(wave_val_i, flux_val_i, kind="cubic", bounds_error=False)(wave_val)
+                        flux_err   = interp1d(wave_val_i, flux_err_i, kind="cubic", bounds_error=False)(wave_val)
 
             # loop lines
             for j in range(Nline):
 
-                # loop temperature bins
-                for k in range(Ntemp):
+                # skip line if it does not satisfy criteria or overlaps with tellurics
+                if idx_crit[j]*idx_tell[j] == False:
 
-                    # initial guess
-                    vrad_val = 0
+                    # assign NaN to RV and RV error
+                    vrad_val_arr[i,j,:] = np.nan
+                    vrad_err_arr[i,j,:] = np.nan
+                
+                # continue if good line
+                else:
 
-                    # wavelength, flux and flux uncertainty for line
-                    wave_spec_line = wave_val[idx[j,k]]
-                    flux_spec_line = flux_val[idx[j,k]]
-                    ferr_spec_line = flux_err[idx[j,k]]
+                    # loop temperature bins
+                    for k in range(Ntemp):
 
-                    # try to template match
-                    try:
+                        # initial guess
+                        vrad_val = 0
 
-                        # loop iterations
-                        for _ in range(Niter):
+                        # wavelength, flux and flux uncertainty for line
+                        wave_spec_line = wave_val[idx[j,k]]
+                        flux_spec_line = flux_val[idx[j,k]]
+                        ferr_spec_line = flux_err[idx[j,k]]
 
-                            # single spectrum shift
-                            wave_spec_shift = wave_spec_line*(1-vrad_val/c)
-                            flux_spec_shift = flux_spec_line
-                            ferr_spec_shift = ferr_spec_line
-                            
-                            # master spectrum interpolate
-                            wave_mast_inter = wave_spec_shift
-                            flux_mast_inter = flux_func(wave_mast_inter)
-                            grad_mast_inter = grad_func(wave_mast_inter)
+                        # try to template match
+                        try:
 
-                            # select function of shifted spectrum and initial guess on parameters
-                            if scale:
-                                func_spec_shift = _spec_shift_scale
-                                p0              = (0,0,1)
-                            else:
-                                func_spec_shift = _spec_shift
-                                p0              = (0,)
+                            # loop iterations
+                            for _ in range(Niter):
 
-                            # solve for parameters
-                            param, _ = curve_fit(func_spec_shift, (wave_mast_inter, flux_mast_inter, grad_mast_inter), flux_spec_shift, sigma=ferr_spec_shift, p0=p0)
+                                # single spectrum shift
+                                wave_spec_shift = wave_spec_line*(1-vrad_val/c)
+                                flux_spec_shift = flux_spec_line
+                                ferr_spec_shift = ferr_spec_line
+                                
+                                # master spectrum interpolate
+                                wave_mast_inter = wave_spec_shift
+                                flux_mast_inter = flux_func(wave_mast_inter)
+                                grad_mast_inter = grad_func(wave_mast_inter)
 
-                            # compute RV and RV error
-                            vrad_val += param[0]*c
-                            vrad_err  = 1/np.sqrt(np.sum(1/(ferr_spec_shift/(grad_mast_inter*wave_mast_inter/c))**2))
+                                # select function of shifted spectrum and initial guess on parameters
+                                if scale:
+                                    func_spec_shift = _spec_shift_scale
+                                    p0              = (0,0,1)
+                                else:
+                                    func_spec_shift = _spec_shift
+                                    p0              = (0,)
 
-                        # save
-                        vrad_val_arr[i,j,k] = vrad_val
-                        vrad_err_arr[i,j,k] = vrad_err
-                    
-                    # if unsuccessful, assign NaN to RV and RV error
-                    except:
+                                # solve for parameters
+                                param, _ = curve_fit(func_spec_shift, (wave_mast_inter, flux_mast_inter, grad_mast_inter), flux_spec_shift, sigma=ferr_spec_shift, p0=p0)
 
-                        vrad_val_arr[i,j,k] = np.nan
-                        vrad_err_arr[i,j,k] = np.nan
+                                # compute RV and RV error
+                                vrad_val += param[0]*c
+                                vrad_err  = 1/np.sqrt(np.sum(1/(ferr_spec_shift/(grad_mast_inter*wave_mast_inter/c))**2))
+
+                            # save
+                            vrad_val_arr[i,j,k] = vrad_val
+                            vrad_err_arr[i,j,k] = vrad_err
+                        
+                        # if unsuccessful, assign NaN to RV and RV error
+                        except:
+
+                            vrad_val_arr[i,j,k] = np.nan
+                            vrad_err_arr[i,j,k] = np.nan
 
         # weighted average of valid lines
         vrad_val = np.zeros((Nspec,Ntemp))
@@ -213,9 +243,16 @@ class compute_vrad_pbp:
                 idx = ~np.isnan(vrad_val_arr[i,:,j]) & (np.abs(vrad_err_arr[i,:,j])>0)
                 vrad_val[i,j] = np.average(vrad_val_arr[i,idx,j], weights=1/vrad_err_arr[i,idx,j]**2)
                 vrad_err[i,j] = np.sqrt(1/np.sum(1/vrad_err_arr[i,idx,j]**2))
+        
+        # reduce dimensions if only one temperature bin
+        if Ntemp == 1:
+            vrad_val = vrad_val[:,0]
+            vrad_err = vrad_err[:,0]
+            vrad_val_arr = vrad_val_arr[:,:,0]
+            vrad_err_arr = vrad_err_arr[:,:,0]
 
         # save RV data
-        self.vrad = {"vrad_val": vrad_val, "vrad_err": vrad_err, "vrad_val_pbp": vrad_val_arr, "vrad_err_pbp": vrad_err_arr, "method": "PBP", "mask": mask_name}
+        self.vrad = {"vrad_val": vrad_val, "vrad_err": vrad_err, "vrad_val_pbp": vrad_val_arr, "vrad_err_pbp": vrad_err_arr, "bins": bins, "method": "PBP", "mask": mask_name}
 
         return None
 

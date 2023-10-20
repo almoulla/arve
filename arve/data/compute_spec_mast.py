@@ -45,21 +45,44 @@ class compute_spec_mast:
             # loop spectra
             for i in range(Nspec):
 
-                # read CSV file
-                df = pd.read_csv(self.spec["files"][i])
-                
-                # get flux and flux error if same wavelength grid
-                if self.spec["same_wave_grid"]:
-                    flux_val   = df["flux_val"].to_numpy()
-                    flux_err   = df["flux_err"].to_numpy()
-                
-                # interpolate flux and flux error on reference wavelength grid
-                else:
-                    wave_val_i = df["wave_val"].to_numpy()
-                    flux_val_i = df["flux_val"].to_numpy()
-                    flux_err_i = df["flux_err"].to_numpy()
-                    flux_val   = interp1d(wave_val_i, flux_val_i, kind="cubic", bounds_error=False)(wave_val)
-                    flux_err   = interp1d(wave_val_i, flux_err_i, kind="cubic", bounds_error=False)(wave_val)
+                # read CSV files
+                if self.spec["extension"] == "csv":
+
+                    # read CSV file
+                    df = pd.read_csv(self.spec["files"][i])
+                    
+                    # get flux and flux error if same wavelength grid
+                    if self.spec["same_wave_grid"]:
+                        flux_val   = df["flux_val"].to_numpy()
+                        flux_err   = df["flux_err"].to_numpy()
+                    
+                    # interpolate flux and flux error on reference wavelength grid
+                    else:
+                        wave_val_i = df["wave_val"].to_numpy()
+                        flux_val_i = df["flux_val"].to_numpy()
+                        flux_err_i = df["flux_err"].to_numpy()
+                        flux_val   = interp1d(wave_val_i, flux_val_i, kind="cubic", bounds_error=False)(wave_val)
+                        flux_err   = interp1d(wave_val_i, flux_err_i, kind="cubic", bounds_error=False)(wave_val)
+                    
+                # read NPZ files
+                if self.spec["extension"] == "npz":
+
+                    # read NPZ file
+                    file = np.load(self.spec["files"][i])
+                    
+                    # get flux and flux error if same wavelength grid
+                    if self.spec["same_wave_grid"]:
+                        flux_val   = file["flux_val"]
+                        flux_err   = file["flux_err"]
+                    
+                    # interpolate flux and flux error on reference wavelength grid
+                    else:
+                        self.time["time_val"][i] = float(file["time_val"])
+                        wave_val_i = file["wave_val"]
+                        flux_val_i = file["flux_val"]
+                        flux_err_i = file["flux_err"]
+                        flux_val   = interp1d(wave_val_i, flux_val_i, kind="cubic", bounds_error=False)(wave_val)
+                        flux_err   = interp1d(wave_val_i, flux_err_i, kind="cubic", bounds_error=False)(wave_val)
                 
                 # master spectrum
                 if i == 0:

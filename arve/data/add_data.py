@@ -1,4 +1,5 @@
 import glob
+import numpy  as np
 import pandas as pd
 
 class add_data:
@@ -14,6 +15,7 @@ class add_data:
         resolution    :int =None,
         medium        :str="vac",
         path          :str= None,
+        extension     :str= None,
         compression   :str= None,
         same_wave_grid:bool=False
         ) -> None:
@@ -37,7 +39,9 @@ class add_data:
         :type medium: str, optional
         :param path: path to spectra which must be stored in CSV files, defaults to None
         :type path: str, optional
-        :param compression: extension ('zip', 'gzip', etc) if the CSV files are compressed, defaults to None
+        :param extension: extension ('csv' or 'npz'), defaults to None
+        :type extension: str, optional
+        :param compression: compression ('zip', 'gzip', etc) if the CSV files are compressed, defaults to None
         :type compression: str, optional
         :param same_wave_grid: all spectra already on the same wavelength grid, defaults to False
         :type same_wave_grid: bool, optional
@@ -49,23 +53,37 @@ class add_data:
         if path is not None:
             
             # path to CSV files
-            path_csv = path+'**/*.csv'
-
+            if extension == "csv":
+                path_ext = path+"**/*.csv"
+            
+            # path to npz files
+            if extension == "npz":
+                path_ext = path+"**/*.npz"
+            
             # compressed extension
             if compression is not None:
-                path_csv += '.'+compression
+                path_ext += "."+compression
             
             # search files
-            files = glob.glob(path_csv, recursive=True)
+            files = glob.glob(path_ext, recursive=True)
             files = sorted(files)
 
             # add first spectrum as reference
-            df       = pd.read_csv(files[0])
-            wave_val = df["wave_val"].to_numpy()
-            flux_val = df["flux_val"].to_numpy()
-            flux_val = flux_val.reshape(1,len(flux_val))
-            flux_err = df["flux_err"].to_numpy()
-            flux_err = flux_err.reshape(1,len(flux_err))
+            if extension == "csv":
+                df       = pd.read_csv(files[0])
+                wave_val = df["wave_val"].to_numpy()
+                flux_val = df["flux_val"].to_numpy()
+                flux_val = flux_val.reshape(1,len(flux_val))
+                flux_err = df["flux_err"].to_numpy()
+                flux_err = flux_err.reshape(1,len(flux_err))
+            if extension == "npz":
+                file     = np.load(files[0])
+                time_val = np.zeros(len(files))
+                wave_val = file["wave_val"]
+                flux_val = file["flux_val"]
+                flux_val = flux_val.reshape(1,len(flux_val))
+                flux_err = file["flux_err"]
+                flux_err = flux_err.reshape(1,len(flux_err))
         
         else:
 
@@ -82,6 +100,7 @@ class add_data:
                      "resolution"    : resolution,
                      "medium"        : medium,
                      "path"          : path,
+                     "extension"     : extension,
                      "same_wave_grid": same_wave_grid,
                      "files"         : files}
         
