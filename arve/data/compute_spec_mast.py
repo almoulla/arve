@@ -41,6 +41,8 @@ class compute_spec_mast:
 
             # nr. of spectra
             Nspec = len(self.spec["files"])
+            if Nspec > 100:
+                Nspec = 100
 
             # loop spectra
             for i in range(Nspec):
