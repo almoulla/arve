@@ -23,6 +23,9 @@ class get_aux_data:
         resolution = self.spec["resolution"]
         medium     = self.spec["medium"]
 
+        # read systematic velocity
+        vrad_sys = self.arve.star.stellar_parameters["vrad_sys"]
+
         # path to auxiliary data
         path_aux_data = pkg_resources.resource_filename("arve", "aux_data/")
 
@@ -72,9 +75,9 @@ class get_aux_data:
             spec["flux"] = _convolve_gaussian(spec.wave.to_numpy(), spec.flux.to_numpy(), resolution)
 
         # read tellurics
-        tell     = pd.read_csv(path_aux_data+"tellurics/TELL.csv.zip")
-        tell["wave_l"] = self.arve.functions.doppler_shift(tell["wave_l"], -self.arve.star.stellar_parameters["vrad_sys"])
-        tell["wave_r"] = self.arve.functions.doppler_shift(tell["wave_r"], -self.arve.star.stellar_parameters["vrad_sys"])
+        tell           = pd.read_csv(path_aux_data+"tellurics/TELL.csv.zip")
+        tell["wave_l"] = self.arve.functions.doppler_shift(wave=tell["wave_l"], v=-vrad_sys)
+        tell["wave_r"] = self.arve.functions.doppler_shift(wave=tell["wave_r"], v=-vrad_sys)
         if medium == "air":
             tell["wave_l"] = self.arve.functions.convert_vac_to_air(tell["wave_l"])
             tell["wave_r"] = self.arve.functions.convert_vac_to_air(tell["wave_r"])

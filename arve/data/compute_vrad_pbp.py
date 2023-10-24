@@ -33,6 +33,7 @@ class compute_vrad_pbp:
         temp                         =  self.aux_data["spec"]["temp"]
         if self.spec["path"] is None:
             flux_val_arr, flux_err_arr = [self.spec[key] for key in ["flux_val", "flux_err"]]
+        vrad_sys = self.arve.star.stellar_parameters["vrad_sys"]
 
         # master spectrum gradient
         mast_grad_val = np.gradient(mast_flux_val)/np.gradient(mast_wave_val)
@@ -145,6 +146,7 @@ class compute_vrad_pbp:
                     # interpolate flux and flux error on reference wavelength grid
                     else:
                         wave_val_i = df["wave_val"].to_numpy()
+                        wave_val_i = self.arve.functions.doppler_shift(wave=wave_val_i, v=-vrad_sys)
                         flux_val_i = df["flux_val"].to_numpy()
                         flux_err_i = df["flux_err"].to_numpy()
                         flux_val   = interp1d(wave_val_i, flux_val_i, kind="cubic", bounds_error=False)(wave_val)
@@ -165,6 +167,7 @@ class compute_vrad_pbp:
                     else:
                         self.time["time_val"][i] = float(file["time_val"])
                         wave_val_i = file["wave_val"]
+                        wave_val_i = self.arve.functions.doppler_shift(wave=wave_val_i, v=-vrad_sys)
                         flux_val_i = file["flux_val"]
                         flux_err_i = file["flux_err"]
                         flux_val   = interp1d(wave_val_i, flux_val_i, kind="cubic", bounds_error=False)(wave_val)

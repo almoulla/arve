@@ -49,6 +49,9 @@ class add_data:
         :rtype: None
         """
         
+        # read data
+        vrad_sys = self.arve.star.stellar_parameters["vrad_sys"]
+
         # input from path
         if path is not None:
             
@@ -72,6 +75,7 @@ class add_data:
             if extension == "csv":
                 df       = pd.read_csv(files[0])
                 wave_val = df["wave_val"].to_numpy()
+                wave_val = self.arve.functions.doppler_shift(wave=wave_val, v=-vrad_sys)
                 flux_val = df["flux_val"].to_numpy()
                 flux_val = flux_val.reshape(1,len(flux_val))
                 flux_err = df["flux_err"].to_numpy()
@@ -80,6 +84,7 @@ class add_data:
                 file     = np.load(files[0])
                 time_val = np.zeros(len(files))
                 wave_val = file["wave_val"]
+                wave_val = self.arve.functions.doppler_shift(wave=wave_val, v=-vrad_sys)
                 flux_val = file["flux_val"]
                 flux_val = flux_val.reshape(1,len(flux_val))
                 flux_err = file["flux_err"]

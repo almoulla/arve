@@ -27,6 +27,7 @@ class compute_vrad_ccf:
         wave_val = self.spec["wave_val"]
         if self.spec["path"] is None:
             flux_val_arr, flux_err_arr = [self.spec[key] for key in ["flux_val", "flux_err"]]
+        vrad_sys = self.arve.star.stellar_parameters["vrad_sys"]
 
         # mask from VALD
         if mask_path is None:
@@ -151,6 +152,7 @@ class compute_vrad_ccf:
                         # interpolate flux and flux error on reference wavelength grid
                         else:
                             wave_val_i = df["wave_val"].to_numpy()
+                            wave_val_i = self.arve.functions.doppler_shift(wave=wave_val_i, v=-vrad_sys)
                             flux_val_i = df["flux_val"].to_numpy()
                             flux_err_i = df["flux_err"].to_numpy()
                             flux_val   = interp1d(wave_val_i, flux_val_i, kind="cubic", bounds_error=False)(wave_val)
@@ -171,6 +173,7 @@ class compute_vrad_ccf:
                         else:
                             self.time["time_val"][i] = float(file["time_val"])
                             wave_val_i = file["wave_val"]
+                            wave_val_i = self.arve.functions.doppler_shift(wave=wave_val_i, v=-vrad_sys)
                             flux_val_i = file["flux_val"]
                             flux_err_i = file["flux_err"]
                             flux_val   = interp1d(wave_val_i, flux_val_i, kind="cubic", bounds_error=False)(wave_val)

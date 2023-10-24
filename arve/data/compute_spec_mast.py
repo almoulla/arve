@@ -15,6 +15,9 @@ class compute_spec_mast:
         :rtype: None
         """
 
+        # read data
+        vrad_sys = self.arve.star.stellar_parameters["vrad_sys"]
+
         # read data from input
         if self.spec["path"] is None:
 
@@ -61,6 +64,7 @@ class compute_spec_mast:
                     # interpolate flux and flux error on reference wavelength grid
                     else:
                         wave_val_i = df["wave_val"].to_numpy()
+                        wave_val_i = self.arve.functions.doppler_shift(wave=wave_val_i, v=-vrad_sys)
                         flux_val_i = df["flux_val"].to_numpy()
                         flux_err_i = df["flux_err"].to_numpy()
                         flux_val   = interp1d(wave_val_i, flux_val_i, kind="cubic", bounds_error=False)(wave_val)
@@ -81,6 +85,7 @@ class compute_spec_mast:
                     else:
                         self.time["time_val"][i] = float(file["time_val"])
                         wave_val_i = file["wave_val"]
+                        wave_val_i = self.arve.functions.doppler_shift(wave=wave_val_i, v=-vrad_sys)
                         flux_val_i = file["flux_val"]
                         flux_err_i = file["flux_err"]
                         flux_val   = interp1d(wave_val_i, flux_val_i, kind="cubic", bounds_error=False)(wave_val)
