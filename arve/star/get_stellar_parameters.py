@@ -11,14 +11,16 @@ class get_stellar_parameters:
         """
 
         # initiate dictionarty with stellar parameters
-        self.stellar_parameters = {}
-
+        if self.stellar_parameters is None:
+            self.stellar_parameters = {}
+        
         # Sun
         if self.target == "Sun":
 
             # save stellar parameters
             self.stellar_parameters["sptype"  ] = "G2"
             self.stellar_parameters["vrad_sys"] = 0.0
+            self.stellar_parameters["berv_max"] = 1.0
             self.stellar_parameters["Teff"    ] = 5770
             self.stellar_parameters["logg"    ] = 4.4
             self.stellar_parameters["Fe_H"    ] = 0.0
@@ -29,12 +31,24 @@ class get_stellar_parameters:
         # other stars
         else:
 
-            # get spectral type from query
-            simbad = Simbad()
-            simbad.add_votable_fields("sptype"  )
-            simbad.add_votable_fields("velocity")
-            self.stellar_parameters["sptype"  ] = simbad.query_object(self.target)["SP_TYPE"   ][0][:2]
-            self.stellar_parameters["vrad_sys"] = simbad.query_object(self.target)["RVZ_RADVEL"][0]
+            # specific target
+            if self.target is not None:
+
+                # get spectral type and systematic velocity from query
+                simbad = Simbad()
+                simbad.add_votable_fields("sptype"  )
+                simbad.add_votable_fields("velocity")
+                self.stellar_parameters["sptype"  ] = simbad.query_object(self.target)["SP_TYPE"   ][0][:2]
+                self.stellar_parameters["vrad_sys"] = simbad.query_object(self.target)["RVZ_RADVEL"][0]
+
+            # specific spectral type
+            else:
+
+                # set systematic velocity to zero
+                self.stellar_parameters["vrad_sys"] = 0.0
+
+            # maximum BERV
+            self.stellar_parameters["berv_max"] = 30.0
 
             # convert spectral types to numbers
             sptype_num       =  self.arve.functions.sptype_to_num(sptype=self.stellar_parameters["sptype"])

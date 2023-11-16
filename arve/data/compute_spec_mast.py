@@ -1,5 +1,4 @@
 import numpy             as     np
-import pandas            as     pd
 from   scipy.interpolate import interp1d
 import warnings
 warnings.filterwarnings("ignore")
@@ -16,31 +15,23 @@ class compute_spec_mast:
         """
 
         # read data
-        vrad_sys = self.arve.star.stellar_parameters["vrad_sys"]
+        wave_val = self.spec["wave_val"]
+        Nord     = self.spec["Nord"]
+        Npix     = self.spec["Npix"]
 
         # read data from input
         if self.spec["path"] is None:
 
             # read data
-            wave_val, flux_val, flux_err = [self.spec[key] for key in ["wave_val", "flux_val", "flux_err"]]
+            flux_val, flux_err = [self.spec[key] for key in ["flux_val", "flux_err"]]
 
             # master spectrum
-            mast_flux_val = np.average(flux_val, weights=1/flux_err**2, axis=0)
-            
-            # remove NaN
-            mast_flux_val[np.isnan(mast_flux_val)] = 0
-
-            # oversample
-            func_flux     = interp1d(wave_val, mast_flux_val, "cubic")
-            mast_wave_val = np.concatenate([np.linspace(wave_val[i], wave_val[i+1], ofac+1)[:ofac] for i in range(len(wave_val)-1)])
-            mast_wave_val = np.append(mast_wave_val, wave_val[-1])
-            mast_flux_val = func_flux(mast_wave_val)
+            mast_wave_val = wave_val
+            mast_flux_val = np.array([np.average(flux_val[:,i], weights=1/flux_err[:,i]**2, axis=0) for i in range(Nord)])
+            mast_flux_err = np.array([np.sqrt(1/np.sum(1/flux_err[:,i]**2, axis=0))                 for i in range(Nord)])
         
         # read data from path
         else:
-
-            # read data
-            wave_val = self.spec["wave_val"]
 
             # nr. of spectra
             Nspec = len(self.spec["files"])
@@ -50,67 +41,39 @@ class compute_spec_mast:
             # loop spectra
             for i in range(Nspec):
 
-                # read CSV files
-                if self.spec["extension"] == "csv":
-
-                    # read CSV file
-                    df = pd.read_csv(self.spec["files"][i])
-                    
-                    # get flux and flux error if same wavelength grid
-                    if self.spec["same_wave_grid"]:
-                        flux_val   = df["flux_val"].to_numpy()
-                        flux_err   = df["flux_err"].to_numpy()
-                    
-                    # interpolate flux and flux error on reference wavelength grid
-                    else:
-                        wave_val_i = df["wave_val"].to_numpy()
-                        wave_val_i = self.arve.functions.doppler_shift(wave=wave_val_i, v=-vrad_sys)
-                        flux_val_i = df["flux_val"].to_numpy()
-                        flux_err_i = df["flux_err"].to_numpy()
-                        flux_val   = interp1d(wave_val_i, flux_val_i, kind="cubic", bounds_error=False)(wave_val)
-                        flux_err   = interp1d(wave_val_i, flux_err_i, kind="cubic", bounds_error=False)(wave_val)
-                    
-                # read NPZ files
-                if self.spec["extension"] == "npz":
-
-                    # read NPZ file
-                    file = np.load(self.spec["files"][i])
-                    
-                    # get flux and flux error if same wavelength grid
-                    if self.spec["same_wave_grid"]:
-                        flux_val   = file["flux_val"]
-                        flux_err   = file["flux_err"]
-                    
-                    # interpolate flux and flux error on reference wavelength grid
-                    else:
-                        self.time["time_val"][i] = float(file["time_val"])
-                        wave_val_i = file["wave_val"]
-                        wave_val_i = self.arve.functions.doppler_shift(wave=wave_val_i, v=-vrad_sys)
-                        flux_val_i = file["flux_val"]
-                        flux_err_i = file["flux_err"]
-                        flux_val   = interp1d(wave_val_i, flux_val_i, kind="cubic", bounds_error=False)(wave_val)
-                        flux_err   = interp1d(wave_val_i, flux_err_i, kind="cubic", bounds_error=False)(wave_val)
+                # read spectrum
+                _, flux_val, flux_err = self.read_spec(i)
                 
                 # master spectrum
                 if i == 0:
+                    mast_wave_val = wave_val
                     mast_flux_val = flux_val
                     mast_flux_err = flux_err
                 else:
-                    flux_val_arr = np.array([mast_flux_val,flux_val])
-                    flux_err_arr = np.array([mast_flux_err,flux_err])
-                    mast_flux_val = np.average(flux_val_arr, weights=1/flux_err_arr**2, axis=0)
-                    mast_flux_err = np.sqrt(1/np.sum(1/flux_err_arr**2, axis=0))
+                    flux_val_arr  = np.array([mast_flux_val,flux_val])
+                    flux_err_arr  = np.array([mast_flux_err,flux_err])
+                    mast_flux_val = np.array([np.average(flux_val_arr[:,j], weights=1/flux_err_arr[:,j]**2, axis=0) for j in range(Nord)])
+                    mast_flux_err = np.array([np.sqrt(1/np.sum(1/flux_err_arr[:,j]**2, axis=0))                     for j in range(Nord)])
 
-            # remove NaN
-            mast_flux_val[np.isnan(mast_flux_val)] = 0
-            
-            # oversample
-            func_flux     = interp1d(wave_val, mast_flux_val, "cubic")
-            mast_wave_val = np.concatenate([np.linspace(wave_val[i], wave_val[i+1], ofac+1)[:ofac] for i in range(len(wave_val)-1)])
-            mast_wave_val = np.append(mast_wave_val, wave_val[-1])
-            mast_flux_val = func_flux(mast_wave_val)
+        # remove NaN
+        idx = np.isnan(mast_flux_val) | np.isnan(mast_flux_err)
+        mast_flux_val[idx] = 0
+        mast_flux_err[idx] = 0
+
+        # oversample
+        mast_wave_val_samp = np.zeros((Nord,Npix+(ofac-1)*(Npix-1)))
+        mast_flux_val_samp = np.zeros((Nord,Npix+(ofac-1)*(Npix-1)))
+        mast_flux_err_samp = np.zeros((Nord,Npix+(ofac-1)*(Npix-1)))
+        for i in range(Nord):
+            func_flux_val         = interp1d(mast_wave_val[i], mast_flux_val[i], "cubic")
+            func_flux_err         = interp1d(mast_wave_val[i], mast_flux_err[i], "cubic")
+            mast_wave_val_samp[i] = np.append(np.concatenate([np.linspace(mast_wave_val[i][j], mast_wave_val[i][j+1], ofac+1)[:ofac] for j in range(Npix-1)]), mast_wave_val[i][-1])
+            mast_flux_val_samp[i] = func_flux_val(mast_wave_val_samp[i])
+            mast_flux_err_samp[i] = func_flux_err(mast_wave_val_samp[i])
 
         # save spectral data
-        self.spec_mast = {"wave_val": mast_wave_val, "flux_val": mast_flux_val}
+        self.spec_mast = {"wave_val": mast_wave_val_samp,
+                          "flux_val": mast_flux_val_samp,
+                          "flux_err": mast_flux_err_samp}
 
         return None

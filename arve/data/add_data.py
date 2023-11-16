@@ -1,6 +1,5 @@
 import glob
-import numpy  as np
-import pandas as pd
+import numpy as np
 
 class add_data:
 
@@ -12,11 +11,13 @@ class add_data:
         wave_val      :list=None,
         flux_val      :list=None,
         flux_err      :list=None,
+        format        :str="s1d",
         resolution    :int =None,
         medium        :str="vac",
         path          :str= None,
-        extension     :str= None,
+        extension     :str="csv",
         compression   :str= None,
+        instrument    :str= None,
         same_wave_grid:bool=False
         ) -> None:
         """Add data.
@@ -33,16 +34,20 @@ class add_data:
         :type flux_val: list, optional
         :param flux_err: flux errors, defaults to None
         :type flux_err: list, optional
+        :param format: spectral format (S1D or S2D), defaults to "s1d"
+        :type format: str, optional
         :param resolution: instrumental resolution, defaults to None
         :type resolution: int, optional
         :param medium: medium, defaults to "vac"
         :type medium: str, optional
-        :param path: path to spectra which must be stored in CSV files, defaults to None
+        :param path: path to spectra which must be stored in CSV, NPZ or FITS files, defaults to None
         :type path: str, optional
-        :param extension: extension ('csv' or 'npz'), defaults to None
+        :param extension: extension (csv, npz or fits), defaults to "csv"
         :type extension: str, optional
-        :param compression: compression ('zip', 'gzip', etc) if the CSV files are compressed, defaults to None
+        :param compression: compression (zip, gzip, etc) if the CSV files are compressed, defaults to None
         :type compression: str, optional
+        :param instrument: instrument name if the spectra are in FITS files, defaults to None
+        :type instrument: str, optional
         :param same_wave_grid: all spectra already on the same wavelength grid, defaults to False
         :type same_wave_grid: bool, optional
         :return: None
@@ -52,18 +57,23 @@ class add_data:
         # read data
         vrad_sys = self.arve.star.stellar_parameters["vrad_sys"]
 
+        # input from keyword arguments
+        if path is None:
+
+            # shift wavelength grid to system restframe
+            if wave_val is not None:
+                wave_val = self.arve.functions.doppler_shift(wave=wave_val, v=-vrad_sys)
+
+            # None entry for files
+            files = None
+
         # input from path
         if path is not None:
             
-            # path to CSV files
-            if extension == "csv":
-                path_ext = path+"**/*.csv"
+            # path to files
+            path_ext = path+f"**/*.{extension}"
             
-            # path to npz files
-            if extension == "npz":
-                path_ext = path+"**/*.npz"
-            
-            # compressed extension
+            # path with compression
             if compression is not None:
                 path_ext += "."+compression
             
@@ -71,42 +81,54 @@ class add_data:
             files = glob.glob(path_ext, recursive=True)
             files = sorted(files)
 
-            # add first spectrum as reference
-            if extension == "csv":
-                df       = pd.read_csv(files[0])
-                wave_val = df["wave_val"].to_numpy()
-                wave_val = self.arve.functions.doppler_shift(wave=wave_val, v=-vrad_sys)
-                flux_val = df["flux_val"].to_numpy()
-                flux_val = flux_val.reshape(1,len(flux_val))
-                flux_err = df["flux_err"].to_numpy()
-                flux_err = flux_err.reshape(1,len(flux_err))
-            if extension == "npz":
-                file     = np.load(files[0])
-                time_val = np.zeros(len(files))
-                wave_val = file["wave_val"]
-                wave_val = self.arve.functions.doppler_shift(wave=wave_val, v=-vrad_sys)
-                flux_val = file["flux_val"]
-                flux_val = flux_val.reshape(1,len(flux_val))
-                flux_err = file["flux_err"]
-                flux_err = flux_err.reshape(1,len(flux_err))
-        
-        else:
-
-            # None entry for files
-            files = None
-
         # add dictionaries with data
-        self.time = {"time_val"      : time_val}
-        self.vrad = {"vrad_val"      : vrad_val,
-                     "vrad_err"      : vrad_err}
-        self.spec = {"wave_val"      : wave_val,
-                     "flux_val"      : flux_val,
-                     "flux_err"      : flux_err,
-                     "resolution"    : resolution,
-                     "medium"        : medium,
-                     "path"          : path,
-                     "extension"     : extension,
-                     "same_wave_grid": same_wave_grid,
-                     "files"         : files}
+        self.time = {
+            "time_val"      : time_val
+            }
+        self.vrad = {
+            "vrad_val"      : vrad_val,
+            "vrad_err"      : vrad_err
+            }
+        self.spec = {
+            "wave_val"      : wave_val,
+            "flux_val"      : flux_val,
+            "flux_err"      : flux_err,
+            "format"        : format,
+            "resolution"    : resolution,
+            "medium"        : medium,
+            "path"          : path,
+            "extension"     : extension,
+            "instrument"    : instrument,
+            "same_wave_grid": same_wave_grid,
+            "files"         : files
+            }
+
+        # if input from path, make special additions
+        if path is not None:
+
+            # if not provided, make time values an array with zeros to be populated
+            if time_val is None:
+                self.time["time_val"] = np.zeros(len(files))
+            
+            # read reference (0th) spectrum
+            wave_val, flux_val, flux_err = self.read_spec(0)
+
+            # reshape arrays
+            flux_val = flux_val.reshape(1,flux_val.shape[0],flux_val.shape[1])
+            flux_err = flux_err.reshape(1,flux_err.shape[0],flux_err.shape[1])
+
+            # add reference spectrum
+            self.spec["wave_val"] = wave_val
+            self.spec["flux_val"] = flux_val
+            self.spec["flux_err"] = flux_err
+
+        # add nr. of spectra, orders and pixels
+        if wave_val is not None:
+            if path is None:
+                self.spec["Nspec"] = flux_val.shape[0]
+            else:
+                self.spec["Nspec"] = len(files)
+            self.spec["Nord"] = wave_val.shape[0]
+            self.spec["Npix"] = wave_val.shape[1]
         
         return None

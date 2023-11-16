@@ -4,6 +4,7 @@ from .compute_vrad_ccf  import compute_vrad_ccf
 from .compute_vrad_lbl  import compute_vrad_lbl
 from .compute_vrad_pbp  import compute_vrad_pbp
 from .get_aux_data      import get_aux_data
+from .read_spec         import read_spec
 
 from typing import Optional
 
@@ -13,7 +14,8 @@ class Data(
     compute_vrad_ccf,
     compute_vrad_lbl,
     compute_vrad_pbp,
-    get_aux_data
+    get_aux_data,
+    read_spec
     ):
     """ARVE Data sub-class.
     """

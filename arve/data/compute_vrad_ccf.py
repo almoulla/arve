@@ -6,7 +6,7 @@ from   tqdm              import tqdm
 
 class compute_vrad_ccf:
 
-    def compute_vrad_ccf(self, mask_path:str=None, weight:str=None, criteria:list=None, exclude_tellurics=True, vgrid:list=[-20,20,0.25]) -> None:
+    def compute_vrad_ccf(self, weight:str=None, criteria:list=None, exclude_tellurics=True, vgrid:list=None) -> None:
         """Compute radial velocities (RVs) from spectral data.
 
         :param mask_path: path to line mask (must be a CSV file where the wavelength column is "wave"), defaults to None
@@ -17,7 +17,7 @@ class compute_vrad_ccf:
         :type criteria: list, optional
         :param exclude_tellurics: exclude telluric bands, defaults to True
         :type exclude_tellurics: bool, optional
-        :param vgrid: velocity grid, in the format [start,stop,step] and in units of km/s, on which to evaluate the CCF, defaults to [-20,20,0.25]
+        :param vgrid: velocity grid, in the format [start,stop,step] and in units of km/s, on which to evaluate the CCF, defaults to None
         :type vgrid: list, optional
         :return: None
         :rtype: None
@@ -25,195 +25,202 @@ class compute_vrad_ccf:
 
         # read data
         wave_val = self.spec["wave_val"]
-        if self.spec["path"] is None:
-            flux_val_arr, flux_err_arr = [self.spec[key] for key in ["flux_val", "flux_err"]]
-        vrad_sys = self.arve.star.stellar_parameters["vrad_sys"]
+        Nord     = self.spec["Nord"]
 
-        # mask from VALD
-        if mask_path is None:
+        # read constants
+        c = self.arve.functions.constants["c"]
 
-            # read mask and mask name
-            mask      = self.aux_data["mask"]
-            mask_name = self.aux_data["name"]
-        
-        # provided mask
-        else:
+        # read mask
+        mask = self.aux_data["mask"]
 
-            # read mask and mask name
-            mask      = pd.read_csv(mask_path)
-            mask_name = mask_path.split("/")[-1]
-
-        # central wavelengths
-        wc = np.array(mask["wave"])
+        # central wavelength
+        wc = np.zeros(Nord, dtype=object)
+        for i in range(Nord):
+            wc[i] = np.array(mask[i]["wave"])
 
         # weights
-        if weight is None:
-            w = np.ones_like(wc)
-        else:
-            w = np.array(mask[weight])
-
-        # keep mask lines which satisfy criteria
-        if criteria is not None:
-            idx = np.ones_like(wc, dtype=bool)
-            for i in range(len(criteria)):
-                crit = np.array(mask["crit_"+criteria[i]])
-                idx *= crit
-            wc  = wc[idx]
-            w   = w [idx]
+        w = np.zeros(Nord, dtype=object)
+        for i in range(Nord):
+            if weight is None:
+                w[i] = np.ones(len(mask[i]))
+            else:
+                w[i] = np.array(mask[i][weight])
 
         # exclude tellurics
         if exclude_tellurics:
+            if criteria is None:
+                criteria = ["tell"]
+            else:
+                criteria = criteria.append("tell")
 
-            # read telluric bands
-            tell      = self.aux_data["tell"]
-            wave_l    = np.array(tell["wave_l"])
-            wave_r    = np.array(tell["wave_r"])
-            wave_band = np.array([wave_l,wave_r]).T
-
-            # keep lines outside of bands
-            idx = np.sum([(wc > wave_band[i,0]) & (wc < wave_band[i,1]) for i in range(len(wave_band))], axis=0).astype(bool) == False
-            wc  = wc[idx]
-            w   = w [idx]
+        # keep mask lines which satisfy criteria
+        if criteria is not None:
+            for i in range(Nord):
+                idx = np.ones_like(wc[i], dtype=bool)
+                for j in range(len(criteria)):
+                    crit = np.array(mask[i]["crit_"+criteria[j]])
+                    idx *= crit
+                wc[i] = wc[i][idx]
+                w [i] = w [i][idx]
 
         # RV shifts
-        vrads = np.arange(vgrid[0],vgrid[1]+vgrid[2]/2,vgrid[2])
+        if vgrid is None:
+            wave_val_flat = np.concatenate(wave_val)
+            vrads_start   = -20
+            vrads_stop    =  20
+            vrads_step    = np.nanmedian(np.diff(wave_val_flat)/wave_val_flat[:-1])*c
+            vrads         = np.arange(vrads_start, vrads_stop, vrads_step)
+        else:
+            vrads         = np.arange(vgrid[0],vgrid[1]+vgrid[2]/2,vgrid[2])
 
         # keep mask lines within spectrum overlap
-        idx = (self.arve.functions.doppler_shift(wave=wc, v=min(vrads)) > min(wave_val)) & \
-              (self.arve.functions.doppler_shift(wave=wc, v=max(vrads)) < max(wave_val))
-        wc  = wc[idx]
-        w   = w [idx]
+        for i in range(Nord):
+            idx = (self.arve.functions.doppler_shift(wave=wc[i], v=np.min(vrads)) > np.min(wave_val[i])) & \
+                  (self.arve.functions.doppler_shift(wave=wc[i], v=np.max(vrads)) < np.max(wave_val[i]))
+            wc[i] = wc[i][idx]
+            w [i] = w [i][idx]
 
         # normalize weights
-        w = w/np.sum(w)
+        for i in range(Nord):
+            w[i] = w[i]/np.sum(w[i])
         
         # nr. of spectra, RV shifts and lines
         if self.spec["path"] is None:
-            Nspec = len(flux_val_arr)
+            Nspec = len(self.spec["flux_val"])
         else:
             Nspec = len(self.spec["files"])
         Nvrad = len(vrads)
-        Nline = len(wc)
 
         # empty arrays for indices
-        ir = np.zeros((Nvrad,Nline), dtype=int)
-        il = np.zeros((Nvrad,Nline), dtype=int)
+        ir = np.zeros((Nord,Nvrad), dtype=object)
+        il = np.zeros((Nord,Nvrad), dtype=object)
 
         # empty arrays for fractions
-        fr = np.zeros((Nvrad,Nline))
-        fl = np.zeros((Nvrad,Nline))
+        fr = np.zeros((Nord,Nvrad), dtype=object)
+        fl = np.zeros((Nord,Nvrad), dtype=object)
 
-        # loop RV shifts
-        for i in range(Nvrad):
+        # loop spectral orders
+        for i in range(Nord):
 
-            # shifted central wavelengths
-            wc_shift = self.arve.functions.doppler_shift(wave=wc, v=vrads[i])
+            # loop RV shifts
+            for j in range(Nvrad):
 
-            # right and left indices
-            ir[i] = np.searchsorted(wave_val, wc_shift, side="right")
-            il[i] = ir[i] - 1
+                # shifted central wavelengths
+                wc_shift = self.arve.functions.doppler_shift(wave=wc[i], v=vrads[j])
 
-            # right and left fractions
-            fr[i] = (wc_shift-wave_val[il[i]])/(wave_val[ir[i]]-wave_val[il[i]])
-            fl[i] = 1 - fr[i]
+                # right and left indices
+                ir[i,j] = np.searchsorted(wave_val[i], wc_shift, side="right")
+                il[i,j] = ir[i,j] - 1
 
-        # empty arrays for RV values and errors
-        vrad_val = np.zeros(Nspec)*np.nan
-        vrad_err = np.zeros(Nspec)*np.nan
+                # right and left fractions
+                fr[i,j] = (wc_shift-wave_val[i][il[i,j]])/(wave_val[i][ir[i,j]]-wave_val[i][il[i,j]])
+                fl[i,j] = 1 - fr[i,j]
 
-        # empty arrays for FWHM values and errors
-        fwhm_val = np.zeros(Nspec)*np.nan
+        # empty arrays for CCF values and errors
+        ccf_val = np.zeros((Nspec,Nord+1,Nvrad))
+        ccf_err = np.zeros((Nspec,Nord+1,Nvrad))
+
+        # empty arrays for CCF moments
+        vrad_val_arr = np.zeros((Nspec,Nord+1))*np.nan
+        vrad_err_arr = np.zeros((Nspec,Nord+1))*np.nan
+        fwhm_val_arr = np.zeros((Nspec,Nord+1))*np.nan
+        fwhm_err_arr = np.zeros((Nspec,Nord+1))*np.nan
 
         # loop spectra
         print("Analyzed spectra:")
         for i in tqdm(range(Nspec)):
 
-            try:
+            # read spectrum
+            _, flux_val, flux_err = self.read_spec(i)
 
-                # read data from input
-                if self.spec["path"] is None:
-                    flux_val = flux_val_arr[i]
-                    flux_err = flux_err_arr[i]
-                
-                # read data from path
-                else:
+            # loop orders
+            for j in range(Nord+1):
 
-                    # read CSV files
-                    if self.spec["extension"] == "csv":
+                try:
 
-                        # read CSV file
-                        df = pd.read_csv(self.spec["files"][i])
-                        
-                        # get flux and flux error if same wavelength grid
-                        if self.spec["same_wave_grid"]:
-                            flux_val   = df["flux_val"].to_numpy()
-                            flux_err   = df["flux_err"].to_numpy()
-                        
-                        # interpolate flux and flux error on reference wavelength grid
-                        else:
-                            wave_val_i = df["wave_val"].to_numpy()
-                            wave_val_i = self.arve.functions.doppler_shift(wave=wave_val_i, v=-vrad_sys)
-                            flux_val_i = df["flux_val"].to_numpy()
-                            flux_err_i = df["flux_err"].to_numpy()
-                            flux_val   = interp1d(wave_val_i, flux_val_i, kind="cubic", bounds_error=False)(wave_val)
-                            flux_err   = interp1d(wave_val_i, flux_err_i, kind="cubic", bounds_error=False)(wave_val)
-                        
-                    # read NPZ files
-                    if self.spec["extension"] == "npz":
+                    # single order
+                    if j < Nord:
 
-                        # read NPZ file
-                        file = np.load(self.spec["files"][i])
-                        
-                        # get flux and flux error if same wavelength grid
-                        if self.spec["same_wave_grid"]:
-                            flux_val   = file["flux_val"]
-                            flux_err   = file["flux_err"]
-                        
-                        # interpolate flux and flux error on reference wavelength grid
-                        else:
-                            self.time["time_val"][i] = float(file["time_val"])
-                            wave_val_i = file["wave_val"]
-                            wave_val_i = self.arve.functions.doppler_shift(wave=wave_val_i, v=-vrad_sys)
-                            flux_val_i = file["flux_val"]
-                            flux_err_i = file["flux_err"]
-                            flux_val   = interp1d(wave_val_i, flux_val_i, kind="cubic", bounds_error=False)(wave_val)
-                            flux_err   = interp1d(wave_val_i, flux_err_i, kind="cubic", bounds_error=False)(wave_val)
+                        # loop RV shifts
+                        for k in range(Nvrad):
 
-                # empty arrays for CCF values and errors
-                ccf_val = np.zeros(Nvrad)
-                ccf_err = np.zeros(Nvrad)
+                            # CCF value and error
+                            ccf_val[i,j,k] = np.nansum((flux_val[j][il[j,k]]   *fl[j,k]+flux_val[j][ir[j,k]]   *fr[j,k])*w[j]   )
+                            ccf_err[i,j,k] = np.nansum((flux_err[j][il[j,k]]**2*fl[j,k]+flux_err[j][ir[j,k]]**2*fr[j,k])*w[j]**2)**(1/2)
 
-                # loop RV shifts
-                for j in range(Nvrad):
+                    # sum of all orders
+                    else:
 
-                    # CCF value and error
-                    ccf_val[j] = np.nansum((flux_val[il[j]]   *fl[j]+flux_val[ir[j]]   *fr[j])*w   )
-                    ccf_err[j] = np.nansum((flux_err[il[j]]**2*fl[j]+flux_err[ir[j]]**2*fr[j])*w**2)**(1/2)
+                        # order-summed CCF values and errors
+                        ccf_val[i,j] = np.nansum(ccf_val[i], axis=0)
+                        ccf_err[i,j] = np.sqrt(np.sum(ccf_err[i]**2, axis=0))
 
-                # initial guess on Gaussian parameters
-                i_min = np.argmin(ccf_val)
-                i_max = np.argmax(ccf_val)
-                C0 = ccf_val[i_max]
-                a0 = 1-ccf_val[i_min]/C0
-                b0 = vrads[i_min]
-                c0 = (b0-interp1d(ccf_val[:i_min], vrads[:i_min], kind="cubic")((ccf_val[i_min]+ccf_val[i_max])/2))*2
-                p0 = (C0, a0, b0, c0)
+                    # initial guess on Gaussian parameters
+                    i_min = np.argmin(ccf_val[i,j])
+                    i_max = np.argmax(ccf_val[i,j])
+                    C0 = ccf_val[i,j,i_max]
+                    a0 = 1-ccf_val[i,j,i_min]/C0
+                    b0 = vrads[i_min]
+                    c0 = (b0-interp1d(ccf_val[i,j,:i_min], vrads[:i_min], kind="cubic")((ccf_val[i,j,i_min]+ccf_val[i,j,i_max])/2))*2
+                    p0 = (C0, a0, b0, c0)
 
-                # CCF parameters with fitted Gaussian
-                param, _ = curve_fit(self.arve.functions.inverted_gaussian, vrads, ccf_val, sigma=ccf_err, p0=p0)
+                    # CCF parameters with fitted Gaussian
+                    param, _ = curve_fit(self.arve.functions.inverted_gaussian, vrads, ccf_val[i,j], sigma=ccf_err[i,j], p0=p0)
 
-                # RV value and error
-                vrad_val[i] = param[2]
-                vrad_err[i] = 1/np.sqrt(np.sum(1/np.abs(ccf_err*np.gradient(vrads)/np.gradient(ccf_val))**2))
+                    # RV value and error
+                    vrad_val_arr[i,j] = param[2]
+                    vrad_err_arr[i,j] = 1/np.sqrt(np.sum(1/np.abs(ccf_err[i,j]*np.gradient(vrads)/np.gradient(ccf_val[i,j]))**2))
 
-                # FWHM value and error
-                fwhm_val[i] = param[3]
+                    # FWHM value and error
+                    fwhm_val_arr[i,j] = param[3]
+                    fwhm_err_arr[i,j] = vrad_err_arr[i,j]
             
-            except:
-                continue
+                except:
+                    continue
 
-        # save RV data
-        self.vrad = {"vrad_val": vrad_val, "vrad_err": vrad_err, "method": "CCF", "mask": mask_name}
-        self.ccf  = {"fwhm_val": fwhm_val}
+        # emtpty arrays for weighted average of spectral orders
+        vrad_val = np.zeros(Nspec)
+        vrad_err = np.zeros(Nspec)
+        fwhm_val = np.zeros(Nspec)
+        fwhm_err = np.zeros(Nspec)
+
+        # loop spectra
+        for i in range(Nspec):
+
+            # weighted average of RV
+            vrad_val[i], vrad_err[i] = _weighted_average(vrad_val_arr[i,:-1], vrad_err_arr[i,:-1])
+            
+            # weighted average of FWHM
+            fwhm_val[i], fwhm_err[i] = _weighted_average(fwhm_val_arr[i,:-1], fwhm_err_arr[i,:-1])
+
+        # save data
+        self.vrad = {
+            "vrad_val"    : vrad_val    ,
+            "vrad_err"    : vrad_err    ,
+            "vrad_val_ord": vrad_val_arr,
+            "vrad_err_ord": vrad_err_arr,
+            "method"      : "CCF"       ,
+            }
+        self.ccf  = {
+            "vrads"       : vrads       ,
+            "ccf_val"     : ccf_val     ,
+            "ccf_err"     : ccf_err     ,
+            "fwhm_val"    : fwhm_val    ,
+            "fwhm_err"    : fwhm_err    ,
+            "fwhm_val_ord": fwhm_val_arr,
+            "fwhm_err_ord": fwhm_err_arr,
+            }
 
         return None
+
+def _weighted_average(val_arr, err_arr):
+
+    idx = ~np.isnan(val_arr) & ~np.isnan(err_arr)
+    if np.sum(idx) > 0:
+        val_avg = np.average(val_arr[idx], weights=1/err_arr[idx]**2)
+        err_avg = np.sqrt(1/np.sum(1/err_arr[idx]**2))
+    else:
+        val_avg = np.nan
+        err_avg = np.nan
+
+    return val_avg, err_avg

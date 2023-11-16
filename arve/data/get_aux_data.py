@@ -2,29 +2,34 @@ import numpy                 as     np
 import os
 import pandas                as     pd
 import pkg_resources
+from   scipy                 import ndimage
 from   scipy.interpolate     import interp1d
 from   scipy.ndimage.filters import convolve
 
 class get_aux_data:
 
-    def get_aux_data(self) -> None:
+    def get_aux_data(self, path_mask:str=None) -> None:
         """Get auxiliary data.
 
+        :param path_mask: path to line mask (must be a CSV file where the wavelength column is "wave"), defaults to None
+        :type path_mask: str, optional
         :return: None
         :rtype: None
         """
         
-        # read wavelengh range
+        # read wavelengh values
         wave_val = self.spec["wave_val"]
-        wave_min = min(wave_val)
-        wave_max = max(wave_val)
 
         # read resolution and medium
         resolution = self.spec["resolution"]
         medium     = self.spec["medium"]
 
-        # read systematic velocity
+        # read systematic velocity and maximum BERV
         vrad_sys = self.arve.star.stellar_parameters["vrad_sys"]
+        berv_max = self.arve.star.stellar_parameters["berv_max"]
+
+        # read constants
+        c = self.arve.functions.constants["c"]
 
         # path to auxiliary data
         path_aux_data = pkg_resources.resource_filename("arve", "aux_data/")
@@ -45,15 +50,23 @@ class get_aux_data:
         # spectral type as number
         sptype_num       = self.arve.functions.sptype_to_num(sptype=self.arve.star.stellar_parameters["sptype"])
 
+        # read self-provided mask
+        if path_mask is not None:
+            mask      = pd.read_csv(path_mask)
+            mask_name = path_mask.split("/")[-1]
         # read closest mask
-        idx_mask = np.argmin(np.abs(sptype_num-sptype_num_masks))
-        mask     = pd.read_csv(path_aux_data+"masks/"+masks[idx_mask])
-        if medium == "air":
-            mask["wave"  ] = self.arve.functions.convert_vac_to_air(mask["wave"  ])
-            mask["wave_l"] = self.arve.functions.convert_vac_to_air(mask["wave_l"])
-            mask["wave_r"] = self.arve.functions.convert_vac_to_air(mask["wave_r"])
-        idx_wave = (mask.wave_l>=wave_min) & (mask.wave_r<=wave_max)
-        mask     = mask[idx_wave].reset_index(drop=True)
+        else:
+            idx_mask  = np.argmin(np.abs(sptype_num-sptype_num_masks))
+            mask      = pd.read_csv(path_aux_data+"masks/"+masks[idx_mask])
+            mask_name = masks[idx_mask]
+            if medium == "air":
+                mask["wave"  ] = self.arve.functions.convert_vac_to_air(mask["wave"  ])
+                mask["wave_l"] = self.arve.functions.convert_vac_to_air(mask["wave_l"])
+                mask["wave_r"] = self.arve.functions.convert_vac_to_air(mask["wave_r"])
+        mask_dict = {}
+        for i in range(self.spec["Nord"]):
+            idx_wave     = (mask.wave_l>=wave_val[i][0]) & (mask.wave_r<=wave_val[i][-1])
+            mask_dict[i] = mask[idx_wave].reset_index(drop=True)
 
         # read closest spec
         idx_spec = np.argmin(np.abs(sptype_num-sptype_num_specs))
@@ -64,37 +77,106 @@ class get_aux_data:
         spec.insert(0, "wave", wave)
 
         # interpolate spectrum
-        spec_new         = pd.DataFrame()
-        spec_new["wave"] = wave_val
-        spec_new["flux"] = interp1d(spec.wave, spec.flux, kind="cubic")(spec_new.wave)
-        spec_new["temp"] = interp1d(spec.wave, spec.temp, kind="cubic")(spec_new.wave)
-        spec             = spec_new
+        spec_wave = wave_val
+        spec_flux = np.array([interp1d(spec.wave, spec.flux, kind="cubic")(spec_wave[i]) for i in range(self.spec["Nord"])])
+        spec_temp = np.array([interp1d(spec.wave, spec.temp, kind="cubic")(spec_wave[i]) for i in range(self.spec["Nord"])])
+        spec_dict = {
+        "wave": spec_wave,
+        "flux": spec_flux,
+        "temp": spec_temp
+        }
 
         # convolve spectrum
         if resolution is not None:
             spec["flux"] = _convolve_gaussian(spec.wave.to_numpy(), spec.flux.to_numpy(), resolution)
 
-        # read tellurics
-        tell           = pd.read_csv(path_aux_data+"tellurics/TELL.csv.zip")
+        # find left and right index of lines
+        for i in range(self.spec["Nord"]):
+            mask_dict[i].insert(mask_dict[i].columns.get_loc("wave_l")+2, "wave_l_idx", np.searchsorted(spec_dict["wave"][i], mask_dict[i].wave_l))
+            mask_dict[i].insert(mask_dict[i].columns.get_loc("wave_r")+2, "wave_r_idx", np.searchsorted(spec_dict["wave"][i], mask_dict[i].wave_r))
+            mask_dict[i]["wave_l"    ] = spec_dict["wave"][i][mask_dict[i].wave_l_idx]
+            mask_dict[i]["wave_r"    ] = spec_dict["wave"][i][mask_dict[i].wave_r_idx]
+
+        # read telluric lines
+        tell = pd.read_csv(path_aux_data+"tellurics/TELL.csv.zip")
+        wc   = np.array(tell["wave"])
+
+        # wavelength window around telluric lines due to BERV
+        dwave = wc*berv_max/c
+
+        # left and right bounds of telluric lines
+        wl = wc-dwave
+        wr = wc+dwave
+
+        # label overlapping telluric lines
+        label_map, Nlabel = ndimage.label(wl[1:] < wr[:-1])
+
+        # empty arrays for left and right bounds of telluric bands
+        wave_l = np.zeros(Nlabel)
+        wave_r = np.zeros(Nlabel)
+
+        # loop labels
+        for i in range(Nlabel):
+
+            # find left- and rightmost edges of overlapping telluric lines
+            idx = np.where(label_map == i+1)[0]
+            wave_l[i] = wl[idx[ 0]  ]
+            wave_r[i] = wr[idx[-1]+1]
+            
+            # label last telluric line in each band
+            if idx[-1]+1 < len(label_map):
+                label_map[idx[-1]+1] = i+1
+
+        # nr. of single telluric lines
+        Nsingle = np.sum(label_map == 0)
+
+        # loop single telluric lines
+        for i in range(Nsingle):
+
+            # find index of single telluric line
+            idx = np.where(label_map == 0)[0][i]
+
+            # append telluric line bounds to list of telluric bands
+            wave_l = np.append(wave_l, wl[idx])
+            wave_r = np.append(wave_r, wr[idx])
+
+        # sort telluric bounds
+        idx = np.argsort(wave_l)
+        wave_l = wave_l[idx]
+        wave_r = wave_r[idx]
+
+        # create new telluric DataFrame with left and right edges of telluric bands
+        tell = pd.DataFrame()
+        tell["wave_l"] = wave_l
+        tell["wave_r"] = wave_r
+
+        # Doppler shift telluric bands with systematic velocity
         tell["wave_l"] = self.arve.functions.doppler_shift(wave=tell["wave_l"], v=-vrad_sys)
         tell["wave_r"] = self.arve.functions.doppler_shift(wave=tell["wave_r"], v=-vrad_sys)
+
+        # keep telluric bands which overlap with data
         if medium == "air":
             tell["wave_l"] = self.arve.functions.convert_vac_to_air(tell["wave_l"])
             tell["wave_r"] = self.arve.functions.convert_vac_to_air(tell["wave_r"])
-        idx_wave = (tell.wave_l>=wave_min) & (tell.wave_r<=wave_max)
-        tell     = tell[idx_wave].reset_index(drop=True)
-
-        # find left and right index of lines
-        mask.insert(mask.columns.get_loc("wave_l")+2, "wave_l_idx", np.searchsorted(spec.wave, mask.wave_l))
-        mask.insert(mask.columns.get_loc("wave_r")+2, "wave_r_idx", np.searchsorted(spec.wave, mask.wave_r))
-        mask["wave_l"    ] = spec.wave[mask.wave_l_idx].to_numpy()
-        mask["wave_r"    ] = spec.wave[mask.wave_r_idx].to_numpy()
+        tell_dict = {}
+        for i in range(self.spec["Nord"]):
+            idx_wave     = (tell.wave_l>=wave_val[i][-1]) | (tell.wave_r<=wave_val[i][0]) == False
+            tell_dict[i] = tell[idx_wave].reset_index(drop=True)
+            tell_dict[i]["wave_l"][tell_dict[i]["wave_l"]<wave_val[i][ 0]] = wave_val[i][ 0]
+            tell_dict[i]["wave_r"][tell_dict[i]["wave_r"]>wave_val[i][-1]] = wave_val[i][-1]
+        
+        # telluric criterion
+        for i in range(self.spec["Nord"]):
+            wave_l    = np.array(tell_dict[i]["wave_l"])
+            wave_r    = np.array(tell_dict[i]["wave_r"])
+            wave_band = np.array([wave_l,wave_r]).T
+            mask_dict[i]["crit_tell"] = np.sum([(mask_dict[i]["wave"] > wave_band[j,0]) & (mask_dict[i]["wave"] < wave_band[j,1]) for j in range(len(wave_band))], axis=0).astype(bool) == False
 
         # save
-        self.aux_data = {"name": masks[idx_mask],
-                         "mask": mask,
-                         "spec": spec,
-                         "tell": tell}
+        self.aux_data = {"name": mask_name,
+                         "mask": mask_dict,
+                         "spec": spec_dict,
+                         "tell": tell_dict}
 
         return None
 
