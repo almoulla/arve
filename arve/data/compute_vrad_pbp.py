@@ -1,3 +1,4 @@
+from   astropy.stats     import sigma_clip
 import numpy             as     np
 import pandas            as     pd
 from   scipy.interpolate import interp1d
@@ -74,7 +75,7 @@ class compute_vrad_pbp:
             if criteria is None:
                 criteria = ["tell"]
             else:
-                criteria = criteria.append("tell")
+                criteria.append("tell")
 
         # lines which satisfy criteria
         idx_crit = np.zeros(Nord, dtype=object)
@@ -112,8 +113,11 @@ class compute_vrad_pbp:
                     idx[i][j,k] = np.intersect1d(idx_line[i][j], idx_temp[i][k])
 
         # empty arrays for RV values and errors
-        vrad_val_arr = np.zeros((Nspec,Nord), dtype=object)
-        vrad_err_arr = np.zeros((Nspec,Nord), dtype=object)
+        vrad_val_arr = np.zeros(Nord, dtype=object)
+        vrad_err_arr = np.zeros(Nord, dtype=object)
+        for i in range(Nord):
+            vrad_val_arr[i] = np.zeros((Nline[i],Ntemp,Nspec))*np.nan
+            vrad_err_arr[i] = np.zeros((Nline[i],Ntemp,Nspec))*np.nan
 
         # loop spectra
         print("Analyzed spectra:")
@@ -124,10 +128,6 @@ class compute_vrad_pbp:
 
             # loop orders
             for j in range(Nord):
-
-                # emprt array for RV values and errors of current spectrum and order
-                vrad_val_arr[i,j] = np.zeros((Nline[j],Ntemp))*np.nan
-                vrad_err_arr[i,j] = np.zeros((Nline[j],Ntemp))*np.nan
 
                 # loop lines
                 for k in range(Nline[j]):
@@ -178,33 +178,57 @@ class compute_vrad_pbp:
                                     vrad_err  = 1/np.sqrt(np.sum(1/(ferr_spec_shift/(grad_mast_inter*wave_mast_inter/c))**2))
 
                                 # save
-                                vrad_val_arr[i,j][k,l] = vrad_val
-                                vrad_err_arr[i,j][k,l] = vrad_err
+                                vrad_val_arr[j][k,l,i] = vrad_val
+                                vrad_err_arr[j][k,l,i] = vrad_err
                             
                             # if unsuccessful, continue
                             except:
 
                                 continue
 
-        # weighted average of valid lines
-        vrad_val = np.zeros((Nspec,Nord,Ntemp))*np.nan
-        vrad_err = np.zeros((Nspec,Nord,Ntemp))*np.nan
+        # outlier rejection
+        for i in range(Nspec):
+            *_, clip_val_min, clip_val_max = sigma_clip(np.concatenate(vrad_val_arr)[:,:,i], maxiters=None, return_bounds=True)
+            *_, clip_err_min, clip_err_max = sigma_clip(np.concatenate(vrad_err_arr)[:,:,i], maxiters=None, return_bounds=True)
+            for j in range(Nord):
+                for k in range(Nline[j]):
+                    for l in range(Ntemp):
+                        if (vrad_val_arr[j][k,l,i] < clip_val_min) | (vrad_val_arr[j][k,l,i] > clip_val_max):
+                            vrad_val_arr[j][k,l,i] = np.nan
+                        if (vrad_err_arr[j][k,l,i] < clip_err_min) | (vrad_err_arr[j][k,l,i] > clip_err_max):
+                            vrad_err_arr[j][k,l,i] = np.nan
+
+        # weighted average of all valid lines per order
+        vrad_val_ord = np.zeros((Nspec,Nord,Ntemp))*np.nan
+        vrad_err_ord = np.zeros((Nspec,Nord,Ntemp))*np.nan
         for i in range(Nspec):
             for j in range(Nord):
                 for k in range(Ntemp):
-                    idx = ~np.isnan(vrad_val_arr[i,j][:,k]) & (np.abs(vrad_err_arr[i,j][:,k])>0)
+                    idx = ~np.isnan(vrad_val_arr[j][:,k,i]) & (np.abs(vrad_err_arr[j][:,k,i])>0)
                     if np.sum(idx) > 0:
-                        vrad_val[i,j,k] = np.average(vrad_val_arr[i,j][idx,k], weights=1/vrad_err_arr[i,j][idx,k]**2)
-                        vrad_err[i,j,k] = np.sqrt(1/np.sum(1/vrad_err_arr[i,j][idx,k]**2))
+                        vrad_val_ord[i,j,k] = np.average(vrad_val_arr[j][idx,k,i], weights=1/vrad_err_arr[j][idx,k,i]**2)
+                        vrad_err_ord[i,j,k] = np.sqrt(1/np.sum(1/vrad_err_arr[j][idx,k,i]**2))
+
+        # weighted average of all orders
+        vrad_val = np.zeros((Nspec,Ntemp))*np.nan
+        vrad_err = np.zeros((Nspec,Ntemp))*np.nan
+        for i in range(Nspec):
+            for j in range(Ntemp):
+                idx = ~np.isnan(vrad_val_ord[i,:,j]) & (np.abs(vrad_err_ord[i,:,j])>0)
+                if np.sum(idx) > 0:
+                    vrad_val[i,j] = np.average(vrad_val_ord[i,idx,j], weights=1/vrad_err_ord[i,idx,j]**2)
+                    vrad_err[i,j] = np.sqrt(1/np.sum(1/vrad_err_ord[i,idx,j]**2))
 
         # save RV data
         self.vrad = {
-            "vrad_val": vrad_val,
-            "vrad_err": vrad_err,
+            "vrad_val"    : vrad_val    ,
+            "vrad_err"    : vrad_err    ,
+            "vrad_val_ord": vrad_val_ord,
+            "vrad_err_ord": vrad_err_ord,
             "vrad_val_pbp": vrad_val_arr,
             "vrad_err_pbp": vrad_err_arr,
-            "bins": bins,
-            "method": "PBP",
+            "bins"        : bins        ,
+            "method"      : "PBP"       ,
             }
 
         return None

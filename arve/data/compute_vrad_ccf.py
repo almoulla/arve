@@ -51,7 +51,7 @@ class compute_vrad_ccf:
             if criteria is None:
                 criteria = ["tell"]
             else:
-                criteria = criteria.append("tell")
+                criteria.append("tell")
 
         # keep mask lines which satisfy criteria
         if criteria is not None:
@@ -152,8 +152,8 @@ class compute_vrad_ccf:
                     else:
 
                         # order-summed CCF values and errors
-                        ccf_val[i,j] = np.nansum(ccf_val[i], axis=0)
-                        ccf_err[i,j] = np.sqrt(np.sum(ccf_err[i]**2, axis=0))
+                        ccf_val[i,j] = np.nansum(ccf_val[i]   , axis=0)
+                        ccf_err[i,j] = np.nansum(ccf_err[i]**2, axis=0)**(1/2)
 
                     # initial guess on Gaussian parameters
                     i_min = np.argmin(ccf_val[i,j])
