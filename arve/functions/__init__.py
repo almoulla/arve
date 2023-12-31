@@ -3,6 +3,7 @@ from .convert_vac_to_air import convert_vac_to_air
 from .doppler_shift      import doppler_shift
 from .gls_periodogram    import gls_periodogram
 from .inverted_gaussian  import inverted_gaussian
+from .keplerian          import keplerian
 from .sptype_to_num      import sptype_to_num
 
 from typing import Optional
@@ -13,6 +14,7 @@ class Functions(
     doppler_shift,
     gls_periodogram,
     inverted_gaussian,
+    keplerian,
     sptype_to_num
     ):
     """ARVE Functions sub-class.

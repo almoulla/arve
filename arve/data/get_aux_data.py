@@ -5,14 +5,17 @@ import pkg_resources
 from   scipy                 import ndimage
 from   scipy.interpolate     import interp1d
 from   scipy.ndimage.filters import convolve
+from   scipy.signal          import argrelextrema
 
 class get_aux_data:
 
-    def get_aux_data(self, path_mask:str=None) -> None:
+    def get_aux_data(self, path_mask:str=None, tell_lim:float=0.99) -> None:
         """Get auxiliary data.
 
         :param path_mask: path to line mask (must be a CSV file where the wavelength column is "wave"), defaults to None
         :type path_mask: str, optional
+        :param tell_lim: telluric depth limit, defaults to 0.99
+        :type tell_lim: float, optional
         :return: None
         :rtype: None
         """
@@ -43,7 +46,6 @@ class get_aux_data:
         # search spec
         specs            = sorted(os.listdir(path_aux_data+"spectra/"))
         specs            = [spec for spec in specs if spec.endswith(".csv.zip")]
-        specs.remove("WAVE.csv.zip")
         sptype_specs     = [spec.split(".")[0] for spec in specs]
         sptype_num_specs = np.array([self.arve.functions.sptype_to_num(sptype=sptype) for sptype in sptype_specs])
 
@@ -68,13 +70,17 @@ class get_aux_data:
             idx_wave     = (mask.wave_l>=wave_val[i][0]) & (mask.wave_r<=wave_val[i][-1])
             mask_dict[i] = mask[idx_wave].reset_index(drop=True)
 
-        # read closest spec
+        # read closest spectrum
         idx_spec = np.argmin(np.abs(sptype_num-sptype_num_specs))
+        wave     = pd.read_csv(path_aux_data+"wavelengths/WAVE.csv.zip")["wave"]
         spec     = pd.read_csv(path_aux_data+"spectra/"+specs[idx_spec])
-        wave     = pd.read_csv(path_aux_data+"spectra/WAVE.csv.zip")["wave"]
         if medium == "air":
             wave = self.arve.functions.convert_vac_to_air(wave)
         spec.insert(0, "wave", wave)
+
+        # convolve spectrum
+        if resolution is not None:
+            spec["flux"] = _convolve_gaussian(spec.wave.to_numpy(), spec.flux.to_numpy(), resolution)
 
         # interpolate spectrum
         spec_wave = wave_val
@@ -86,20 +92,42 @@ class get_aux_data:
         "temp": spec_temp
         }
 
-        # convolve spectrum
-        if resolution is not None:
-            spec["flux"] = _convolve_gaussian(spec.wave.to_numpy(), spec.flux.to_numpy(), resolution)
-
         # find left and right index of lines
         for i in range(self.spec["Nord"]):
             mask_dict[i].insert(mask_dict[i].columns.get_loc("wave_l")+2, "wave_l_idx", np.searchsorted(spec_dict["wave"][i], mask_dict[i].wave_l))
             mask_dict[i].insert(mask_dict[i].columns.get_loc("wave_r")+2, "wave_r_idx", np.searchsorted(spec_dict["wave"][i], mask_dict[i].wave_r))
             mask_dict[i]["wave_l"    ] = spec_dict["wave"][i][mask_dict[i].wave_l_idx]
             mask_dict[i]["wave_r"    ] = spec_dict["wave"][i][mask_dict[i].wave_r_idx]
-
-        # read telluric lines
+        
+        # read telluric spectrum
+        wave = pd.read_csv(path_aux_data+"wavelengths/WAVE.csv.zip")["wave"]
         tell = pd.read_csv(path_aux_data+"tellurics/TELL.csv.zip")
-        wc   = np.array(tell["wave"])
+        if medium == "air":
+            wave = self.arve.functions.convert_vac_to_air(wave)
+        wave = self.arve.functions.doppler_shift(wave=wave, v=-vrad_sys)
+        tell.insert(0, "wave", wave)
+
+        # convolve telluric spectrum
+        if resolution is not None:
+            tell["flux"] = _convolve_gaussian(tell.wave.to_numpy(), tell.flux.to_numpy(), resolution)
+
+        # interpolate telluric spectrum
+        tell_wave = wave_val
+        tell_flux = np.array([interp1d(tell.wave, tell.flux, kind="cubic")(tell_wave[i]) for i in range(self.spec["Nord"])])
+        tell_dict = {
+        "wave": tell_wave,
+        "flux": tell_flux
+        }
+
+        # find telluric lines
+        tell_wave = np.array(tell["wave"])
+        tell_flux = np.array(tell["flux"])
+        idx = argrelextrema(tell_flux, np.less)[0]
+        wc  = tell_wave[idx]
+        fc  = tell_flux[idx]
+        idx = fc < tell_lim
+        wc  = wc[idx]
+        fc  = fc[idx]
 
         # wavelength window around telluric lines due to BERV
         dwave = wc*berv_max/c
@@ -146,29 +174,22 @@ class get_aux_data:
         wave_r = wave_r[idx]
 
         # create new telluric DataFrame with left and right edges of telluric bands
-        tell = pd.DataFrame()
-        tell["wave_l"] = wave_l
-        tell["wave_r"] = wave_r
-
-        # Doppler shift telluric bands with systematic velocity
-        tell["wave_l"] = self.arve.functions.doppler_shift(wave=tell["wave_l"], v=-vrad_sys)
-        tell["wave_r"] = self.arve.functions.doppler_shift(wave=tell["wave_r"], v=-vrad_sys)
+        band = pd.DataFrame()
+        band["wave_l"] = wave_l
+        band["wave_r"] = wave_r
 
         # keep telluric bands which overlap with data
-        if medium == "air":
-            tell["wave_l"] = self.arve.functions.convert_vac_to_air(tell["wave_l"])
-            tell["wave_r"] = self.arve.functions.convert_vac_to_air(tell["wave_r"])
-        tell_dict = {}
+        band_dict = {}
         for i in range(self.spec["Nord"]):
-            idx_wave     = (tell.wave_l>=wave_val[i][-1]) | (tell.wave_r<=wave_val[i][0]) == False
-            tell_dict[i] = tell[idx_wave].reset_index(drop=True)
-            tell_dict[i]["wave_l"][tell_dict[i]["wave_l"]<wave_val[i][ 0]] = wave_val[i][ 0]
-            tell_dict[i]["wave_r"][tell_dict[i]["wave_r"]>wave_val[i][-1]] = wave_val[i][-1]
+            idx_wave     = (band.wave_l>=wave_val[i][-1]) | (band.wave_r<=wave_val[i][0]) == False
+            band_dict[i] = band[idx_wave].reset_index(drop=True)
+            band_dict[i]["wave_l"][band_dict[i]["wave_l"]<wave_val[i][ 0]] = wave_val[i][ 0]
+            band_dict[i]["wave_r"][band_dict[i]["wave_r"]>wave_val[i][-1]] = wave_val[i][-1]
         
         # telluric criterion
         for i in range(self.spec["Nord"]):
-            wave_l    = np.array(tell_dict[i]["wave_l"])
-            wave_r    = np.array(tell_dict[i]["wave_r"])
+            wave_l    = np.array(band_dict[i]["wave_l"])
+            wave_r    = np.array(band_dict[i]["wave_r"])
             wave_band = np.array([wave_l,wave_r]).T
             mask_dict[i]["crit_tell"] = np.sum([(mask_dict[i]["wave"] > wave_band[j,0]) & (mask_dict[i]["wave"] < wave_band[j,1]) for j in range(len(wave_band))], axis=0).astype(bool) == False
 
@@ -176,7 +197,9 @@ class get_aux_data:
         self.aux_data = {"name": mask_name,
                          "mask": mask_dict,
                          "spec": spec_dict,
-                         "tell": tell_dict}
+                         "tell": tell_dict,
+                         "band": band_dict
+                        }
 
         return None
 

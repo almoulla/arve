@@ -55,7 +55,8 @@ class add_data:
         """
         
         # read data
-        vrad_sys = self.arve.star.stellar_parameters["vrad_sys"]
+        if self.arve.star.stellar_parameters is not None:
+            vrad_sys = self.arve.star.stellar_parameters["vrad_sys"]
 
         # input from keyword arguments
         if path is None:
@@ -125,7 +126,8 @@ class add_data:
         # add nr. of spectra, orders and pixels
         if wave_val is not None:
             if path is None:
-                self.spec["Nspec"] = flux_val.shape[0]
+                if flux_val is not None:
+                    self.spec["Nspec"] = flux_val.shape[0]
             else:
                 self.spec["Nspec"] = len(files)
             self.spec["Nord"] = wave_val.shape[0]

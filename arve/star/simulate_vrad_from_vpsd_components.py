@@ -63,7 +63,7 @@ class simulate_vrad_from_vpsd_components:
         vrad_comp = np.zeros((Ntime,Nvpsd_comp+2))
 
         # Index of all components except photon noise
-        idx_tot = [comp_name[i] != 'Photon_noise' for i in range(Nvpsd_comp)]
+        idx_tot = [comp_name[i] != "Photon_noise" for i in range(Nvpsd_comp)]
 
         # loop times
         for i in range(Ntime):
@@ -86,10 +86,12 @@ class simulate_vrad_from_vpsd_components:
         vrad_dict["time_val"] = time
         for i in range(Nvpsd_comp):
             vrad_dict[comp_name[i]] = vrad_comp[:,i]
-        vrad_dict['Total'              ] = vrad_comp[:,-2]
-        vrad_dict['Total_without_noise'] = vrad_comp[:,-1]
+        vrad_dict["Total"              ] = vrad_comp[:,-2]
+        vrad_dict["Total_without_noise"] = vrad_comp[:,-1]
         
         # save RV components
+        if self.arve.data.vrad is None:
+            self.arve.data.vrad = {}
         self.arve.data.vrad["vrad_comp"] = vrad_dict
     
         return None

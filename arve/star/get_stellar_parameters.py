@@ -60,7 +60,7 @@ class get_stellar_parameters:
             
         # compute and save micro- and macro-turbulence
         self.stellar_parameters["vmic"] = 0.85
-        self.stellar_parameters["vmac"] = max(0.00, 3.98-(self.stellar_parameters["Teff"]-5770)/650)
+        self.stellar_parameters["vmac"] = max(0.00, 3.98+(self.stellar_parameters["Teff"]-5770)/650)
 
         return None
 
