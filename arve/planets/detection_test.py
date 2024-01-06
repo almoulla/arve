@@ -26,28 +26,30 @@ class detection_test:
         # period error
         if P_err is None:
             P_err = P_inj*0.1
+        
+        # copy RV values
+        vrad_val_tmp = np.copy(vrad_val)
+
+        # add injected Keplerian to RV values
+        vrad_val_tmp += K_inj*np.sin(2*np.pi/P_inj*time_val)
+
+        # set RV values with Keplerian
+        self.arve.data.vrad["vrad_val"] = vrad_val_tmp
 
         try:
 
-            # copy RV values
-            vrad_val_tmp = np.copy(vrad_val)
-
-            # add injected Keplerian to RV values
-            vrad_val_tmp += K_inj*np.sin(2*np.pi/P_inj*time_val)
-
             # fit Keplerians
-            self.arve.data.vrad["vrad_val"] = vrad_val_tmp
             self.fit_keplerians(ofac=ofac, fap=fap, P_err=P_err)
             keplerians = self.keplerians
             Nkepl = len(keplerians)
 
             # get periods and RV semi-amplitudes of fitted Keplerians
-            P_val    = keplerians["P_val"].to_numpy()
-            K_val    = keplerians["K_val"].to_numpy()
+            P_val = keplerians["P_val"].to_numpy()
+            K_val = keplerians["K_val"].to_numpy()
 
             # check if injected period is among fitted periods (within the allowed error)
-            P_bound  = np.vstack([P_val-P_err, P_val+P_err]).T
-            P_crit   = np.array([(P_inj>P_bound[k,0]) & (P_inj<P_bound[k,1]) for k in range(Nkepl)])
+            P_bound = np.vstack([P_val-P_err, P_val+P_err]).T
+            P_crit  = np.array([(P_inj>P_bound[k,0]) & (P_inj<P_bound[k,1]) for k in range(Nkepl)])
 
             # if period criterion is not satisfied, return NaN
             if np.sum(P_crit) == 0:
@@ -61,6 +63,7 @@ class detection_test:
         
         except:
 
+            # if unable to fit Keplerians, return NaN
             detection_result = np.nan
         
         # re-set RV values without Keplerian
