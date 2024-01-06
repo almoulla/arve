@@ -61,8 +61,8 @@ class injection_recovery:
                 K_arr = 9e-5*m_arr*M**(-2/3)*(P_arr/365.25)**(-1/3)
 
             # detection array
-            detection_arr = np.zeros(len(K_arr))
-            for i in range(len(K_arr)):
+            detection_arr = np.zeros(len(P_arr))
+            for i in range(len(P_arr)):
                 detection_arr[i] = self.detection_test(P_arr[i], K_arr[i], P_err=P_err[i], ofac=ofac, fap=fap)
 
         # else set arrays to None
