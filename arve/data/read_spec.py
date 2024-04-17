@@ -47,6 +47,16 @@ class read_spec:
                             "flux_val": hdul[1].data,
                             "flux_err": hdul[2].data}
                     hdul.close()
+                
+                # instrument: SPIROU
+                if self.spec["instrument"] == "spirou":
+                    if i == 0: self.spec["medium"] = "air"
+                    hdul = fits.open(self.spec["files"][i])
+                    self.time["time_val"][i] = hdul[0].header["MJDATE"]
+                    file = {"wave_val": hdul[1].data["wavelength"],
+                            "flux_val": hdul[1].data["flux"],
+                            "flux_err": hdul[1].data["eflux"]}
+                    hdul.close()
             
             # shift wavelengths and reshape arrays
             wave_val = np.array(file["wave_val"])

@@ -98,18 +98,20 @@ class plot_vpsd_components:
         if total_only == False:
             plt.loglog(freq, vpsd_tot, ls="-", c="k", label="Total")
         else:
-            plt.loglog(freq, vpsd_tot, ls="-", label=self.stellar_parameters["sptype"])
+            plt.loglog(freq, vpsd_tot, ls="-", c="k")
+            plt.text(freq[0]*1.25, vpsd_tot[0]*1.1, self.stellar_parameters["sptype"], ha="left", va="bottom")
 
         # plot limits
-        plt.xlim(freq[0], freq[-1])
+        plt.xlim(min(freq), max(freq))
 
         # plot labels
         plt.xlabel("$f$ [d$^{-1}$]")
         plt.ylabel("VPSD [(km/s)$^{2}$ / d$^{-1}$]")
 
         # plot legend
-        leg = plt.legend(loc="lower left")
-        leg.set_zorder(101)
+        if total_only == False:
+            leg = plt.legend(loc="lower left")
+            leg.set_zorder(101)
 
         # plot axes
         plt.gca().tick_params(axis="both", which="both", direction="in", top=True, right=True)

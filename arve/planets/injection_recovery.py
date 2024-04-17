@@ -57,7 +57,7 @@ class injection_recovery:
             if y_var == "K":
                 K_arr = y_arr
             if y_var == "m":
-                m_arr = x_arr
+                m_arr = y_arr
                 K_arr = 9e-5*m_arr*M**(-2/3)*(P_arr/365.25)**(-1/3)
 
             # detection array

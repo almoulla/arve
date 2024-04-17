@@ -175,3 +175,6 @@ class add_vpsd_components:
                 self.vpsd_components[name] = {"type": type, "coef_val": coef_val, "coef_err": coef_err, "vary": vary}
         
         return None
+
+
+#%%

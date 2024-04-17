@@ -145,8 +145,8 @@ class compute_vrad_ccf:
                         for k in range(Nvrad):
 
                             # CCF value and error
-                            ccf_val[i,j,k] = np.nansum((flux_val[j][il[j,k]]   *fl[j,k]+flux_val[j][ir[j,k]]   *fr[j,k])*w[j]   )
-                            ccf_err[i,j,k] = np.nansum((flux_err[j][il[j,k]]**2*fl[j,k]+flux_err[j][ir[j,k]]**2*fr[j,k])*w[j]**2)**(1/2)
+                            ccf_val[i,j,k] = np.nansum(( flux_val[j][il[j,k]]*fl[j,k]    + flux_val[j][ir[j,k]]*fr[j,k]    )*w[j]   )
+                            ccf_err[i,j,k] = np.nansum(((flux_err[j][il[j,k]]*fl[j,k])**2+(flux_err[j][ir[j,k]]*fr[j,k])**2)*w[j]**2)**(1/2)
 
                     # sum of all orders
                     else:
