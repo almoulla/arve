@@ -84,8 +84,8 @@ class get_aux_data:
 
         # interpolate spectrum
         spec_wave = wave_val
-        spec_flux = np.array([interp1d(spec.wave, spec.flux, kind="cubic")(spec_wave[i]) for i in range(self.spec["Nord"])])
-        spec_temp = np.array([interp1d(spec.wave, spec.temp, kind="cubic")(spec_wave[i]) for i in range(self.spec["Nord"])])
+        spec_flux = np.array([interp1d(spec.wave, spec.flux, kind="cubic", bounds_error=False)(spec_wave[i]) for i in range(self.spec["Nord"])])
+        spec_temp = np.array([interp1d(spec.wave, spec.temp, kind="cubic", bounds_error=False)(spec_wave[i]) for i in range(self.spec["Nord"])])
         spec_dict = {
         "wave": spec_wave,
         "flux": spec_flux,
@@ -113,7 +113,8 @@ class get_aux_data:
 
         # interpolate telluric spectrum
         tell_wave = wave_val
-        tell_flux = np.array([interp1d(tell.wave, tell.flux, kind="cubic")(tell_wave[i]) for i in range(self.spec["Nord"])])
+
+        tell_flux = np.array([interp1d(tell.wave, tell.flux, kind="cubic", bounds_error=False)(tell_wave[i]) for i in range(self.spec["Nord"])])
         tell_dict = {
         "wave": tell_wave,
         "flux": tell_flux

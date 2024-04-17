@@ -14,9 +14,6 @@ class read_spec:
         :rtype: tuple
         """
 
-        # read data
-        vrad_sys = self.arve.star.stellar_parameters["vrad_sys"]
-
         # read data from input
         if self.spec["path"] is None:
             wave_val = self.spec["wave_val"]
@@ -40,7 +37,9 @@ class read_spec:
 
                 # instrument: NIRPS
                 if self.spec["instrument"] == "nirps":
-                    if i == 0: self.spec["medium"] = "air"
+                    if i == 0:
+                            self.spec["medium"    ] = "air"
+                            self.spec["resolution"] = 80000
                     hdul = fits.open(self.spec["files"][i])
                     self.time["time_val"][i] = hdul[0].header["HIERARCH ESO QC BJD"]
                     file = {"wave_val": hdul[5].data,
@@ -50,19 +49,21 @@ class read_spec:
                 
                 # instrument: SPIROU
                 if self.spec["instrument"] == "spirou":
-                    if i == 0: self.spec["medium"] = "air"
+                    if i == 0:
+                            self.spec["medium"    ] = "vac"
+                            self.spec["resolution"] = 75000
                     hdul = fits.open(self.spec["files"][i])
                     self.time["time_val"][i] = hdul[0].header["MJDATE"]
-                    file = {"wave_val": hdul[1].data["wavelength"],
+                    self.vrad["berv_val"][i] = hdul[0].header["BERV"]
+                    file = {"wave_val": hdul[1].data["wavelength"]*10,
                             "flux_val": hdul[1].data["flux"],
                             "flux_err": hdul[1].data["eflux"]}
                     hdul.close()
             
-            # shift wavelengths and reshape arrays
+            # reshape arrays
             wave_val = np.array(file["wave_val"])
             flux_val = np.array(file["flux_val"])
             flux_err = np.array(file["flux_err"])
-            wave_val = self.arve.functions.doppler_shift(wave=wave_val, v=-vrad_sys)
             if self.spec["format"] == "s1d":
                 wave_val = wave_val.reshape(1,wave_val.shape[0])
                 flux_val = flux_val.reshape(1,flux_val.shape[0])
@@ -79,5 +80,14 @@ class read_spec:
                 wave_val = wave_val_inter
                 flux_val = flux_val_inter
                 flux_err = flux_err_inter
+        
+        # read data
+        vrad_sys = self.arve.star.stellar_parameters["vrad_sys"]
+        berv_val = self.vrad["berv_val"]
+        
+        # shift wavelengths
+        wave_val = self.arve.functions.doppler_shift(wave=wave_val, v=-vrad_sys)
+        if self.spec["berv_corrected"] == False:
+            wave_val = self.arve.functions.doppler_shift(wave=wave_val, v=berv_val[i])
         
         return wave_val, flux_val, flux_err
