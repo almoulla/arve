@@ -48,7 +48,7 @@ class fit_keplerians:
         while (power_max >= power_fap) & (len(para_val_arr) < Nmax):
 
             # Lomb-Scargle periodogram
-            gls        = LombScargle(time_val, vrad_val_tmp, vrad_err)
+            gls       = LombScargle(time_val, vrad_val_tmp, vrad_err)
             power_gls = gls.power(freq)
             power_max = np.nanmax(power_gls)
             power_fap = gls.false_alarm_level(fap)

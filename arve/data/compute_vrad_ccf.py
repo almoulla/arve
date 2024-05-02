@@ -6,17 +6,17 @@ from   tqdm              import tqdm
 
 class compute_vrad_ccf:
 
-    def compute_vrad_ccf(self, weight:str=None, criteria:list=None, exclude_tellurics=True, vgrid:list=None) -> None:
+    def compute_vrad_ccf(self, weight:str=None, criteria:list=None, exclude_tellurics=True, exclude_regions:list=None, vgrid:list=None) -> None:
         """Compute radial velocities (RVs) from spectral data.
 
-        :param mask_path: path to line mask (must be a CSV file where the wavelength column is "wave"), defaults to None
-        :type mask_path: str, optional
         :param weight: column name of weight, defaults to None
         :type weight: str, optional
         :param criteria: criteria to apply (must be columns with prefix "crit_"), defaults to None
         :type criteria: list, optional
         :param exclude_tellurics: exclude telluric bands, defaults to True
         :type exclude_tellurics: bool, optional
+        :param exclude_regions: exclude wavelength intervals, defaults to None
+        :type exclude_regions: list, optional
         :param vgrid: velocity grid, in the format [start,stop,step] and in units of km/s, on which to evaluate the CCF, defaults to None
         :type vgrid: list, optional
         :return: None
@@ -60,6 +60,16 @@ class compute_vrad_ccf:
                 for j in range(len(criteria)):
                     crit = np.array(mask[i]["crit_"+criteria[j]])
                     idx *= crit
+                wc[i] = wc[i][idx]
+                w [i] = w [i][idx]
+
+        # exclude regions
+        if exclude_regions is not None:
+            for i in range(Nord):
+                idx = np.ones_like(wc[i], dtype=bool)
+                for j in range(len(wc[i])):
+                    if np.sum([(wc[i][j] > exclude_regions[k][0]) & (wc[i][j] < exclude_regions[k][1]) for k in range(len(exclude_regions))]) > 0:
+                        idx[j] = False
                 wc[i] = wc[i][idx]
                 w [i] = w [i][idx]
 
@@ -215,7 +225,7 @@ class compute_vrad_ccf:
 
 def _weighted_average(val_arr, err_arr):
 
-    idx = ~np.isnan(val_arr) & ~np.isnan(err_arr)
+    idx = ~np.isnan(val_arr) & ~np.isnan(err_arr) & (err_arr>0)
     if np.sum(idx) > 0:
         val_avg = np.average(val_arr[idx], weights=1/err_arr[idx]**2)
         err_avg = np.sqrt(1/np.sum(1/err_arr[idx]**2))

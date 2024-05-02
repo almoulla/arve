@@ -2,13 +2,15 @@ import numpy as np
 
 class detection_test:
 
-    def detection_test(self, P_inj:float, K_inj:float, P_err:float=None, ofac:int=3, fap:float=0.01) -> float:
+    def detection_test(self, P_inj:float, K_inj:float, p_inj:float=None, P_err:float=None, ofac:int=3, fap:float=0.01) -> float:
         """Detection test (used by injection_recovery() function).
 
         :param P_inj: injected period
         :type P_inj: float
         :param K_inj: injected RV semi-amplitude
         :type K_inj: float
+        :param p_inj: injected phase, defaults to None
+        :type p_inj: float
         :param P_err: allowed period error to count as detection (set to 10% of injected period if not provided), defaults to None
         :type P_err: float, optional
         :param ofac: over-factorization of periodogram, defaults to 3
@@ -23,6 +25,10 @@ class detection_test:
         time_val, = [self.arve.data.time[key] for key in ["time_val"]]
         vrad_val, = [self.arve.data.vrad[key] for key in ["vrad_val"]]
 
+        # injected phase
+        if p_inj is None:
+            p_inj = np.random.uniform(-np.pi, np.pi)
+
         # period error
         if P_err is None:
             P_err = P_inj*0.1
@@ -31,7 +37,7 @@ class detection_test:
         vrad_val_tmp = np.copy(vrad_val)
 
         # add injected Keplerian to RV values
-        vrad_val_tmp += K_inj*np.sin(2*np.pi/P_inj*time_val)
+        vrad_val_tmp += K_inj*np.sin(2*np.pi/P_inj*time_val + p_inj)
 
         # set RV values with Keplerian
         self.arve.data.vrad["vrad_val"] = vrad_val_tmp

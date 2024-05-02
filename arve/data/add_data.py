@@ -90,12 +90,12 @@ class add_data:
 
         # add dictionaries with data
         self.time = {
-            "time_val"      : time_val
+            "time_val"      : time_val,
+            "berv_val"      : berv_val
             }
         self.vrad = {
             "vrad_val"      : vrad_val,
-            "vrad_err"      : vrad_err,
-            "berv_val"      : berv_val
+            "vrad_err"      : vrad_err
             }
         self.spec = {
             "wave_val"      : wave_val,
@@ -120,7 +120,7 @@ class add_data:
                 self.time["time_val"] = np.zeros(len(files))
             # if not provided, make BERV values an array with zeros to be populated
             if berv_val is None:
-                self.vrad["berv_val"] = np.zeros(len(files))
+                self.time["berv_val"] = np.zeros(len(files))
             
             # read reference (0th) spectrum
             wave_val, flux_val, flux_err = self.read_spec(0)

@@ -113,7 +113,6 @@ class get_aux_data:
 
         # interpolate telluric spectrum
         tell_wave = wave_val
-
         tell_flux = np.array([interp1d(tell.wave, tell.flux, kind="cubic", bounds_error=False)(tell_wave[i]) for i in range(self.spec["Nord"])])
         tell_dict = {
         "wave": tell_wave,
