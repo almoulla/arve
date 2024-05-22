@@ -5,9 +5,11 @@ warnings.filterwarnings("ignore")
 
 class compute_spec_mast:
 
-    def compute_spec_mast(self, ofac=10) -> None:
+    def compute_spec_mast(self, Nspec:int=None, ofac:int=10) -> None:
         """Compute master spectrum.
 
+        :param Nspec: number of spectra used to build the master (if None, all input spectra will be considered), defaults to None
+        :type Nspec: int, optional
         :param ofac: oversampling factor, defaults to 10
         :type ofac: int, optional
         :return: None
@@ -34,9 +36,8 @@ class compute_spec_mast:
         else:
 
             # nr. of spectra
-            Nspec = len(self.spec["files"])
-            if Nspec > 100:
-                Nspec = 100
+            if Nspec is None:
+                Nspec = len(self.spec["files"])
 
             # loop spectra
             for i in range(Nspec):

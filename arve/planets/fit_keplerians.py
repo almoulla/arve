@@ -5,15 +5,15 @@ from   scipy.optimize     import curve_fit
 
 class fit_keplerians:
 
-    def fit_keplerians(self, ofac:int=3, fap:float=0.01, P_err:float=None, Nmax:int=10) -> None:
+    def fit_keplerians(self, ofac:int=3, fap:float=0.01, P_lim:float=None, Nmax:int=10) -> None:
         """Fit Keplerians.
 
         :param ofac: over-factorization of periodogram, defaults to 3
         :type ofac: int, optional
         :param fap: false-alarm probability level, defaults to 0.01
         :type fap: float, optional
-        :param P_err: allowed period error for fitting bound (set to 10% of guessed period if not provided), defaults to None
-        :type P_err: float, optional
+        :param P_lim: allowed fractional period error for fitting bound (set to 10% of guessed period if not provided), defaults to None
+        :type P_lim: float, optional
         :param Nmax: maximum number of fitted Keplerians, defaults to 10
         :type Nmax: int, optional
         :return: None
@@ -25,10 +25,10 @@ class fit_keplerians:
         vrad_val, vrad_err = [self.arve.data.vrad[key] for key in ["vrad_val", "vrad_err"]]
 
         # copy RV values
-        vrad_val_tmp  = np.copy(vrad_val)
+        vrad_val_tmp = np.copy(vrad_val)
 
         # frequency grid on which to compute periodograms
-        T    = np.max(time_val) - np.min(time_val[0])
+        T    = np.max(time_val) - np.min(time_val)
         dt   = np.nanmedian(np.diff(time_val))
         freq = np.arange(1/T, 1/(2*dt), 1/(T*ofac))
 
@@ -66,8 +66,10 @@ class fit_keplerians:
                 p0      = [P_guess, K_guess, p_guess, C_guess]
 
                 # set period error if not provided
-                if P_err is None:
+                if P_lim is None:
                     P_err = P_guess*0.1
+                else:
+                    P_err = P_guess*P_lim
 
                 # parameter bounds
                 P_bound = [P_guess-P_err, P_guess+P_err]

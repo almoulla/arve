@@ -31,6 +31,10 @@ class read_spec:
             if self.spec["extension"] == "npz":
                 file = np.load(self.spec["files"][i])
                 self.time["time_val"][i] = file["time_val"]
+                try:
+                    self.time["berv_val"][i] = file["berv_val"]
+                except:
+                    pass
 
             # read file: FITS
             if self.spec["extension"] == "fits":

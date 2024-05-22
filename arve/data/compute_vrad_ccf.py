@@ -6,7 +6,7 @@ from   tqdm              import tqdm
 
 class compute_vrad_ccf:
 
-    def compute_vrad_ccf(self, weight:str=None, criteria:list=None, exclude_tellurics=True, exclude_regions:list=None, vgrid:list=None) -> None:
+    def compute_vrad_ccf(self, weight:str=None, criteria:list=None, exclude_tellurics=True, exclude_regions:bool=True, vgrid:list=None) -> None:
         """Compute radial velocities (RVs) from spectral data.
 
         :param weight: column name of weight, defaults to None
@@ -15,8 +15,8 @@ class compute_vrad_ccf:
         :type criteria: list, optional
         :param exclude_tellurics: exclude telluric bands, defaults to True
         :type exclude_tellurics: bool, optional
-        :param exclude_regions: exclude wavelength intervals, defaults to None
-        :type exclude_regions: list, optional
+        :param exclude_regions: exclude wavelength intervals, defaults to True
+        :type exclude_regions: bool, optional
         :param vgrid: velocity grid, in the format [start,stop,step] and in units of km/s, on which to evaluate the CCF, defaults to None
         :type vgrid: list, optional
         :return: None
@@ -52,24 +52,21 @@ class compute_vrad_ccf:
                 criteria = ["tell"]
             else:
                 criteria.append("tell")
+        
+        # exclude regions
+        if exclude_regions:
+            if criteria is None:
+                criteria = ["excl"]
+            else:
+                criteria.append("excl")
 
-        # keep mask lines which satisfy criteria
+        # lines which satisfy criteria
         if criteria is not None:
             for i in range(Nord):
                 idx = np.ones_like(wc[i], dtype=bool)
                 for j in range(len(criteria)):
                     crit = np.array(mask[i]["crit_"+criteria[j]])
                     idx *= crit
-                wc[i] = wc[i][idx]
-                w [i] = w [i][idx]
-
-        # exclude regions
-        if exclude_regions is not None:
-            for i in range(Nord):
-                idx = np.ones_like(wc[i], dtype=bool)
-                for j in range(len(wc[i])):
-                    if np.sum([(wc[i][j] > exclude_regions[k][0]) & (wc[i][j] < exclude_regions[k][1]) for k in range(len(exclude_regions))]) > 0:
-                        idx[j] = False
                 wc[i] = wc[i][idx]
                 w [i] = w [i][idx]
 

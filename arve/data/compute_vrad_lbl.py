@@ -9,15 +9,15 @@ warnings.filterwarnings("ignore")
 
 class compute_vrad_lbl:
 
-    def compute_vrad_lbl(self, criteria:list=None, exclude_tellurics:bool=True, exclude_regions:list=None, scale=True, Niter=1, bins:list=None) -> None:
+    def compute_vrad_lbl(self, criteria:list=None, exclude_tellurics:bool=True, exclude_regions:bool=True, scale=True, Niter=1, bins:list=None) -> None:
         """Compute radial velocities (RVs) from spectral data.
 
         :param criteria: criteria to apply (must be columns with prefix "crit_"), defaults to None
         :type criteria: list, optional
         :param exclude_tellurics: exclude telluric bands, defaults to True
         :type exclude_tellurics: bool, optional
-        :param exclude_regions: exclude wavelength intervals, defaults to None
-        :type exclude_regions: list, optional
+        :param exclude_regions: exclude wavelength intervals, defaults to True
+        :type exclude_regions: bool, optional
         :param scale: scale master spectrum when fitting, defaults to True
         :type scale: bool, optional
         :param Niter: number of iterations per line, defaults to 1
@@ -79,6 +79,13 @@ class compute_vrad_lbl:
             else:
                 criteria.append("tell")
 
+        # exclude regions
+        if exclude_regions:
+            if criteria is None:
+                criteria = ["excl"]
+            else:
+                criteria.append("excl")
+
         # lines which satisfy criteria
         idx_crit = np.zeros(Nord, dtype=object)
         for i in range(Nord):
@@ -87,15 +94,6 @@ class compute_vrad_lbl:
                 for j in range(len(criteria)):
                     crit = np.array(mask[i]["crit_"+criteria[j]])
                     idx_crit[i] *= crit
-        
-        # exclude regions
-        if exclude_regions is not None:
-            for i in range(Nord):
-                idx_excl = np.ones_like(wc[i], dtype=bool)
-                for j in range(len(wc[i])):
-                    if np.sum([(wc[i][j] > exclude_regions[k][0]) & (wc[i][j] < exclude_regions[k][1]) for k in range(len(exclude_regions))]) > 0:
-                        idx_excl[j] = False
-                idx_crit[i] *= idx_excl
 
         # index of lines
         idx_line = np.zeros(Nord, dtype=object)

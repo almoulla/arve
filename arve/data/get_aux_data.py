@@ -9,13 +9,15 @@ from   scipy.signal          import argrelextrema
 
 class get_aux_data:
 
-    def get_aux_data(self, path_mask:str=None, tell_lim:float=0.99) -> None:
+    def get_aux_data(self, path_mask:str=None, tell_lim:float=0.99, exclude_regions:list=None) -> None:
         """Get auxiliary data.
 
         :param path_mask: path to line mask (must be a CSV file where the wavelength column is "wave"), defaults to None
         :type path_mask: str, optional
         :param tell_lim: telluric depth limit, defaults to 0.99
         :type tell_lim: float, optional
+        :param exclude_regions: wavelength intervals to be excluded, defaults to None
+        :type exclude_regions: list, optional
         :return: None
         :rtype: None
         """
@@ -119,64 +121,32 @@ class get_aux_data:
         "flux": tell_flux
         }
 
-        # find telluric lines
+        # find left and right bounds of telluric bands
         tell_wave = np.array(tell["wave"])
         tell_flux = np.array(tell["flux"])
-        idx = argrelextrema(tell_flux, np.less)[0]
-        wc  = tell_wave[idx]
-        fc  = tell_flux[idx]
-        idx = fc < tell_lim
-        wc  = wc[idx]
-        fc  = fc[idx]
+        idx_above = np.where(tell_flux>=tell_lim)[0]
+        idx_below = np.where(tell_flux< tell_lim)[0]
+        if len(idx_above) == 0:
+            tell_wave_l = np.array([tell_wave[ 0]])
+            tell_wave_r = np.array([tell_wave[-1]])
+        elif len(idx_below) == 0:
+            tell_wave_l = np.array([])
+            tell_wave_r = np.array([])
+        else:
+            idx_l = idx_above[:-1][np.diff(idx_above)>1]
+            idx_r = idx_below[:-1][np.diff(idx_below)>1]
+            if tell_flux[ 0] < tell_lim:
+                idx_l = np.append(0, idx_l)
+            if tell_flux[-1] < tell_lim:
+                idx_l = np.append(idx_l, idx_above[-1])
+                idx_r = np.append(idx_r, len(tell_flux)-1)
+                tell_wave_l = tell_wave[idx_l]*(1-berv_max/c)
+                tell_wave_r = tell_wave[idx_r]*(1+berv_max/c)
 
-        # wavelength window around telluric lines due to BERV
-        dwave = wc*berv_max/c
-
-        # left and right bounds of telluric lines
-        wl = wc-dwave
-        wr = wc+dwave
-
-        # label overlapping telluric lines
-        label_map, Nlabel = ndimage.label(wl[1:] < wr[:-1])
-
-        # empty arrays for left and right bounds of telluric bands
-        wave_l = np.zeros(Nlabel)
-        wave_r = np.zeros(Nlabel)
-
-        # loop labels
-        for i in range(Nlabel):
-
-            # find left- and rightmost edges of overlapping telluric lines
-            idx = np.where(label_map == i+1)[0]
-            wave_l[i] = wl[idx[ 0]  ]
-            wave_r[i] = wr[idx[-1]+1]
-            
-            # label last telluric line in each band
-            if idx[-1]+1 < len(label_map):
-                label_map[idx[-1]+1] = i+1
-
-        # nr. of single telluric lines
-        Nsingle = np.sum(label_map == 0)
-
-        # loop single telluric lines
-        for i in range(Nsingle):
-
-            # find index of single telluric line
-            idx = np.where(label_map == 0)[0][i]
-
-            # append telluric line bounds to list of telluric bands
-            wave_l = np.append(wave_l, wl[idx])
-            wave_r = np.append(wave_r, wr[idx])
-
-        # sort telluric bounds
-        idx = np.argsort(wave_l)
-        wave_l = wave_l[idx]
-        wave_r = wave_r[idx]
-
-        # create new telluric DataFrame with left and right edges of telluric bands
+        # create new telluric DataFrame with left and right bounds of telluric bands
         band = pd.DataFrame()
-        band["wave_l"] = wave_l
-        band["wave_r"] = wave_r
+        band["wave_l"] = tell_wave_l
+        band["wave_r"] = tell_wave_r
 
         # keep telluric bands which overlap with data
         band_dict = {}
@@ -185,13 +155,22 @@ class get_aux_data:
             band_dict[i] = band[idx_wave].reset_index(drop=True)
             band_dict[i]["wave_l"][band_dict[i]["wave_l"]<wave_val[i][ 0]] = wave_val[i][ 0]
             band_dict[i]["wave_r"][band_dict[i]["wave_r"]>wave_val[i][-1]] = wave_val[i][-1]
-        
+
         # telluric criterion
         for i in range(self.spec["Nord"]):
             wave_l    = np.array(band_dict[i]["wave_l"])
             wave_r    = np.array(band_dict[i]["wave_r"])
             wave_band = np.array([wave_l,wave_r]).T
             mask_dict[i]["crit_tell"] = np.sum([(mask_dict[i]["wave"] > wave_band[j,0]) & (mask_dict[i]["wave"] < wave_band[j,1]) for j in range(len(wave_band))], axis=0).astype(bool) == False
+
+        # exclude regions
+        for i in range(self.spec["Nord"]):
+            idx_excl = np.ones(len(mask_dict[i]), dtype=bool)
+            if exclude_regions is not None:
+                for j in range(len(mask_dict[i])):
+                    if np.sum([(mask_dict[i]["wave"][j] > exclude_regions[k][0]) & (mask_dict[i]["wave"][j] < exclude_regions[k][1]) for k in range(len(exclude_regions))]) > 0:
+                        idx_excl[j] = False
+            mask_dict[i]["crit_excl"] = idx_excl
 
         # save
         self.aux_data = {"name": mask_name,
