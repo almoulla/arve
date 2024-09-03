@@ -2,11 +2,13 @@ import numpy as np
 
 class injection_recovery:
 
-    def injection_recovery(self, xy_arr:list=None, xy_map:list=None, map_dim:list=[10,10], x_var:str="P", y_var:str="K", P_lim:float=0.1, scale:str="linear", ofac:int=3, fap:float=0.01) -> None:
+    def injection_recovery(self, xy_arr:list=None, p_arr:list=None, xy_map:list=None, map_dim:list=[10,10], x_var:str="P", y_var:str="K", P_lim:float=0.1, scale:str="linear", ofac:int=3, fap:float=0.01) -> None:
         """Injection-recovery detection test of specific injected values, 2D map or both.
 
         :param xy_arr: 2D array with injected values in the format [x_arr, y_arr], defaults to None
         :type xy_arr: list, optional
+        :param p_arr: 1D array with injected phases, defaults to None
+        :type p_arr: list, optional
         :param xy_map: array with 2D map bounds in the format [x_min, x_max, y_min, y_max], defaults to None
         :type xy_map: list, optional
         :param map_dim: map dimensions in the format [x_dim, y_dim], defaults to [10,10]
@@ -61,7 +63,7 @@ class injection_recovery:
                 K_arr = 9e-5*m_arr*M**(-2/3)*(P_arr/365.25)**(-1/3)
 
             # detection array
-            detection_arr = self.detection_test(P_arr, K_arr, P_err=P_err, ofac=ofac, fap=fap)
+            detection_arr = self.detection_test(P_arr, K_arr, p_arr, P_err=P_err, ofac=ofac, fap=fap)
 
         # else set arrays to None
         else:
