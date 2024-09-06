@@ -130,6 +130,10 @@ class compute_vrad_ccf:
         # empty arrays for CCF moments
         vrad_val_arr = np.zeros((Nspec,Nord+1))*np.nan
         vrad_err_arr = np.zeros((Nspec,Nord+1))*np.nan
+        cont_val_arr = np.zeros((Nspec,Nord+1))*np.nan
+        cont_err_arr = np.zeros((Nspec,Nord+1))*np.nan
+        ampl_val_arr = np.zeros((Nspec,Nord+1))*np.nan
+        ampl_err_arr = np.zeros((Nspec,Nord+1))*np.nan
         fwhm_val_arr = np.zeros((Nspec,Nord+1))*np.nan
         fwhm_err_arr = np.zeros((Nspec,Nord+1))*np.nan
 
@@ -172,15 +176,24 @@ class compute_vrad_ccf:
                     p0 = (C0, a0, b0, c0)
 
                     # CCF parameters with fitted Gaussian
-                    param, _ = curve_fit(self.arve.functions.inverted_gaussian, vrads, ccf_val[i,j], sigma=ccf_err[i,j], p0=p0)
+                    param_val, param_cov = curve_fit(self.arve.functions.inverted_gaussian, vrads, ccf_val[i,j], sigma=ccf_err[i,j], p0=p0)
+                    param_err            = np.sqrt(np.diag(param_cov))
 
                     # RV value and error
-                    vrad_val_arr[i,j] = param[2]
-                    vrad_err_arr[i,j] = 1/np.sqrt(np.sum(1/np.abs(ccf_err[i,j]*np.gradient(vrads)/np.gradient(ccf_val[i,j]))**2))
+                    vrad_val_arr[i,j] = param_val[2]
+                    vrad_err_arr[i,j] = 1/np.sqrt(np.sum(1/(ccf_err[i,j]*np.gradient(vrads)/np.gradient(ccf_val[i,j]))**2))
+
+                    # continuum value and error
+                    cont_val_arr[i,j] = param_val[0]
+                    cont_err_arr[i,j] = param_err[0]
+
+                    # amplitude value and error
+                    ampl_val_arr[i,j] = param_val[1]
+                    ampl_err_arr[i,j] = param_err[1]
 
                     # FWHM value and error
-                    fwhm_val_arr[i,j] = param[3]
-                    fwhm_err_arr[i,j] = vrad_err_arr[i,j]
+                    fwhm_val_arr[i,j] = param_val[3]
+                    fwhm_err_arr[i,j] = param_err[3]
             
                 except:
                     continue
@@ -188,6 +201,10 @@ class compute_vrad_ccf:
         # emtpty arrays for weighted average of spectral orders
         vrad_val = np.zeros(Nspec)
         vrad_err = np.zeros(Nspec)
+        cont_val = np.zeros(Nspec)
+        cont_err = np.zeros(Nspec)
+        ampl_val = np.zeros(Nspec)
+        ampl_err = np.zeros(Nspec)
         fwhm_val = np.zeros(Nspec)
         fwhm_err = np.zeros(Nspec)
 
@@ -197,8 +214,62 @@ class compute_vrad_ccf:
             # weighted average of RV
             vrad_val[i], vrad_err[i] = _weighted_average(vrad_val_arr[i,:-1], vrad_err_arr[i,:-1])
             
+            # weighted average of continuum
+            cont_val[i], cont_err[i] = _weighted_average(cont_val_arr[i,:-1], cont_err_arr[i,:-1])
+
+            # weighted average of amplitude
+            ampl_val[i], ampl_err[i] = _weighted_average(ampl_val_arr[i,:-1], ampl_err_arr[i,:-1])
+
             # weighted average of FWHM
             fwhm_val[i], fwhm_err[i] = _weighted_average(fwhm_val_arr[i,:-1], fwhm_err_arr[i,:-1])
+
+        # bisector normalized flux points
+        bisector_flux_val = np.arange(0.00, 1.00, 0.01)
+        Nbis              = len(bisector_flux_val)
+
+        # emtpty arrays for bisector and BIS value and error
+        bisector_vrad_val = np.zeros((Nspec,Nbis))*np.nan
+        bisector_vrad_err = np.zeros((Nspec,Nbis))*np.nan
+        bis_val           = np.zeros( Nspec      )*np.nan
+        bis_err           = np.zeros( Nspec      )*np.nan
+
+        # loop spectra
+        for i in range(Nspec):
+
+            try:
+
+                # CCF RV error
+                ccf_err_vrad = (ccf_err[i,-1]*np.gradient(vrads)/np.gradient(ccf_val[i,-1]))**2
+
+                # bisector value
+                bisector_vrad_val_l  = interp1d(ccf_val[i,-1][vrads<vrad_val[i]]/cont_val[i], vrads[vrads<vrad_val[i]], bounds_error=False)(bisector_flux_val)
+                bisector_vrad_val_r  = interp1d(ccf_val[i,-1][vrads>vrad_val[i]]/cont_val[i], vrads[vrads>vrad_val[i]], bounds_error=False)(bisector_flux_val)
+                bisector_vrad_val[i] = (bisector_vrad_val_l+bisector_vrad_val_r)/2
+
+                # bisector error
+                bisector_vrad_err_l  = interp1d(vrads[vrads<vrad_val[i]], ccf_err_vrad[vrads<vrad_val[i]], bounds_error=False)(bisector_vrad_val_l)
+                bisector_vrad_err_r  = interp1d(vrads[vrads>vrad_val[i]], ccf_err_vrad[vrads>vrad_val[i]], bounds_error=False)(bisector_vrad_val_r)
+                bisector_vrad_err[i] = np.sqrt(bisector_vrad_err_l**2 + bisector_vrad_err_r**2)/2
+
+                # bisector normalized flux
+                bisector_flux_norm = 1-(1-bisector_flux_val)/ampl_val[i]
+
+                # bisector index for bottom and top
+                idx_bisector_bot = (bisector_flux_norm>0.1) & (bisector_flux_norm<0.4)
+                idx_bisector_top = (bisector_flux_norm>0.6) & (bisector_flux_norm<0.9)
+
+                # BIS bottom and top value and error
+                bis_bot_val = np.average(bisector_vrad_val[i][idx_bisector_bot])
+                bis_bot_err = np.average(bisector_vrad_err[i][idx_bisector_bot])/np.sqrt(np.sum(idx_bisector_bot))
+                bis_top_val = np.average(bisector_vrad_val[i][idx_bisector_top])
+                bis_top_err = np.average(bisector_vrad_err[i][idx_bisector_top])/np.sqrt(np.sum(idx_bisector_top))
+
+                # BIS value and error
+                bis_val[i] =  bis_top_val    - bis_bot_val
+                bis_err[i] = (bis_top_err**2 + bis_bot_err**2)**(1/2)
+
+            except:
+                continue
 
         # save data
         self.vrad = {
@@ -209,13 +280,20 @@ class compute_vrad_ccf:
             "method"      : "CCF"       ,
             }
         self.ccf  = {
-            "vrads"       : vrads       ,
-            "ccf_val"     : ccf_val     ,
-            "ccf_err"     : ccf_err     ,
-            "fwhm_val"    : fwhm_val    ,
-            "fwhm_err"    : fwhm_err    ,
-            "fwhm_val_ord": fwhm_val_arr,
-            "fwhm_err_ord": fwhm_err_arr,
+            "vrads"            : vrads            ,
+            "ccf_val"          : ccf_val          ,
+            "ccf_err"          : ccf_err          ,
+            "bisector_vrad_val": bisector_vrad_val,
+            "bisector_vrad_err": bisector_vrad_err,
+            "bisector_flux_val": bisector_flux_val,
+            "cont_val"         : cont_val         ,
+            "cont_err"         : cont_err         ,
+            "ampl_val"         : ampl_val         ,
+            "ampl_err"         : ampl_err         ,
+            "fwhm_val"         : fwhm_val         ,
+            "fwhm_err"         : fwhm_err         ,
+            "bis_val"          : bis_val          ,
+            "bis_err"          : bis_err          ,
             }
 
         return None
