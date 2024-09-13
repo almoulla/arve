@@ -199,29 +199,34 @@ class compute_vrad_ccf:
                     continue
 
         # emtpty arrays for weighted average of spectral orders
-        vrad_val = np.zeros(Nspec)
-        vrad_err = np.zeros(Nspec)
-        cont_val = np.zeros(Nspec)
-        cont_err = np.zeros(Nspec)
-        ampl_val = np.zeros(Nspec)
-        ampl_err = np.zeros(Nspec)
-        fwhm_val = np.zeros(Nspec)
-        fwhm_err = np.zeros(Nspec)
+        vrad_val = np.zeros(Nspec)*np.nan
+        vrad_err = np.zeros(Nspec)*np.nan
+        cont_val = np.zeros(Nspec)*np.nan
+        cont_err = np.zeros(Nspec)*np.nan
+        ampl_val = np.zeros(Nspec)*np.nan
+        ampl_err = np.zeros(Nspec)*np.nan
+        fwhm_val = np.zeros(Nspec)*np.nan
+        fwhm_err = np.zeros(Nspec)*np.nan
 
         # loop spectra
         for i in range(Nspec):
 
-            # weighted average of RV
-            vrad_val[i], vrad_err[i] = _weighted_average(vrad_val_arr[i,:-1], vrad_err_arr[i,:-1])
-            
-            # weighted average of continuum
-            cont_val[i], cont_err[i] = _weighted_average(cont_val_arr[i,:-1], cont_err_arr[i,:-1])
+            try:
 
-            # weighted average of amplitude
-            ampl_val[i], ampl_err[i] = _weighted_average(ampl_val_arr[i,:-1], ampl_err_arr[i,:-1])
+                # weighted average of RV
+                vrad_val[i], vrad_err[i] = _weighted_average(vrad_val_arr[i,:-1], vrad_err_arr[i,:-1])
+                
+                # weighted average of continuum
+                cont_val[i], cont_err[i] = _weighted_average(cont_val_arr[i,:-1], cont_err_arr[i,:-1])
 
-            # weighted average of FWHM
-            fwhm_val[i], fwhm_err[i] = _weighted_average(fwhm_val_arr[i,:-1], fwhm_err_arr[i,:-1])
+                # weighted average of amplitude
+                ampl_val[i], ampl_err[i] = _weighted_average(ampl_val_arr[i,:-1], ampl_err_arr[i,:-1])
+
+                # weighted average of FWHM
+                fwhm_val[i], fwhm_err[i] = _weighted_average(fwhm_val_arr[i,:-1], fwhm_err_arr[i,:-1])
+
+            except:
+                continue
 
         # bisector normalized flux points
         bisector_flux_val = np.arange(0.00, 1.00, 0.01)

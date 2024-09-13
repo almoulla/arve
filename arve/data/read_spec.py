@@ -42,6 +42,16 @@ class read_spec:
                 # open file
                 hdul = fits.open(self.spec["files"][i])
 
+                # instrument: HARPN
+                if self.spec["instrument"] == "harpn":
+                    if i == 0:
+                        self.spec["medium"    ] = "air"
+                        self.spec["resolution"] = 115000
+                    self.time["time_val"][i] = hdul[0].header["HIERARCH TNG QC BJD"]
+                    file = {"wave_val": hdul[1].data["wavelength_air"],
+                            "flux_val": hdul[1].data["flux"],
+                            "flux_err": hdul[1].data["error"]}
+
                 # instrument: NIRPS
                 if self.spec["instrument"] == "neid":
                     if i == 0:
