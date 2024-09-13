@@ -3,7 +3,7 @@ import numpy as np
 class injection_recovery:
 
     def injection_recovery(self, xy_arr:list=None, p_arr:list=None, xy_map:list=None, map_dim:list=[10,10], x_var:str="P", y_var:str="K", P_lim:float=0.1, scale:str="linear", ofac:int=3, fap:float=0.01) -> None:
-        """Injection-recovery detection test of specific injected values, 2D map or both.
+        """Injection-recovery test of specific injected values, 2D map or both.
 
         :param xy_arr: 2D array with injected values in the format [x_arr, y_arr], defaults to None
         :type xy_arr: list, optional
@@ -17,7 +17,7 @@ class injection_recovery:
         :type x_var: str, optional
         :param y_var: y variable, either RV semi-amplitude "K" in km/s or planet mass "m" in Earth masses, defaults to "K"
         :type y_var: str, optional
-        :param P_lim: period fraction for calculation of allow period errors to count as detection, defaults to 0.1
+        :param P_lim: period fraction for calculation of allow period errors to count as recovery, defaults to 0.1
         :type P_lim: float, optional
         :param scale: scale of injected values, either "linear" or "log", defaults to "linear"
         :type scale: str, optional
@@ -62,14 +62,14 @@ class injection_recovery:
                 m_arr = y_arr
                 K_arr = 9e-5*m_arr*M**(-2/3)*(P_arr/365.25)**(-1/3)
 
-            # detection array
-            detection_arr = self.detection_test(P_arr, K_arr, p_arr, P_err=P_err, ofac=ofac, fap=fap)
+            # recovery array
+            recovery_arr = self.recovery_test(P_arr, K_arr, p_arr, P_err=P_err, ofac=ofac, fap=fap)
 
         # else set arrays to None
         else:
-            x_arr         = None
-            y_arr         = None
-            detection_arr = None
+            x_arr        = None
+            y_arr        = None
+            recovery_arr = None
 
         # if injected map is provided
         if include_map:
@@ -98,28 +98,28 @@ class injection_recovery:
                 m_map = y_map
                 K_map = 9e-5*m_map*M**(-2/3)*(P_map/365.25)**(-1/3)
 
-            # detection map
-            detection_map = np.zeros((len(P_map),len(K_map)))
+            # recovery map
+            recovery_map = np.zeros((len(P_map),len(K_map)))
             for i in range(len(P_map)):
                 for j in range(len(K_map)):
-                    detection_map[i,j] = self.detection_test(np.array([P_map[i]]), np.array([K_map[j]]), P_err=np.array([P_err[i]]), ofac=ofac, fap=fap)[0]
+                    recovery_map[i,j] = self.recovery_test(np.array([P_map[i]]), np.array([K_map[j]]), P_err=np.array([P_err[i]]), ofac=ofac, fap=fap)[0]
 
         # else set arrays to None
         else:
-            x_map         = None
-            y_map         = None
-            detection_map = None
+            x_map        = None
+            y_map        = None
+            recovery_map = None
 
         # save
-        self.detections = {
+        self.recoveries = {
             "x_var": x_var,
             "y_var": y_var,
             "x_arr": x_arr,
             "y_arr": y_arr,
             "x_map": x_map,
             "y_map": y_map,
-            "detection_arr": detection_arr,
-            "detection_map": detection_map,
+            "recovery_arr": recovery_arr,
+            "recovery_map": recovery_map,
             "scale": scale
         }
 

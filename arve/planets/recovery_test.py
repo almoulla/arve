@@ -1,9 +1,9 @@
 import numpy as np
 
-class detection_test:
+class recovery_test:
 
-    def detection_test(self, P_inj:list, K_inj:list, p_inj:list=None, P_err:list=None, ofac:int=3, fap:float=0.01) -> list:
-        """Detection test (used by injection_recovery() function).
+    def recovery_test(self, P_inj:list, K_inj:list, p_inj:list=None, P_err:list=None, ofac:int=3, fap:float=0.01) -> list:
+        """Recovery test (used by injection_recovery() function).
 
         :param P_inj: injected periods
         :type P_inj: list
@@ -11,13 +11,13 @@ class detection_test:
         :type K_inj: list
         :param p_inj: injected phases, defaults to None
         :type p_inj: list
-        :param P_err: allowed period errors to count as detection (set to 10% of injected periods if not provided), defaults to None
+        :param P_err: allowed period errors to count as recovery (set to 10% of injected periods if not provided), defaults to None
         :type P_err: list, optional
         :param ofac: over-factorization of periodogram, defaults to 3
         :type ofac: int, optional
         :param fap: false-alarm probability level, defaults to 0.01
         :type fap: float, optional
-        :return: ratios between recovered and injected RV semi-amplitudes for detected Keplerians, NaNs otherwise
+        :return: ratios between recovered and injected RV semi-amplitudes for recovered Keplerians, NaNs otherwise
         :rtype: list
         """
 
@@ -46,8 +46,8 @@ class detection_test:
         # set RV values with Keplerians
         self.arve.data.vrad["vrad_val"] = vrad_val_tmp
 
-        # empty array for detection results
-        detection_result = np.zeros(Nkep_inj)
+        # empty array for recovery results
+        recovery_result = np.zeros(Nkep_inj)
 
         # try to fit Keplerians
         try:
@@ -70,21 +70,21 @@ class detection_test:
 
                 # if period criterion is not satisfied, return NaN
                 if np.sum(P_crit) == 0:
-                    detection_result[i] = np.nan
+                    recovery_result[i] = np.nan
                 # if period criterion is satisfied, return ratio between recovered and injected RV semi-amplitude of the Keplerian with the closest period
                 else:
                     idx_all = np.where(P_crit)[0]
                     idx_min = np.argmin(np.abs(K_val[idx_all]-K_inj[i]))
                     K_rec   = K_val[idx_all[idx_min]]
-                    detection_result[i] = K_rec/K_inj[i]
+                    recovery_result[i] = K_rec/K_inj[i]
 
         # if unable to fit Keplerians, return NaNs
         except:
 
-            detection_result = np.zeros(Nkep_inj)*np.nan
+            recovery_result = np.zeros(Nkep_inj)*np.nan
         
         # re-set RV values without Keplerians
         self.arve.data.vrad["vrad_val"] = vrad_val
 
-        # return detection result
-        return detection_result
+        # return recovery result
+        return recovery_result

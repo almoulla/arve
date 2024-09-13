@@ -3,10 +3,10 @@ import matplotlib.pyplot  as     plt
 from   matplotlib.ticker  import AutoMinorLocator
 import numpy              as     np
 
-class plot_detections:
+class plot_recoveries:
 
-    def plot_detections(self, vmin:float=0, vmax:float=2) -> plt.Figure:
-        """Plot detections.
+    def plot_recoveries(self, vmin:float=0, vmax:float=2) -> plt.Figure:
+        """Plot recoveries.
 
         :param vmin: minimum value in color map, defaults to 0
         :type vmin: float, optional
@@ -16,14 +16,14 @@ class plot_detections:
         :rtype: plt.Figure
         """
 
-        # read detections
-        detections = self.detections
-        x_var, y_var, x_arr, y_arr, x_map, y_map = [detections[key] for key in ["x_var", "y_var", "x_arr", "y_arr", "x_map", "y_map"]]
-        detection_arr, detection_map, scale      = [detections[key] for key in ["detection_arr", "detection_map", "scale"]]
+        # read recoveries
+        recoveries = self.recoveries
+        x_var, y_var, x_arr, y_arr, x_map, y_map = [recoveries[key] for key in ["x_var", "y_var", "x_arr", "y_arr", "x_map", "y_map"]]
+        recovery_arr, recovery_map, scale        = [recoveries[key] for key in ["recovery_arr", "recovery_map", "scale"]]
 
         # include array and map
-        include_arr = detection_arr is not None
-        include_map = detection_map is not None
+        include_arr = recovery_arr is not None
+        include_map = recovery_map is not None
 
         # color map
         colors = ["black", "lightskyblue", "firebrick"]
@@ -50,7 +50,7 @@ class plot_detections:
             dx = np.nanmedian(np.diff(x_map_plot))
             dy = np.nanmedian(np.diff(y_map_plot))
             extent = [x_map_plot[0]-dx/2, x_map_plot[-1]+dx/2, y_map_plot[0]-dy/2, y_map_plot[-1]+dy/2]
-            plt.imshow(detection_map.T, cmap=cmap, origin="lower", vmin=vmin, vmax=vmax, extent=extent, aspect="auto", interpolation="none")
+            plt.imshow(recovery_map.T, cmap=cmap, origin="lower", vmin=vmin, vmax=vmax, extent=extent, aspect="auto", interpolation="none")
         
         # if array is included
         if include_arr:
@@ -64,9 +64,9 @@ class plot_detections:
                 y_arr_plot = np.log10(y_arr)
             
             # plot 1D detection array
-            idx_nan = np.isnan(detection_arr)
-            plt.scatter(x_arr_plot[idx_nan], y_arr_plot[idx_nan], c="w"          , cmap=cmap, vmin=vmin, vmax=vmax, marker="o", edgecolors="k")
-            plt.scatter(x_arr_plot         , y_arr_plot         , c=detection_arr, cmap=cmap, vmin=vmin, vmax=vmax, marker="o", edgecolors="k")
+            idx_nan = np.isnan(recovery_arr)
+            plt.scatter(x_arr_plot[idx_nan], y_arr_plot[idx_nan], c="w"         , cmap=cmap, vmin=vmin, vmax=vmax, marker="o", edgecolors="k")
+            plt.scatter(x_arr_plot         , y_arr_plot         , c=recovery_arr, cmap=cmap, vmin=vmin, vmax=vmax, marker="o", edgecolors="k")
 
         # plot labels
         if x_var == "P": xlabel = "$P$ [d]"
