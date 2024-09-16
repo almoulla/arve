@@ -54,13 +54,13 @@ class injection_recovery:
                 P_err = P_arr*P_lim
             if x_var == "a":
                 a_arr = x_arr
-                P_arr = (a_arr**3/(7.496e-6*M))**(1/2)
+                P_arr = 365.25*a_arr**(3/2)*M**(-1/2)
                 P_err = P_arr*P_lim
             if y_var == "K":
                 K_arr = y_arr
             if y_var == "m":
                 m_arr = y_arr
-                K_arr = 9e-5*m_arr*M**(-2/3)*(P_arr/365.25)**(-1/3)
+                K_arr = 8.95e-5*(P_arr/365.25)**(-1/3)*M**(-2/3)*m_arr
 
             # recovery array
             recovery_arr = self.recovery_test(P_arr, K_arr, p_arr, P_err=P_err, ofac=ofac, fap=fap)
