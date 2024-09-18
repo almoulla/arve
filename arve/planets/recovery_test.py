@@ -2,7 +2,7 @@ import numpy as np
 
 class recovery_test:
 
-    def recovery_test(self, P_inj:list, K_inj:list, p_inj:list=None, P_err:list=None, ofac:int=3, fap:float=0.01) -> list:
+    def recovery_test(self, P_inj:list, K_inj:list, p_inj:list=None, P_err:list=None, ofac:int=3, fap:float=0.01, N_max:int=10) -> list:
         """Recovery test (used by injection_recovery() function).
 
         :param P_inj: injected periods
@@ -17,6 +17,8 @@ class recovery_test:
         :type ofac: int, optional
         :param fap: false-alarm probability level, defaults to 0.01
         :type fap: float, optional
+        :param N_max: maximum number of fitted Keplerians, defaults to 10
+        :type N_max: int, optional
         :return: ratios between recovered and injected RV semi-amplitudes for recovered Keplerians, NaNs otherwise
         :rtype: list
         """
@@ -53,7 +55,7 @@ class recovery_test:
         try:
 
             # fit Keplerians
-            self.fit_keplerians(ofac=ofac, fap=fap)
+            self.fit_keplerians(ofac=ofac, fap=fap, N_max=N_max)
             keplerians = self.keplerians
             Nkep_fit = len(keplerians)
 

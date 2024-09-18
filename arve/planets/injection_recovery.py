@@ -2,7 +2,7 @@ import numpy as np
 
 class injection_recovery:
 
-    def injection_recovery(self, xy_arr:list=None, p_arr:list=None, xy_map:list=None, map_dim:list=[10,10], x_var:str="P", y_var:str="K", P_lim:float=0.1, scale:str="linear", ofac:int=3, fap:float=0.01) -> None:
+    def injection_recovery(self, xy_arr:list=None, p_arr:list=None, xy_map:list=None, map_dim:list=[10,10], x_var:str="P", y_var:str="K", scale:str="linear", P_lim:float=0.1, ofac:int=3, fap:float=0.01, N_max:int=10) -> None:
         """Injection-recovery test of specific injected values, 2D map or both.
 
         :param xy_arr: 2D array with injected values in the format [x_arr, y_arr], defaults to None
@@ -17,14 +17,16 @@ class injection_recovery:
         :type x_var: str, optional
         :param y_var: y variable, either RV semi-amplitude "K" in km/s or planet mass "m" in Earth masses, defaults to "K"
         :type y_var: str, optional
-        :param P_lim: period fraction for calculation of allow period errors to count as recovery, defaults to 0.1
-        :type P_lim: float, optional
         :param scale: scale of injected values, either "linear" or "log", defaults to "linear"
         :type scale: str, optional
+        :param P_lim: period fraction for calculation of allow period errors to count as recovery, defaults to 0.1
+        :type P_lim: float, optional
         :param ofac: over-factorization of periodogram, defaults to 3
         :type ofac: int, optional
         :param fap: false-alarm probability level, defaults to 0.01
         :type fap: float, optional
+        :param N_max: maximum number of fitted Keplerians, defaults to 10
+        :type N_max: int, optional
         :return: None
         :rtype: None
         """
@@ -63,7 +65,7 @@ class injection_recovery:
                 K_arr = 8.95e-5*(P_arr/365.25)**(-1/3)*M**(-2/3)*m_arr
 
             # recovery array
-            recovery_arr = self.recovery_test(P_arr, K_arr, p_arr, P_err=P_err, ofac=ofac, fap=fap)
+            recovery_arr = self.recovery_test(P_arr, K_arr, p_arr, P_err=P_err, ofac=ofac, fap=fap, N_max=N_max)
 
         # else set arrays to None
         else:
@@ -90,19 +92,19 @@ class injection_recovery:
                 P_err = P_map*P_lim
             if x_var == "a":
                 a_map = x_map
-                P_map = (a_map**3/(7.496e-6*M))**(1/2)
+                P_map = 365.25*a_map**(3/2)*M**(-1/2)
                 P_err = P_map*P_lim
             if y_var == "K":
                 K_map = y_map
             if y_var == "m":
                 m_map = y_map
-                K_map = 9e-5*m_map*M**(-2/3)*(P_map/365.25)**(-1/3)
+                K_map = 8.95e-5*(P_map/365.25)**(-1/3)*M**(-2/3)*m_map
 
             # recovery map
             recovery_map = np.zeros((len(P_map),len(K_map)))
             for i in range(len(P_map)):
                 for j in range(len(K_map)):
-                    recovery_map[i,j] = self.recovery_test(np.array([P_map[i]]), np.array([K_map[j]]), P_err=np.array([P_err[i]]), ofac=ofac, fap=fap)[0]
+                    recovery_map[i,j] = self.recovery_test(np.array([P_map[i]]), np.array([K_map[j]]), P_err=np.array([P_err[i]]), ofac=ofac, fap=fap, N_max=N_max)[0]
 
         # else set arrays to None
         else:

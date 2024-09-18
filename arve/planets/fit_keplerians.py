@@ -5,7 +5,7 @@ from   scipy.optimize     import curve_fit
 
 class fit_keplerians:
 
-    def fit_keplerians(self, ofac:int=3, fap:float=0.01, P_lim:float=None, Nmax:int=10) -> None:
+    def fit_keplerians(self, ofac:int=3, fap:float=0.01, P_lim:float=None, N_max:int=10) -> None:
         """Fit Keplerians.
 
         :param ofac: over-factorization of periodogram, defaults to 3
@@ -14,8 +14,8 @@ class fit_keplerians:
         :type fap: float, optional
         :param P_lim: allowed fractional period error for fitting bound (set to 10% of guessed period if not provided), defaults to None
         :type P_lim: float, optional
-        :param Nmax: maximum number of fitted Keplerians, defaults to 10
-        :type Nmax: int, optional
+        :param N_max: maximum number of fitted Keplerians, defaults to 10
+        :type N_max: int, optional
         :return: None
         :rtype: None
         """
@@ -45,7 +45,7 @@ class fit_keplerians:
         power_fap = 0
 
         # fit Keplerians while the maximum periodogram power is larger than the FAP power or while the number of fitted Keplerians is below the maximum
-        while (power_max >= power_fap) & (len(para_val_arr) < Nmax):
+        while (power_max >= power_fap) & (len(para_val_arr) < N_max):
 
             # Lomb-Scargle periodogram
             gls       = LombScargle(time_val, vrad_val_tmp, vrad_err)
