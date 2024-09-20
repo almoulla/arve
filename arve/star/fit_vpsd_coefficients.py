@@ -68,15 +68,6 @@ def _func_res(params, self, freq_avg, vpsd_avg):
         # component type
         type = comp_dict["type"]
 
-        # type Constant
-        if type == "Constant":
-            
-            # unpack coefficients
-            c0 = params[comp + "_0"]
-
-            # compute component
-            vpsd_comp = c0
-
         # type Lorentz
         if type == "Lorentz":
 
@@ -98,10 +89,19 @@ def _func_res(params, self, freq_avg, vpsd_avg):
 
             # compute component
             vpsd_comp = c0/(1+(c1*freq_avg)**c2)
-    
+
+        # type Constant
+        if type == "Constant":
+            
+            # unpack coefficients
+            c0 = params[comp + "_0"]
+
+            # compute component
+            vpsd_comp = c0
+
         # add component to sum
         vpsd_tot += vpsd_comp
-    
+
     # logarithmic residual
     logres = np.log10(vpsd_avg) - np.log10(vpsd_tot)
 

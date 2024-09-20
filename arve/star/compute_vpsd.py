@@ -2,9 +2,11 @@ import numpy as np
 
 class compute_vpsd:
 
-    def compute_vpsd(self) -> None:
+    def compute_vpsd(self, N_bin:int=50) -> None:
         """Compute velocity power spectral density (VPSD).
 
+        :param N_bin: number of frequency bins for the averaged VPSD, defaults to 50
+        :type N_bin: int, optional
         :return: None
         :rtype: None
         """
@@ -17,7 +19,7 @@ class compute_vpsd:
         freq, vps, phi, win_freq, win_vps, win_area = self.arve.functions.gls_periodogram(time=time_val, val=vrad_val, err=vrad_err, normalize=False, win_func=True)
 
         # compute log-average VPS
-        freq_bin = 10 ** (np.linspace(np.log10(freq[0]), np.log10(freq[-1]), 51))
+        freq_bin = 10 ** (np.linspace(np.log10(freq[0]), np.log10(freq[-1]), N_bin+1))
         freq_avg = (freq_bin[1:] + freq_bin[:-1]) / 2
         vps_avg  = np.empty(freq_avg.size)
         for i in range(freq_avg.size):

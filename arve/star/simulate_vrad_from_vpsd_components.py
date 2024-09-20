@@ -46,15 +46,15 @@ class simulate_vrad_from_vpsd_components:
             coef_val  = vpsd_comp[comp_name[i]]["coef_val"]
 
             # evaluate component on frequencies
-            if comp_type == "Constant":
-                c0, = coef_val
-                vpsd_arr[i] = c0*np.ones_like(freq)
             if comp_type == "Lorentz":
                 c0, c1, c2 = coef_val
                 vpsd_arr[i] = c0*c1**2/(c1**2+(freq-c2)**2)
             if comp_type == "Harvey":
                 c0, c1, c2 = coef_val
                 vpsd_arr[i] = c0/(1+(c1*freq)**c2)
+            if comp_type == "Constant":
+                c0, = coef_val
+                vpsd_arr[i] = c0*np.ones_like(freq)
         
         # velocity amplitudes
         vamp_arr = np.sqrt(vpsd_arr*df)
@@ -62,8 +62,8 @@ class simulate_vrad_from_vpsd_components:
         # empty array for RV components + total + total without noise
         vrad_comp = np.zeros((Ntime,Nvpsd_comp+2))
 
-        # Index of all components except photon noise
-        idx_tot = [comp_name[i] != "Photon_noise" for i in range(Nvpsd_comp)]
+        # index of all components except noise
+        idx_tot = [comp_name[i] != "Noise" for i in range(Nvpsd_comp)]
 
         # loop times
         for i in range(Ntime):

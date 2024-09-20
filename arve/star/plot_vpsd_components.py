@@ -48,19 +48,6 @@ class plot_vpsd_components:
             type     = comp_dict["type"]
             coef_val = comp_dict["coef_val"]
 
-            # type Constant
-            if type == "Constant":
-
-                # unpack coefficients
-                c0 = coef_val[0]
-
-                # compute component
-                vpsd_comp = c0
-
-                # plot component
-                if total_only == False:
-                    plt.axhline(vpsd_comp, ls="--", label=comp)
-
             # type Lorentz
             if type == "Lorentz":
                 
@@ -90,6 +77,19 @@ class plot_vpsd_components:
                 # plot component
                 if total_only == False:
                     plt.loglog(freq, vpsd_comp, ls="--", label=comp)
+
+            # type Constant
+            if type == "Constant":
+
+                # unpack coefficients
+                c0 = coef_val[0]
+
+                # compute component
+                vpsd_comp = c0
+
+                # plot component
+                if total_only == False:
+                    plt.axhline(vpsd_comp, ls="--", label=comp)
 
             # add component to sum
             vpsd_tot += vpsd_comp

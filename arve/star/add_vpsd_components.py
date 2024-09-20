@@ -2,10 +2,10 @@ import numpy as np
 
 class add_vpsd_components:
 
-    def add_vpsd_components(self, components:list=["Photon_noise", "Oscillations", "Granulation", "Supergranulation"]) -> None:
+    def add_vpsd_components(self, components:list=["Oscillations", "Granulation", "Supergranulation", "Noise"]) -> None:
         """Add velocity power spectral density (VPSD) components.
 
-        :param components: VPSD components, defaults to ["Photon_noise", "Oscillations", "Granulation", "Supergranulation"]
+        :param components: VPSD components, defaults to ["Oscillations", "Granulation", "Supergranulation", "Noise"]
         :type components: list, optional
         :return: None
         :rtype: None
@@ -37,25 +37,6 @@ class add_vpsd_components:
         # dictionary with VPSD components
         if self.vpsd_components is None:
             self.vpsd_components = {}
-
-        # photon noise
-        if "Photon_noise" in components:
-
-            # check vpsd is computed
-            if self.vpsd is not None:
-
-                # coefficients
-                c0 = np.min(vpsd_avg) # amplitude
-
-                # specifications
-                name     = "Photon_noise" # name
-                type     = "Constant"     # function type
-                coef_val = [c0  ]         # coefficient values
-                coef_err = [0   ]         # coefficient errors
-                vary     = [True]         # vary when fitted
-
-                # save VPSD component
-                self.vpsd_components[name] = {"type": type, "coef_val": coef_val, "coef_err": coef_err, "vary": vary}
 
         # oscillations
         if "Oscillations" in components:
@@ -173,8 +154,24 @@ class add_vpsd_components:
 
                 # save VPSD component
                 self.vpsd_components[name] = {"type": type, "coef_val": coef_val, "coef_err": coef_err, "vary": vary}
+
+        # noise
+        if "Noise" in components:
+
+            # check vpsd is computed
+            if self.vpsd is not None:
+
+                # coefficients
+                c0 = np.min(vpsd_avg) # amplitude
+
+                # specifications
+                name     = "Noise"    # name
+                type     = "Constant" # function type
+                coef_val = [c0  ]     # coefficient values
+                coef_err = [0   ]     # coefficient errors
+                vary     = [True]     # vary when fitted
+
+                # save VPSD component
+                self.vpsd_components[name] = {"type": type, "coef_val": coef_val, "coef_err": coef_err, "vary": vary}
         
         return None
-
-
-#%%
