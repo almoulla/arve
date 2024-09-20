@@ -2,10 +2,8 @@ import numpy                 as     np
 import os
 import pandas                as     pd
 import pkg_resources
-from   scipy                 import ndimage
 from   scipy.interpolate     import interp1d
 from   scipy.ndimage.filters import convolve
-from   scipy.signal          import argrelextrema
 
 class get_aux_data:
 
@@ -135,13 +133,15 @@ class get_aux_data:
         else:
             idx_l = idx_above[:-1][np.diff(idx_above)>1]
             idx_r = idx_below[:-1][np.diff(idx_below)>1]
-            if tell_flux[ 0] < tell_lim:
+            if tell_flux[ 0] <  tell_lim:
                 idx_l = np.append(0, idx_l)
-            if tell_flux[-1] < tell_lim:
+            if tell_flux[-1] >= tell_lim:
+                idx_r = np.append(idx_r, idx_below[-1])
+            if tell_flux[-1] <  tell_lim:
                 idx_l = np.append(idx_l, idx_above[-1])
                 idx_r = np.append(idx_r, len(tell_flux)-1)
-                tell_wave_l = tell_wave[idx_l]*(1-berv_max/c)
-                tell_wave_r = tell_wave[idx_r]*(1+berv_max/c)
+            tell_wave_l = tell_wave[idx_l]*(1-berv_max/c)
+            tell_wave_r = tell_wave[idx_r]*(1+berv_max/c)
 
         # create new telluric DataFrame with left and right bounds of telluric bands
         band = pd.DataFrame()
@@ -183,7 +183,7 @@ class get_aux_data:
         return None
 
 def _convolve_gaussian(wave:list, flux:list, resolution:float) -> list:
-    """Convolve spectrum with Gaussian instrumental profile.
+    """Convolve spectrum with Gaussian instrumental profile. Adapted from: https://pysme-astro.readthedocs.io/en/latest/_modules/pysme/broadening.html
 
     :param wave: wavelength values
     :type wave: list
