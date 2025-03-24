@@ -1,7 +1,9 @@
-import numpy                 as     np
+import importlib.resources
 import os
+import urllib.request
+
+import numpy                 as     np
 import pandas                as     pd
-import pkg_resources
 from   scipy.interpolate     import interp1d
 from   scipy.ndimage.filters import convolve
 
@@ -34,23 +36,26 @@ class get_aux_data:
         # read constants
         c = self.arve.functions.constants["c"]
 
-        # path to auxiliary data
-        path_aux_data = pkg_resources.resource_filename("arve", "aux_data/")
+        # paths to auxiliary data
+        path_aux_data = importlib.resources.files("arve/aux_data/")
+        path_aux_mask = path_aux_data+"masks/"
+        path_aux_spec = path_aux_data+"spectra/"
+        path_aux_tell = path_aux_data+"tellurics/"
+        path_aux_wave = path_aux_data+"wavelengths/"
 
-        # search masks
-        masks            = sorted(os.listdir(path_aux_data+"masks/"))
-        masks            = [mask for mask in masks if mask.endswith(".csv.zip")]
-        sptype_masks     = [mask.split(".")[0] for mask in masks]
-        sptype_num_masks = np.array([self.arve.functions.sptype_to_num(sptype=sptype) for sptype in sptype_masks])
-
-        # search spec
-        specs            = sorted(os.listdir(path_aux_data+"spectra/"))
-        specs            = [spec for spec in specs if spec.endswith(".csv.zip")]
-        sptype_specs     = [spec.split(".")[0] for spec in specs]
-        sptype_num_specs = np.array([self.arve.functions.sptype_to_num(sptype=sptype) for sptype in sptype_specs])
+        # search file names and spectral types among masks
+        files             = sorted(os.listdir(path_aux_mask))
+        files             = [file for file in files if file.endswith(".csv.zip")]
+        sptypes_data      = [file.split(".")[0] for file in files]
+        sptypes_data_num  = np.array([self.arve.functions.sptype_to_num(sptype=sptype) for sptype in sptypes_data])
 
         # spectral type as number
-        sptype_num       = self.arve.functions.sptype_to_num(sptype=self.arve.star.stellar_parameters["sptype"])
+        sptype_star     = self.arve.star.stellar_parameters["sptype"]
+        sptype_star_num = self.arve.functions.sptype_to_num(sptype=sptype_star)
+
+        # file of closest spectral type available in auxiliary data
+        idx_file = np.argmin(np.abs(sptype_star_num-sptypes_data_num))
+        file     = files[idx_file]
 
         # read self-provided mask
         if path_mask is not None:
@@ -58,9 +63,8 @@ class get_aux_data:
             mask_name = path_mask.split("/")[-1]
         # read closest mask
         else:
-            idx_mask  = np.argmin(np.abs(sptype_num-sptype_num_masks))
-            mask      = pd.read_csv(path_aux_data+"masks/"+masks[idx_mask])
-            mask_name = masks[idx_mask]
+            mask      = pd.read_csv(path_aux_mask+file)
+            mask_name = file
             if medium == "air":
                 mask["wave"  ] = self.arve.functions.convert_vac_to_air(mask["wave"  ])
                 mask["wave_l"] = self.arve.functions.convert_vac_to_air(mask["wave_l"])
@@ -70,10 +74,14 @@ class get_aux_data:
             idx_wave     = (mask.wave_l>=wave_val[i][0]) & (mask.wave_r<=wave_val[i][-1])
             mask_dict[i] = mask[idx_wave].reset_index(drop=True)
 
+        # download closest spectrum from GitHub if it does not already exist in the package directory
+        if not os.path.exists(path_aux_spec+file):
+            path_github = "https://raw.githubusercontent.com/almoulla/arve/main/arve/aux_data/spectra/"+file
+            urllib.request.urlretrieve(path_github, path_aux_spec)
+
         # read closest spectrum
-        idx_spec = np.argmin(np.abs(sptype_num-sptype_num_specs))
-        wave     = pd.read_csv(path_aux_data+"wavelengths/WAVE.csv.zip")["wave"]
-        spec     = pd.read_csv(path_aux_data+"spectra/"+specs[idx_spec])
+        wave = pd.read_csv(path_aux_wave+"WAVE.csv.zip")["wave"]
+        spec = pd.read_csv(path_aux_spec+file)
         if medium == "air":
             wave = self.arve.functions.convert_vac_to_air(wave)
         spec.insert(0, "wave", wave)
@@ -100,8 +108,8 @@ class get_aux_data:
             mask_dict[i]["wave_r"    ] = spec_dict["wave"][i][mask_dict[i].wave_r_idx]
         
         # read telluric spectrum
-        wave = pd.read_csv(path_aux_data+"wavelengths/WAVE.csv.zip")["wave"]
-        tell = pd.read_csv(path_aux_data+"tellurics/TELL.csv.zip")
+        wave = pd.read_csv(path_aux_wave+"WAVE.csv.zip")["wave"]
+        tell = pd.read_csv(path_aux_tell+"TELL.csv.zip")
         if medium == "air":
             wave = self.arve.functions.convert_vac_to_air(wave)
         wave = self.arve.functions.doppler_shift(wave=wave, v=-vrad_sys)

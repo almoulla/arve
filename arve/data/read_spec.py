@@ -42,6 +42,19 @@ class read_spec:
                 # open file
                 hdul = fits.open(self.spec["files"][i])
 
+                # instrument: ESPRESSO
+                if self.spec["instrument"] == "espresso":
+                    if i == 0:
+                        self.spec["medium"    ] = "air"
+                        if hdul[0].header["HIERARCH ESO INS MODE"] == "SINGLEHR":
+                            self.spec["resolution"] = 138000
+                        if hdul[0].header["HIERARCH ESO INS MODE"] == "SINGLEUHR":
+                            self.spec["resolution"] = 190000
+                    self.time["time_val"][i] = hdul[0].header["HIERARCH ESO QC BJD"]
+                    file = {"wave_val": hdul[5].data,
+                            "flux_val": hdul[1].data,
+                            "flux_err": hdul[2].data}
+
                 # instrument: HARPN
                 if self.spec["instrument"] == "harpn":
                     if i == 0:
@@ -52,7 +65,7 @@ class read_spec:
                             "flux_val": hdul[1].data["flux"],
                             "flux_err": hdul[1].data["error"]}
 
-                # instrument: NIRPS
+                # instrument: NEID
                 if self.spec["instrument"] == "neid":
                     if i == 0:
                         self.spec["medium"    ] = "vac"
