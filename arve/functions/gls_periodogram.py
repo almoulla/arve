@@ -1,5 +1,4 @@
-#from   numba import njit
-import numpy as     np
+import numpy as np
 
 class gls_periodogram:
 

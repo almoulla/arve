@@ -5,7 +5,7 @@ with open("README.md") as file:
 
 setup(
     name="arve",
-    version="0.1.7",
+    version="0.2.2",
     author="Khaled Al Moulla",
     author_email="khaled.almoulla@gmail.com",
     description="Analyzing Radial Velocity Elements",
@@ -17,7 +17,6 @@ setup(
     install_requires=["astroquery",
                       "lmfit"     ,
                       "matplotlib",
-                      "numba"     ,
                       "numpy"     ,
                       "pandas"    ,
                       "scipy"     ,
@@ -31,5 +30,6 @@ setup(
     include_package_data=True,
     package_data={"arve": ["aux_data/masks/*.csv.zip",
                            "aux_data/spectra/*.csv.zip",
-                           "aux_data/tellurics/*.csv.zip"]}
+                           "aux_data/tellurics/*.csv.zip",
+                           "aux_data/wavelengths/*.csv.zip"]}
 )
