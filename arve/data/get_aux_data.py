@@ -78,8 +78,8 @@ class get_aux_data:
 
         # download closest spectrum from GitHub if it does not already exist in the package directory
         if not os.path.exists(path_aux_spec+file):
-            path_github = "https://raw.githubusercontent.com/almoulla/arve/main/arve/aux_data/spectra/"+file
-            urllib.request.urlretrieve(path_github, path_aux_spec)
+            path_github = "https://raw.githubusercontent.com/almoulla/arve/main/arve/aux_data/spectra/"
+            urllib.request.urlretrieve(path_github+file, path_aux_spec+file)
 
         # read closest spectrum
         wave = pd.read_csv(path_aux_wave+"WAVE.csv.zip")["wave"]
