@@ -44,6 +44,14 @@ arve.functions.inverted\_gaussian module
    :undoc-members:
    :show-inheritance:
 
+arve.functions.keplerian module
+-------------------------------
+
+.. automodule:: arve.functions.keplerian
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 arve.functions.sptype\_to\_num module
 -------------------------------------
 

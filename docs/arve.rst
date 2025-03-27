@@ -7,6 +7,7 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
+   arve.aux_data
    arve.data
    arve.functions
    arve.planets

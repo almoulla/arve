@@ -44,6 +44,14 @@ arve.star.plot\_vpsd\_components module
    :undoc-members:
    :show-inheritance:
 
+arve.star.simulate\_vrad\_from\_vpsd\_components module
+-------------------------------------------------------
+
+.. automodule:: arve.star.simulate_vrad_from_vpsd_components
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Module contents
 ---------------
 

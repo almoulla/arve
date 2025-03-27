@@ -44,6 +44,22 @@ arve.data.get\_aux\_data module
    :undoc-members:
    :show-inheritance:
 
+arve.data.plot\_vrad module
+---------------------------
+
+.. automodule:: arve.data.plot_vrad
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+arve.data.read\_spec module
+---------------------------
+
+.. automodule:: arve.data.read_spec
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Module contents
 ---------------
 
