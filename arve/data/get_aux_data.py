@@ -39,7 +39,7 @@ class get_aux_data:
         # paths to auxiliary data
         resource_aux_data = importlib.resources.files("arve.aux_data")
         with importlib.resources.as_file(resource_aux_data) as path:
-            path_aux_data = str(path)
+            path_aux_data = str(path) + "/"
         path_aux_mask = path_aux_data+"masks/"
         path_aux_spec = path_aux_data+"spectra/"
         path_aux_tell = path_aux_data+"tellurics/"
