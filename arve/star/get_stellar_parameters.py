@@ -38,8 +38,8 @@ class get_stellar_parameters:
                 simbad = Simbad()
                 simbad.add_votable_fields("sptype"  )
                 simbad.add_votable_fields("velocity")
-                self.stellar_parameters["sptype"  ] = simbad.query_object(self.target)["SP_TYPE"   ][0][:2]
-                self.stellar_parameters["vrad_sys"] = simbad.query_object(self.target)["RVZ_RADVEL"][0]
+                self.stellar_parameters["sptype"  ] = simbad.query_object(self.target)["sp_type"   ][0][:2]
+                self.stellar_parameters["vrad_sys"] = simbad.query_object(self.target)["rvz_radvel"][0]
 
             # specific spectral type
             else:
