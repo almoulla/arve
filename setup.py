@@ -1,10 +1,11 @@
 import arve
+import os
 from   setuptools import find_packages, setup
 
 with open("README.md") as file:
     long_description = file.read()
 
-with open("requirements.txt") as file:
+with open(os.path.join(os.path.dirname(__file__), "requirements.txt")) as file:
     install_requires = file.read().splitlines()
 
 setup(
