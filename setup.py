@@ -1,16 +1,11 @@
-import arve
-import os
-from   setuptools import find_packages, setup
+from setuptools import find_packages, setup
 
 with open("README.md") as file:
     long_description = file.read()
 
-with open(os.path.join(os.path.dirname(__file__), "requirements.txt")) as file:
-    install_requires = file.read().splitlines()
-
 setup(
     name="arve",
-    version=arve.__version__,
+    version="0.2.8",
     author="Khaled Al Moulla",
     author_email="khaled.almoulla@gmail.com",
     description="Analyzing Radial Velocity Elements",
@@ -20,12 +15,17 @@ setup(
     license="MIT License",
     packages=find_packages(),
     python_requires=">=3.10",
-    install_requires=install_requires,
+    install_requires=["astroquery>=0.4.10",
+                      "lmfit>=1.3.3"      ,
+                      "matplotlib>=3.10.1",
+                      "numpy>=2.2.4"      ,
+                      "pandas>=2.2.3"     ,
+                      "scipy>=1.15.2"     ,
+                      "tqdm>=4.67.1"      ],
     classifiers=["Development Status :: 1 - Planning"    ,
                  "Intended Audience :: Science/Research" ,
                  "License :: OSI Approved :: MIT License",
-                 "Programming Language :: Python :: 3"   ,
-                 ],
+                 "Programming Language :: Python :: 3"   ],
     include_package_data=True,
     package_data={"arve": ["aux_data/masks/*.csv.zip",
                            "aux_data/spectra/*.csv.zip",
