@@ -196,8 +196,8 @@ class compute_vrad_lbl:
 
         # outlier rejection
         for i in range(Nspec):
-            *_, clip_val_min, clip_val_max = sigma_clip(np.hstack([vrad_val_arr[j][i,:,:]] for j in range(Nord)), maxiters=None, return_bounds=True)
-            *_, clip_err_min, clip_err_max = sigma_clip(np.hstack([vrad_err_arr[j][i,:,:]] for j in range(Nord)), maxiters=None, return_bounds=True)
+            *_, clip_val_min, clip_val_max = sigma_clip(np.vstack([vrad_val_arr[j][i,:,:] for j in range(Nord)]), maxiters=None, return_bounds=True)
+            *_, clip_err_min, clip_err_max = sigma_clip(np.vstack([vrad_err_arr[j][i,:,:] for j in range(Nord)]), maxiters=None, return_bounds=True)
             for j in range(Nord):
                 for k in range(Nline[j]):
                     for l in range(Nbin):
