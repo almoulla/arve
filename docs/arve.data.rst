@@ -1,8 +1,5 @@
-arve.data package
-=================
-
-Submodules
-----------
+arve.data
+=========
 
 arve.data.add\_data module
 --------------------------
@@ -56,14 +53,6 @@ arve.data.read\_spec module
 ---------------------------
 
 .. automodule:: arve.data.read_spec
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: arve.data
    :members:
    :undoc-members:
    :show-inheritance:

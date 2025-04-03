@@ -1,8 +1,5 @@
-arve.planets package
-====================
-
-Submodules
-----------
+arve.planets
+============
 
 arve.planets.fit\_keplerians module
 -----------------------------------
@@ -40,14 +37,6 @@ arve.planets.recovery\_test module
 ----------------------------------
 
 .. automodule:: arve.planets.recovery_test
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: arve.planets
    :members:
    :undoc-members:
    :show-inheritance:
