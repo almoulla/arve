@@ -69,11 +69,11 @@ class read_spec:
                     if i == 0:
                         self.spec["medium"    ] = "vac"
                         self.spec["resolution"] = 137500
-                    self.time["time_val"][i] = hdul[1].header['BARYMJD']
+                    self.time["time_val"][i] = hdul[1].header["BARYMJD"]
                     if self.spec["format"] == "s2d":
-                        file = {"wave_val": hdul[1].data['bary_wavelength'],
-                                "flux_val": hdul[1].data['spectrum'       ]*hdul[1].data['blaze'],
-                                "flux_err": hdul[1].data['uncertainty'    ]*hdul[1].data['blaze']}
+                        file = {"wave_val": hdul[1].data["bary_wavelength"]                      ,
+                                "flux_val": hdul[1].data["spectrum"       ]*hdul[1].data["blaze"],
+                                "flux_err": hdul[1].data["uncertainty"    ]*hdul[1].data["blaze"]}
 
                 # instrument: HARPS
                 if self.spec["instrument"] == "harps":
@@ -93,8 +93,8 @@ class read_spec:
                     self.time["time_val"][i] = hdul[0].header["HIERARCH TNG QC BJD"]
                     if self.spec["format"] == "s1d":
                         file = {"wave_val": hdul[1].data["wavelength_air"],
-                                "flux_val": hdul[1].data["flux"],
-                                "flux_err": hdul[1].data["error"]}
+                                "flux_val": hdul[1].data["flux"          ],
+                                "flux_err": hdul[1].data["error"         ]}
                     if self.spec["format"] == "s2d":
                         file = {"wave_val": hdul[5].data,
                                 "flux_val": hdul[1].data,
@@ -108,8 +108,8 @@ class read_spec:
                     self.time["time_val"][i] = hdul[0].header["OBSJD"]
                     self.time["berv_val"][i] = hdul[0].header["SSBRV100"]*(-1)
                     if self.spec["format"] == "s2d":
-                        file = {"wave_val": hdul[7].data,
-                                "flux_val": hdul[1].data,
+                        file = {"wave_val": hdul[7].data       ,
+                                "flux_val": hdul[1].data       ,
                                 "flux_err": hdul[4].data**(1/2)}
 
                 # instrument: NIRPS
@@ -131,9 +131,20 @@ class read_spec:
                     self.time["time_val"][i] = hdul[0].header["MJDATE"]
                     self.time["berv_val"][i] = hdul[0].header["BERV"]
                     if self.spec["format"] == "s2d":
-                        file = {"wave_val": hdul[1].data["wavelength"]*10,
-                                "flux_val": hdul[1].data["flux"],
-                                "flux_err": hdul[1].data["weight"]**(-1/2)}
+                        file = {"wave_val": hdul[1].data["wavelength"    ]*10     ,
+                                "flux_val": hdul[1].data["flux"          ]        ,
+                                "flux_err": hdul[1].data["weight"        ]**(-1/2)}
+                
+                # instrument: ESSP
+                if self.spec["instrument"] == "essp":
+                    if i == 0:
+                        self.spec["medium"    ] = "vac"
+                        self.spec["resolution"] = 100000
+                    self.time["time_val"][i] = hdul[0].header["mjd_utc"]
+                    if self.spec["format"] == "s2d":
+                        file = {"wave_val": hdul.data["wavelength" ]                   ,
+                                "flux_val": hdul.data["flux"       ]*hdul.data["blaze"],
+                                "flux_err": hdul.data["uncertainty"]*hdul.data["blaze"]}
                 
                 # close file
                 hdul.close()
