@@ -2,25 +2,39 @@ import numpy as np
 
 class recovery_test:
 
-    def recovery_test(self, P_inj:list, K_inj:list, p_inj:list=None, P_err:list=None, ofac:int=3, fap:float=0.01, N_max:int=10) -> list:
+    def recovery_test(
+        self,
+        P_inj    : np.ndarray              ,
+        K_inj    : np.ndarray              ,
+        p_inj    : np.ndarray | None = None,
+        P_err    : np.ndarray | None = None,
+        oversamp : float             = 3   ,
+        fap      : float             = 0.01,
+        N_max    : int               = 10
+        ) -> np.ndarray:
         """Recovery test (used by injection_recovery() function).
 
-        :param P_inj: injected periods
-        :type P_inj: list
-        :param K_inj: injected RV semi-amplitudes
-        :type K_inj: list
-        :param p_inj: injected phases, defaults to None
-        :type p_inj: list
-        :param P_err: allowed period errors to count as recovery (set to 10% of injected periods if not provided), defaults to None
-        :type P_err: list, optional
-        :param ofac: over-factorization of periodogram, defaults to 3
-        :type ofac: int, optional
-        :param fap: false-alarm probability level, defaults to 0.01
-        :type fap: float, optional
-        :param N_max: maximum number of fitted Keplerians, defaults to 10
-        :type N_max: int, optional
-        :return: ratios between recovered and injected RV semi-amplitudes for recovered Keplerians, NaNs otherwise
-        :rtype: list
+        Parameters
+        ----------
+        P_inj : np.ndarray
+            injected periods
+        K_inj : np.ndarray
+            injected RV semi-amplitudes
+        p_inj : np.ndarray | None, optional
+            injected phases, by default None
+        P_err : np.ndarray | None, optional
+            allowed differences between injected and fitted periods to count as recoveries (set to 10% of injected periods if not provided), by default None
+        oversamp : float, optional
+            oversamling factor of the periodogram frequency grid, by default 3
+        fap : float, optional
+            false-alarm probability (FAP) level, by default 0.01
+        N_max : int, optional
+            maximum number of fitted Keplerians, by default 10
+
+        Returns
+        -------
+        np.ndarray
+            ratios between recovered and injected RV semi-amplitudes for recovered Keplerians
         """
 
         # read data
@@ -28,11 +42,11 @@ class recovery_test:
         vrad_val, = [self.arve.data.vrad[key] for key in ["vrad_val"]]
 
         # nr. of injected Keplerians
-        Nkep_inj = len(P_inj)
+        N_inj = len(P_inj)
 
         # injected phase
         if p_inj is None:
-            p_inj = np.random.uniform(-np.pi, np.pi, Nkep_inj)
+            p_inj = np.random.uniform(-np.pi, np.pi, N_inj)
 
         # period error
         if P_err is None:
@@ -42,33 +56,33 @@ class recovery_test:
         vrad_val_tmp = np.copy(vrad_val)
 
         # add injected Keplerians to RV values
-        for i in range(Nkep_inj):
+        for i in range(N_inj):
             vrad_val_tmp += K_inj[i]*np.sin(2*np.pi/P_inj[i]*time_val + p_inj[i])
 
         # set RV values with Keplerians
         self.arve.data.vrad["vrad_val"] = vrad_val_tmp
 
         # empty array for recovery results
-        recovery_result = np.zeros(Nkep_inj)
+        recovery_result = np.zeros(N_inj)
 
         # try to fit Keplerians
         try:
 
             # fit Keplerians
-            self.fit_keplerians(ofac=ofac, fap=fap, N_max=N_max)
+            self.fit_keplerians(oversamp=oversamp, fap=fap, N_max=N_max)
             keplerians = self.keplerians
-            Nkep_fit = len(keplerians)
+            N_fit = len(keplerians)
 
             # get periods and RV semi-amplitudes of fitted Keplerians
             P_val = keplerians["P_val"].to_numpy()
             K_val = keplerians["K_val"].to_numpy()
 
             # loop injected Keplerians
-            for i in range(Nkep_inj):
+            for i in range(N_inj):
 
                 # check if injected period is among fitted periods (within the allowed error)
                 P_bound = np.vstack([P_val   -P_err  [i]    ,  P_val   +P_err  [i]]).T
-                P_crit  = np.array([(P_inj[i]>P_bound[k,0]) & (P_inj[i]<P_bound[k,1]) for k in range(Nkep_fit)])
+                P_crit  = np.array([(P_inj[i]>P_bound[k,0]) & (P_inj[i]<P_bound[k,1]) for k in range(N_fit)])
 
                 # if period criterion is not satisfied, return NaN
                 if np.sum(P_crit) == 0:
@@ -83,7 +97,7 @@ class recovery_test:
         # if unable to fit Keplerians, return NaNs
         except:
 
-            recovery_result = np.zeros(Nkep_inj)*np.nan
+            recovery_result = np.zeros(N_inj)*np.nan
         
         # re-set RV values without Keplerians
         self.arve.data.vrad["vrad_val"] = vrad_val

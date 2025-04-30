@@ -1,14 +1,25 @@
+import numpy as np
+
 class doppler_shift:
 
-    def doppler_shift(self, wave:list, v:float) -> list:
+    def doppler_shift(
+        self,
+        wave : float | np.ndarray,
+        v    : float
+        ) -> float | np.ndarray:
         """Doppler shift.
 
-        :param wave: wavelengths
-        :type wave: list
-        :param v: velocity in km/s
-        :type v: float
-        :return: Doppler-shifted wavelengths
-        :rtype: list
+        Parameters
+        ----------
+        wave : float | np.ndarray
+            wavelength(s)
+        v : float
+            velocity in km/s
+
+        Returns
+        -------
+        float | np.ndarray
+            Doppler-shifted wavelength(s)
         """
 
         # read constants

@@ -6,8 +6,6 @@ from .inverted_gaussian  import inverted_gaussian
 from .keplerian          import keplerian
 from .sptype_to_num      import sptype_to_num
 
-from typing import Optional
-
 class Functions(
     convert_air_to_vac,
     convert_vac_to_air,
@@ -17,11 +15,11 @@ class Functions(
     keplerian,
     sptype_to_num
     ):
-    """ARVE Functions sub-class.
+    """ARVE Functions subclass.
     """
 
     def __init__(self, arve):
-        self.arve            = arve
-        self.constants: dict = {
+        self.arve                        = arve
+        self.constants : dict[str,float] = {
             "c": 2.99792458e5 # [km/s] speed of light in vacuum
         }

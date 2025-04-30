@@ -1,12 +1,22 @@
+import numpy as np
+
 class convert_vac_to_air:
 
-    def convert_vac_to_air(self, wave_vac:list) -> list:
-        """Convert wavelengths from vacuum to air.
+    def convert_vac_to_air(
+        self,
+        wave_vac : float | np.ndarray
+        ) -> float | np.ndarray:
+        """Convert wavelengths from vacuum to air. Source: https://www.astro.uu.se/valdwiki/Air-to-vacuum%20conversion
 
-        :param wave_vac: wavelengths in vacuum [Å]
-        :type wave_vac: list
-        :return: wavelengths in air [Å]
-        :rtype: list
+        Parameters
+        ----------
+        wave_vac : float | np.ndarray
+            wavelength(s) in vacuum [Å]
+
+        Returns
+        -------
+        float | np.ndarray
+            wavelength(s) in air [Å]
         """
 
         s = 1e4 / wave_vac

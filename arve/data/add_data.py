@@ -1,63 +1,76 @@
 import glob
 import numpy as np
 
+from typing import Literal
+
 class add_data:
 
     def add_data(
         self,
-        time_val      :list=None ,
-        vrad_val      :list=None ,
-        vrad_err      :list=None ,
-        berv_val      :list=None ,
-        wave_val      :list=None ,
-        flux_val      :list=None ,
-        flux_err      :list=None ,
-        format        :str="s1d" ,
-        resolution    :int =None ,
-        medium        :str="vac" ,
-        path          :str= None ,
-        extension     :str="csv" ,
-        compression   :str= None ,
-        instrument    :str= None ,
-        berv_corrected:bool=True ,
-        same_wave_grid:bool=False,
+        time_val       : np.ndarray                    | None = None ,
+        vrad_val       : np.ndarray                    | None = None ,
+        vrad_err       : np.ndarray                    | None = None ,
+        berv_val       : np.ndarray                    | None = None ,
+        wave_val       : np.ndarray                    | None = None ,
+        flux_val       : np.ndarray                    | None = None ,
+        flux_err       : np.ndarray                    | None = None ,
+        medium         : Literal["vac", "air"]                = "vac",
+        format         : Literal["s1d", "s2d"]                = "s1d",
+        path           : str                           | None = None ,
+        extension      : Literal["fits", "npz", "csv"] | None = None ,
+        compression    : str                           | None = None ,
+        instrument     : Literal["espresso",
+                                 "harps",
+                                 "harps-n",
+                                 "kpf",
+                                 "neid",
+                                 "nirps",
+                                 "spirou"]             | None = None ,
+        resolution     : float                         | None = None ,
+        berv_corrected : bool                                 = True ,
+        same_wave_grid : bool                                 = False
         ) -> None:
         """Add data.
 
-        :param time_val: time values, defaults to None
-        :type time_val: list, optional
-        :param vrad_val: radial velocity values, defaults to None
-        :type vrad_val: list, optional
-        :param vrad_err: radial velocity errors, defaults to None
-        :type vrad_err: list, optional
-        :param berv_val: BERV values, defaults to None
-        :type berv_val: list, optional
-        :param wave_val: wavelength values, defaults to None
-        :type wave_val: list, optional
-        :param flux_val: flux values, defaults to None
-        :type flux_val: list, optional
-        :param flux_err: flux errors, defaults to None
-        :type flux_err: list, optional
-        :param format: spectral format (S1D or S2D), defaults to "s1d"
-        :type format: str, optional
-        :param resolution: instrumental resolution, defaults to None
-        :type resolution: int, optional
-        :param medium: medium, defaults to "vac"
-        :type medium: str, optional
-        :param path: path to spectra which must be stored in CSV, NPZ or FITS files, defaults to None
-        :type path: str, optional
-        :param extension: extension (csv, npz or fits), defaults to "csv"
-        :type extension: str, optional
-        :param compression: compression (zip, gzip, etc) if the CSV files are compressed, defaults to None
-        :type compression: str, optional
-        :param instrument: instrument name if the spectra are in FITS files, defaults to None
-        :type instrument: str, optional
-        :param berv_corrected: spectra already BERV corrected, defaults to True
-        :type berv_corrected: bool, optional
-        :param same_wave_grid: spectra already on the same wavelength grid, defaults to False
-        :type same_wave_grid: bool, optional
-        :return: None
-        :rtype: None
+        Parameters
+        ----------
+        time_val : np.ndarray | None, optional
+            time values, by default None
+        vrad_val : np.ndarray | None, optional
+            radial velocity values, by default None
+        vrad_err : np.ndarray | None, optional
+            radial velocity errors, by default None
+        berv_val : np.ndarray | None, optional
+            barycentric-Earth radial velocity (BERV) values, by default None
+        wave_val : np.ndarray | None, optional
+            wavelength values, by default None
+        flux_val : np.ndarray | None, optional
+            flux values, by default None
+        flux_err : np.ndarray | None, optional
+            flux errors, by default None
+        medium : Literal[&quot;vac&quot;, &quot;air&quot;], optional
+            medium of recorded wavelengths, by default "vac"
+        format : Literal[&quot;s1d&quot;, &quot;s2d&quot;], optional
+            spectral format, by default "s1d"
+        path : str | None, optional
+            path to spectra, by default None
+        extension : Literal[&quot;fits&quot;, &quot;npz&quot;, &quot;csv&quot;] | None, optional
+            extension of files containing the spectra, by default None
+        compression : str | None, optional
+            compression of files containing the spectra, by default None
+        instrument : Literal[&quot;espresso&quot;, &quot;harps&quot;, &quot;harps-n&quot;, &quot;kpf&quot;, &quot;neid&quot;, &quot;nirps&quot;, &quot;spirou&quot;] | None, optional
+            instrument name (if the spectra are in FITS files), by default None
+        resolution : float | None, optional
+            instrumental resolution (if the spectra are in NPZ or CSV files), by default None
+        berv_corrected : bool, optional
+            spectra already BERV-corrected, by default True
+        same_wave_grid : bool, optional
+            spectra already on the same wavelength grid, by default False
+
+        Returns
+        -------
+        None
+            None
         """
         
         # read data
@@ -138,10 +151,10 @@ class add_data:
         if wave_val is not None:
             if path is None:
                 if flux_val is not None:
-                    self.spec["Nspec"] = flux_val.shape[0]
+                    self.spec["N_spec"] = flux_val.shape[0]
             else:
-                self.spec["Nspec"] = len(files)
-            self.spec["Nord"] = wave_val.shape[0]
-            self.spec["Npix"] = wave_val.shape[1]
+                self.spec["N_spec"] = len(files)
+            self.spec["N_ord"] = wave_val.shape[0]
+            self.spec["N_pix"] = wave_val.shape[1]
         
         return None

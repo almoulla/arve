@@ -4,11 +4,15 @@ import numpy             as     np
 
 class plot_keplerians:
 
-    def plot_keplerians(self) -> plt.Figure:
+    def plot_keplerians(
+        self
+        ) -> plt.Figure:
         """Plot Keplerians.
 
-        :return: figure with fitted Keplerians and their periodograms
-        :rtype: plt.Figure
+        Returns
+        -------
+        plt.Figure
+            figure with fitted Keplerians and their periodograms
         """
 
         # read data
@@ -20,7 +24,7 @@ class plot_keplerians:
 
         # read Keplerians
         keplerians   = self.keplerians
-        Nkepl        = len(keplerians)
+        N_kep        = len(keplerians)
         cols_val     = ["val" in key for key in keplerians.keys()]
         cols_err     = ["err" in key for key in keplerians.keys()]
         para_val_arr = keplerians[keplerians.keys()[cols_val]].to_numpy()
@@ -30,17 +34,17 @@ class plot_keplerians:
         vrad_val_tmp  = np.copy(vrad_val)
 
         # initiate figure
-        fig, axs = plt.subplots(Nkepl+1, 2, figsize=(15,(Nkepl+1)*3))
+        fig, axs = plt.subplots(N_kep+1, 2, figsize=(15,(N_kep+1)*3))
 
         # loop Keplerians
-        for i in range(Nkepl+1):            
+        for i in range(N_kep+1):            
 
             # plot phase-folded RV time series with fitted Keplerian
-            if Nkepl == 0:
+            if N_kep == 0:
                 ax = axs[0]
             else:
                 ax = axs[i,0]
-            if i < Nkepl:
+            if i < N_kep:
                 P = para_val_arr[i,0]
                 ax.errorbar((time_val%P)/P, vrad_val_tmp, vrad_err, fmt=".", color="k", ecolor="r")
                 vrad_val_mod_calc = self.arve.functions.keplerian(time_val, *para_val_arr[i])
@@ -52,13 +56,13 @@ class plot_keplerians:
                 ax.errorbar(time_val, vrad_val_tmp, vrad_err, fmt=".", color="k", ecolor="r")
             
             # time series labels
-            if i < Nkepl-1:
+            if i < N_kep-1:
                 ax.set_xticklabels([])
                 ax.set_ylabel("RV [km/s]")
-            if i == Nkepl-1:
+            if i == N_kep-1:
                 ax.set_xlabel("Phase")
                 ax.set_ylabel("RV [km/s]")
-            if i == Nkepl:
+            if i == N_kep:
                 ax.set_xlabel("Time [d]")
                 ax.set_ylabel("RV [km/s]")
             
@@ -68,7 +72,7 @@ class plot_keplerians:
             ax.yaxis.set_minor_locator(AutoMinorLocator())
 
             # plot GLS periodogram
-            if Nkepl == 0:
+            if N_kep == 0:
                 ax = axs[1]
             else:
                 ax = axs[i,1]
@@ -76,17 +80,17 @@ class plot_keplerians:
             power_fap = power_fap_arr[i]
             ax.semilogx(1/freq, power_gls, "-k")
             ax.axhline(power_fap, ls="--", c="k")
-            if i < Nkepl:
+            if i < N_kep:
                 ax.plot(1/freq[np.argmax(power_gls)], power_gls[np.argmax(power_gls)], "ob")
             
             # periodogram labels
-            if i < Nkepl-1:
+            if i < N_kep-1:
                 ax.set_xticklabels([])
                 ax.set_ylabel("Power")
-            if i == Nkepl-1:
+            if i == N_kep-1:
                 ax.set_xlabel("Period [d]")
                 ax.set_ylabel("Power")
-            if i == Nkepl:
+            if i == N_kep:
                 ax.set_xlabel("Period [d]")
                 ax.set_ylabel("Power")
             

@@ -4,7 +4,7 @@ from .plot_keplerians    import plot_keplerians
 from .plot_recoveries    import plot_recoveries
 from .recovery_test      import recovery_test
 
-from typing import Optional
+from typing import Optional, Any
 
 class Planets(
     fit_keplerians,
@@ -13,11 +13,11 @@ class Planets(
     plot_recoveries,
     recovery_test
     ):
-    """ARVE Planets sub-class.
+    """ARVE Planets subclass.
     """
     
     def __init__(self, arve):
-        self.arve                         = arve
-        self.periodograms: Optional[dict] = None
-        self.keplerians  : Optional[dict] = None
-        self.recoveries  : Optional[dict] = None
+        self.arve                                   = arve
+        self.periodograms : Optional[dict[str,Any]] = None
+        self.keplerians   : Optional[dict[str,Any]] = None
+        self.recoveries   : Optional[dict[str,Any]] = None

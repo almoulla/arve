@@ -4,13 +4,21 @@ import numpy             as     np
 
 class plot_vrad:
 
-    def plot_vrad(self, figsize:tuple=(10,10)) -> plt.Figure:
+    def plot_vrad(
+        self,
+        figsize : tuple = (10,10)
+        ) -> plt.Figure:
         """Plot RV time series.
 
-        :param figsize: figure size, defaults to (10,10)
-        :type figsize: tuple
-        :return: figure with the RV time series
-        :rtype: plt.Figure
+        Parameters
+        ----------
+        figsize : tuple, optional
+            figure size, by default (10,10)
+
+        Returns
+        -------
+        plt.Figure
+            figure with the RV time series
         """
 
         # read data

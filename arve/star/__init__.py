@@ -5,7 +5,7 @@ from .get_stellar_parameters             import get_stellar_parameters
 from .plot_vpsd_components               import plot_vpsd_components
 from .simulate_vrad_from_vpsd_components import simulate_vrad_from_vpsd_components
 
-from typing import Optional
+from typing import Optional, Any
 
 class Star(
     add_vpsd_components,
@@ -15,12 +15,12 @@ class Star(
     plot_vpsd_components,
     simulate_vrad_from_vpsd_components
     ):
-    """ARVE Star sub-class.
+    """ARVE Star subclass.
     """
 
     def __init__(self, arve):
-        self.arve                               = arve
-        self.target            : Optional[str]  = None
-        self.stellar_parameters: Optional[dict] = None
-        self.vpsd              : Optional[dict] = None
-        self.vpsd_components   : Optional[dict] = None
+        self.arve                                         = arve
+        self.target             : Optional[dict[str,Any]] = None
+        self.stellar_parameters : Optional[dict[str,Any]] = None
+        self.vpsd               : Optional[dict[str,Any]] = None
+        self.vpsd_components    : Optional[dict[str,Any]] = None

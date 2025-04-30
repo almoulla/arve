@@ -1,13 +1,23 @@
-import numpy as     np
 from   lmfit import Parameters, minimize
+import numpy as     np
 
 class fit_vpsd_coefficients:
 
-    def fit_vpsd_coefficients(self) -> None:
+    def fit_vpsd_coefficients(
+        self,
+        coef_bound : float = 10
+        ) -> None:
         """Fit velocity power spectral density (VPSD) coefficients.
 
-        :return: None
-        :rtype: None
+        Parameters
+        ----------
+        coef_bound : float, optional
+            multiplicative factor within which the fitted coefficient are bounded with respect to their theoretical values, by default 10
+
+        Returns
+        -------
+        None
+            None
         """
 
         # read VPSD
@@ -17,29 +27,29 @@ class fit_vpsd_coefficients:
         params = Parameters()
 
         # loop components
-        for comp in self.vpsd_components.keys():
+        for comp_name in self.vpsd_components.keys():
 
             # component dictionary
-            comp_dict = self.vpsd_components[comp]
+            comp_dict = self.vpsd_components[comp_name]
 
             # coefficients and vary
-            coef_val = comp_dict["coef_val"]
-            vary     = comp_dict["vary"]
+            coef_val  = comp_dict["coef_val"]
+            coef_vary = comp_dict["coef_vary"]
 
             # loop coefficients
             for i in range(len(coef_val)):
 
                 # add parameters
-                params.add(comp + "_" + str(i), value=coef_val[i], min=coef_val[i]/10, max=coef_val[i]*10, vary=vary[i])
+                params.add(comp + "_" + str(i), value=coef_val[i], min=coef_val[i]/coef_bound, max=coef_val[i]*coef_bound, vary=coef_vary[i])
 
         # fit coefficients
-        c = minimize(_func_res, params, args=(self, freq_avg, vpsd_avg))
+        coef_fit = minimize(_func_res, params, args=(self, freq_avg, vpsd_avg))
 
         # loop components
-        for comp in self.vpsd_components.keys():
+        for comp_name in self.vpsd_components.keys():
 
             # component dictionary
-            comp_dict = self.vpsd_components[comp]
+            comp_dict = self.vpsd_components[comp_name]
 
             # coefficients
             coef_val = comp_dict["coef_val"]
@@ -49,52 +59,73 @@ class fit_vpsd_coefficients:
             for i in range(len(coef_val)):
 
                 # update coefficients with fitted values
-                coef_val[i] = c.params[comp + "_" + str(i)].value
-                coef_err[i] = c.params[comp + "_" + str(i)].stderr
+                coef_val[i] = coef_fit.params[comp_name + "_" + str(i)].value
+                coef_err[i] = coef_fit.params[comp_name + "_" + str(i)].stderr
         
         return None
 
-def _func_res(params, self, freq_avg, vpsd_avg):
+def _func_res(
+    params   : dict[str,float],
+    self,
+    freq_avg : np.ndarray     ,
+    vpsd_avg : np.ndarray
+    ) -> np.ndarray:
+    """VPSD residual function.
+
+    Parameters
+    ----------
+    params : dict[str,float]
+        VPSD coefficients
+    freq_avg : np.ndarray
+        Binned frequency
+    vpsd_avg : np.ndarray
+        Binned VPSD
+
+    Returns
+    -------
+    np.ndarray
+        Logarithmic residuals between binned VPSD and modeled VPSD (sum of all included components).
+    """
 
     # empty array for sum of components
     vpsd_tot = np.zeros(len(freq_avg))
 
     # loop components
-    for comp in self.vpsd_components.keys():
+    for comp_name in self.vpsd_components.keys():
 
         # component dictionary
-        comp_dict = self.vpsd_components[comp]
+        comp_dict = self.vpsd_components[comp_name]
 
-        # component type
-        type = comp_dict["type"]
+        # function type
+        func_type = comp_dict["func_type"]
 
         # type Lorentz
-        if type == "Lorentz":
+        if func_type == "lorentz":
 
             # unpack coefficients
-            c0 = params[comp + "_0"]
-            c1 = params[comp + "_1"]
-            c2 = params[comp + "_2"]
+            c0 = params[comp_name + "_0"]
+            c1 = params[comp_name + "_1"]
+            c2 = params[comp_name + "_2"]
 
             # compute component
             vpsd_comp = c0*c1**2/(c1**2+(freq_avg-c2)**2)
 
         # type Harvey
-        if type == "Harvey":
+        if func_type == "harvey":
 
             # unpack coefficients
-            c0 = params[comp + "_0"]
-            c1 = params[comp + "_1"]
-            c2 = params[comp + "_2"]
+            c0 = params[comp_name + "_0"]
+            c1 = params[comp_name + "_1"]
+            c2 = params[comp_name + "_2"]
 
             # compute component
             vpsd_comp = c0/(1+(c1*freq_avg)**c2)
 
-        # type Constant
-        if type == "Constant":
+        # type constant
+        if func_type == "constant":
             
             # unpack coefficients
-            c0 = params[comp + "_0"]
+            c0 = params[comp_name + "_0"]
 
             # compute component
             vpsd_comp = c0

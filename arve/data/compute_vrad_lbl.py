@@ -8,43 +8,59 @@ warnings.filterwarnings("ignore")
 
 class compute_vrad_lbl:
 
-    def compute_vrad_lbl(self, criteria:list=None, exclude_tellurics:bool=True, exclude_regions:bool=True, scale=True, Niter=1, bins:list=None) -> None:
-        """Compute radial velocities (RVs) from spectral data.
+    def compute_vrad_lbl(
+        self,
+        scale             : bool                     = True,
+        bins              : list[list[float]] | None = None,
+        N_iter            : int                      = 1   ,
+        vrad_err_lim      : float                    = 1e-3,
+        criteria          : list[str]         | None = None,
+        exclude_tellurics : bool                     = True,
+        exclude_regions   : bool                     = True
+        ) -> None:
+        """Compute radial velocities (RVs) from spectral data using the line-by-line (LBL) method.
 
-        :param criteria: criteria to apply (must be columns with prefix "crit_"), defaults to None
-        :type criteria: list, optional
-        :param exclude_tellurics: exclude telluric bands, defaults to True
-        :type exclude_tellurics: bool, optional
-        :param exclude_regions: exclude wavelength intervals, defaults to True
-        :type exclude_regions: bool, optional
-        :param scale: scale master spectrum when fitting, defaults to True
-        :type scale: bool, optional
-        :param Niter: number of iterations per line, defaults to 1
-        :type Niter: int, optional
-        :param bins: temperature ranges with which to segment each line, defaults to None
-        :type bins: list[list], optional
-        :return: None
-        :rtype: None
+        Parameters
+        ----------
+        scale : bool, optional
+            scale reference spectrum when fitting, by default True
+        bins : list[list[float]] | None, optional
+            formation temperature bins with which to segment each line (if None, only 1 bin with the entire line-forming temperature range is considered), by default None
+        N_iter : int, optional
+            number of iterations per line segment (the inital RV guess is updated from the previous iteration), by default 1
+        vrad_err_lim : float, optional
+            RV error lower limit (used to prevent diverging RVs due to null errors returned by the numerical solver for some lines), by default 1e-3
+        criteria : list[str] | None, optional
+            criteria to apply (must be boolean columns available in the mask), by default None
+        exclude_tellurics : bool, optional
+            exclude telluric bands, by default True
+        exclude_regions : bool, optional
+            exclude wavelength intervals, by default True
+
+        Returns
+        -------
+        None
+            None
         """
 
         # read data
-        wave_val                     =  self.spec["wave_val"]
-        mast_wave_val, mast_flux_val = [self.spec_mast[key] for key in ["wave_val", "flux_val"]]
-        temp                         =  self.aux_data["spec"]["temp"]
-        Nspec                        =  self.spec["Nspec"]
-        Nord                         =  self.spec["Nord"]
+        wave_val                   =  self.spec["wave_val"]
+        ref_wave_val, ref_flux_val = [self.spec_reference[key] for key in ["wave_val", "flux_val"]]
+        temp                       =  self.aux_data["spec"]["temp"]
+        N_spec                     =  self.spec["N_spec"]
+        N_ord                      =  self.spec["N_ord"]
 
-        # master spectrum gradient
-        mast_grad_val = np.zeros_like(mast_wave_val)
-        for i in range(Nord):
-            mast_grad_val[i] = np.gradient(mast_flux_val[i])/np.gradient(mast_wave_val[i])
+        # reference spectrum gradient
+        ref_grad_val = np.zeros_like(ref_wave_val)
+        for i in range(N_ord):
+            ref_grad_val[i] = np.gradient(ref_flux_val[i])/np.gradient(ref_wave_val[i])
         
-        # master flux and gradient functions
-        mast_flux_val_func = np.zeros(Nord, dtype=object)
-        mast_grad_val_func = np.zeros(Nord, dtype=object)
-        for i in range(Nord):
-            mast_flux_val_func[i] = interp1d(mast_wave_val[i], mast_flux_val[i], kind="cubic")
-            mast_grad_val_func[i] = interp1d(mast_wave_val[i], mast_grad_val[i], kind="cubic")
+        # reference flux and gradient functions
+        ref_flux_val_func = np.zeros(N_ord, dtype=object)
+        ref_grad_val_func = np.zeros(N_ord, dtype=object)
+        for i in range(N_ord):
+            ref_flux_val_func[i] = interp1d(ref_wave_val[i], ref_flux_val[i], kind="cubic")
+            ref_grad_val_func[i] = interp1d(ref_wave_val[i], ref_grad_val[i], kind="cubic")
 
         # read constants
         c = self.arve.functions.constants["c"]
@@ -53,122 +69,122 @@ class compute_vrad_lbl:
         mask = self.aux_data["mask"]
 
         # central, left and right wavelengths
-        wc = np.zeros(Nord, dtype=object)
-        wl = np.zeros(Nord, dtype=object)
-        wr = np.zeros(Nord, dtype=object)
-        for i in range(Nord):
-            wc[i] = np.array(mask[i]["wave"  ])
-            wl[i] = np.array(mask[i]["wave_l"])
-            wr[i] = np.array(mask[i]["wave_r"])
+        wave_c = np.zeros(N_ord, dtype=object)
+        wave_l = np.zeros(N_ord, dtype=object)
+        wave_u = np.zeros(N_ord, dtype=object)
+        for i in range(N_ord):
+            wave_c[i] = np.array(mask[i]["wave"  ])
+            wave_l[i] = np.array(mask[i]["wave_l"])
+            wave_u[i] = np.array(mask[i]["wave_u"])
 
         # temperature bins
         if bins is None:
             bins = [[np.min(temp),np.max(temp)]]
 
         # nr. of lines and temperature bins
-        Nline = np.zeros(Nord, dtype=object)
-        for i in range(Nord):
-            Nline[i] = len(wc[i])
-        Nbin = len(bins)
+        N_line = np.zeros(N_ord, dtype=object)
+        for i in range(N_ord):
+            N_line[i] = len(wave_c[i])
+        N_bin = len(bins)
 
         # exclude tellurics
         if exclude_tellurics:
             if criteria is None:
-                criteria = ["tell"]
+                criteria = ["crit_tell"]
             else:
-                criteria.append("tell")
+                criteria.append("crit_tell")
 
         # exclude regions
         if exclude_regions:
             if criteria is None:
-                criteria = ["excl"]
+                criteria = ["crit_excl"]
             else:
-                criteria.append("excl")
+                criteria.append("crit_excl")
 
         # lines which satisfy criteria
-        idx_crit = np.zeros(Nord, dtype=object)
-        for i in range(Nord):
-            idx_crit[i] = np.ones_like(wc[i], dtype=bool)
+        idx_crit = np.zeros(N_ord, dtype=object)
+        for i in range(N_ord):
+            idx_crit[i] = np.ones_like(wave_c[i], dtype=bool)
             if criteria is not None:
                 for j in range(len(criteria)):
-                    crit = np.array(mask[i]["crit_"+criteria[j]])
+                    crit = np.array(mask[i][criteria[j]])
                     idx_crit[i] *= crit
 
         # index of lines
-        idx_line = np.zeros(Nord, dtype=object)
-        for i in range(Nord):
-            idx_line[i] = np.zeros(Nline[i], dtype=object)
-            for j in range(Nline[i]):
-                il             = np.searchsorted(wave_val[i], wl[i][j], side="right")
-                ir             = np.searchsorted(wave_val[i], wr[i][j], side="right")
-                idx_line[i][j] = np.arange(il, ir)
+        idx_line = np.zeros(N_ord, dtype=object)
+        for i in range(N_ord):
+            idx_line[i] = np.zeros(N_line[i], dtype=object)
+            for j in range(N_line[i]):
+                i_l            = np.searchsorted(wave_val[i], wave_l[i][j], side="right")
+                i_u            = np.searchsorted(wave_val[i], wave_u[i][j], side="right")
+                idx_line[i][j] = np.arange(i_l, i_u)
 
         # index of temperature bins
-        idx_temp = np.zeros(Nord, dtype=object)
-        for i in range(Nord):
-            idx_temp[i] = np.zeros(Nbin, dtype=object)
-            for j in range(Nbin):
-                il             = temp[i]>=bins[j][0]
-                ir             = temp[i]<=bins[j][1]
-                idx_temp[i][j] = np.where(il & ir)[0]
+        idx_temp = np.zeros(N_ord, dtype=object)
+        for i in range(N_ord):
+            idx_temp[i] = np.zeros(N_bin, dtype=object)
+            for j in range(N_bin):
+                i_l            = temp[i]>=bins[j][0]
+                i_u            = temp[i]<=bins[j][1]
+                idx_temp[i][j] = np.where(i_l & i_u)[0]
 
         # index of temperature-segmented line parts
-        idx = np.zeros(Nord, dtype=object)
-        for i in range(Nord):
-            idx[i] = np.zeros((Nline[i],Nbin), dtype=object)
-            for j in range(Nline[i]):
-                for k in range(Nbin):
+        idx = np.zeros(N_ord, dtype=object)
+        for i in range(N_ord):
+            idx[i] = np.zeros((N_line[i],N_bin), dtype=object)
+            for j in range(N_line[i]):
+                for k in range(N_bin):
                     idx[i][j,k] = np.intersect1d(idx_line[i][j], idx_temp[i][k])
 
         # empty arrays for RV values and errors
-        vrad_val_arr = np.zeros(Nord, dtype=object)
-        vrad_err_arr = np.zeros(Nord, dtype=object)
-        for i in range(Nord):
-            vrad_val_arr[i] = np.zeros((Nspec,Nline[i],Nbin))*np.nan
-            vrad_err_arr[i] = np.zeros((Nspec,Nline[i],Nbin))*np.nan
+        vrad_val_lbl = np.zeros(N_ord, dtype=object)
+        vrad_err_lbl = np.zeros(N_ord, dtype=object)
+        for i in range(N_ord):
+            vrad_val_lbl[i] = np.zeros((N_spec,N_line[i],N_bin))*np.nan
+            vrad_err_lbl[i] = np.zeros((N_spec,N_line[i],N_bin))*np.nan
 
         # loop spectra
         print("Analyzed spectra:")
-        for i in tqdm(range(Nspec)):
+        for i in tqdm(range(N_spec)):
 
             # read spectrum
             _, flux_val, flux_err = self.read_spec(i)
 
             # loop orders
-            for j in range(Nord):
+            for j in range(N_ord):
 
                 # loop lines
-                for k in range(Nline[j]):
+                for k in range(N_line[j]):
 
                     # check if line satisfies criteria
                     if idx_crit[j][k] == True:
 
                         # loop temperature bins
-                        for l in range(Nbin):
+                        for l in range(N_bin):
 
                             # initial guess
                             vrad_val = 0
 
-                            # wavelength, flux and flux uncertainty for line part
-                            spec_wave_val = wave_val[j,idx[j][k,l]]
-                            spec_flux_val = flux_val[j,idx[j][k,l]]
-                            spec_flux_err = flux_err[j,idx[j][k,l]]
+                            # wavelength, flux and flux error for line part
+                            obs_wave_val = wave_val[j,idx[j][k,l]]
+                            obs_flux_val = flux_val[j,idx[j][k,l]]
+                            obs_flux_err = flux_err[j,idx[j][k,l]]
 
                             # try to template match
                             try:
 
                                 # loop iterations
-                                for _ in range(Niter):
+                                for _ in range(N_iter):
 
-                                    # single spectrum shift
-                                    spec_wave_val_shift = spec_wave_val*(1-vrad_val/c)
-                                    spec_flux_val_shift = spec_flux_val
-                                    spec_flux_err_shift = spec_flux_err
+                                    # observed spectrum shifted
+                                    obs_wave_val_shift = obs_wave_val*(1-vrad_val/c)
+                                    obs_flux_val_shift = obs_flux_val
+                                    obs_flux_err_shift = obs_flux_err
                                     
-                                    # master spectrum interpolate
-                                    mast_wave_val_inter = spec_wave_val_shift
-                                    mast_flux_val_inter = mast_flux_val_func[j](mast_wave_val_inter)
-                                    mast_grad_val_inter = mast_grad_val_func[j](mast_wave_val_inter)
+                                    # reference spectrum interpolated
+                                    ref_wave_val_inter = obs_wave_val_shift
+                                    ref_flux_val_inter = ref_flux_val_func[j](ref_wave_val_inter)
+                                    ref_grad_val_inter = ref_grad_val_func[j](ref_wave_val_inter)
 
                                     # select function of shifted spectrum and initial guess on parameters
                                     if scale:
@@ -179,15 +195,15 @@ class compute_vrad_lbl:
                                         p0              = (0,)
 
                                     # solve for parameters
-                                    param, _ = curve_fit(func_spec_shift, (mast_wave_val_inter, mast_flux_val_inter, mast_grad_val_inter), spec_flux_val_shift, sigma=spec_flux_err_shift, p0=p0)
+                                    param, _ = curve_fit(func_spec_shift, (ref_wave_val_inter, ref_flux_val_inter, ref_grad_val_inter), obs_flux_val_shift, sigma=obs_flux_err_shift, p0=p0)
 
                                     # compute RV and RV error
                                     vrad_val += param[0]*c
-                                    vrad_err  = 1/np.sqrt(np.sum(1/(spec_flux_err_shift/(mast_grad_val_inter*mast_wave_val_inter/c))**2))
+                                    vrad_err  = 1/np.sqrt(np.sum(1/(obs_flux_err_shift/(ref_grad_val_inter*ref_wave_val_inter/c))**2))
 
                                 # save
-                                vrad_val_arr[j][i,k,l] = vrad_val
-                                vrad_err_arr[j][i,k,l] = vrad_err
+                                vrad_val_lbl[j][i,k,l] = vrad_val
+                                vrad_err_lbl[j][i,k,l] = vrad_err
                             
                             # if unsuccessful, continue
                             except:
@@ -195,33 +211,33 @@ class compute_vrad_lbl:
                                 continue
 
         # outlier rejection
-        for i in range(Nspec):
-            *_, clip_val_min, clip_val_max = sigma_clip(np.vstack([vrad_val_arr[j][i,:,:] for j in range(Nord)]), maxiters=None, return_bounds=True)
-            *_, clip_err_min, clip_err_max = sigma_clip(np.vstack([vrad_err_arr[j][i,:,:] for j in range(Nord)]), maxiters=None, return_bounds=True)
-            for j in range(Nord):
-                for k in range(Nline[j]):
-                    for l in range(Nbin):
-                        if (vrad_val_arr[j][i,k,l] < clip_val_min) | (vrad_val_arr[j][i,k,l] > clip_val_max):
-                            vrad_val_arr[j][i,k,l] = np.nan
-                        if (vrad_err_arr[j][i,k,l] < clip_err_min) | (vrad_err_arr[j][i,k,l] > clip_err_max):
-                            vrad_err_arr[j][i,k,l] = np.nan
+        for i in range(N_spec):
+            *_, clip_val_min, clip_val_max = sigma_clip(np.vstack([vrad_val_lbl[j][i,:,:] for j in range(N_ord)]), maxiters=None, return_bounds=True)
+            *_, clip_err_min, clip_err_max = sigma_clip(np.vstack([vrad_err_lbl[j][i,:,:] for j in range(N_ord)]), maxiters=None, return_bounds=True)
+            for j in range(N_ord):
+                for k in range(N_line[j]):
+                    for l in range(N_bin):
+                        if (vrad_val_lbl[j][i,k,l] < clip_val_min) | (vrad_val_lbl[j][i,k,l] > clip_val_max):
+                            vrad_val_lbl[j][i,k,l] = np.nan
+                        if (vrad_err_lbl[j][i,k,l] < clip_err_min) | (vrad_err_lbl[j][i,k,l] > clip_err_max):
+                            vrad_err_lbl[j][i,k,l] = np.nan
 
         # weighted average of all valid lines per order
-        vrad_val_ord = np.zeros((Nspec,Nord,Nbin))*np.nan
-        vrad_err_ord = np.zeros((Nspec,Nord,Nbin))*np.nan
-        for i in range(Nspec):
-            for j in range(Nord):
-                for k in range(Nbin):
-                    idx = ~np.isnan(vrad_val_arr[j][i,:,k]) & (np.abs(vrad_err_arr[j][i,:,k])>0)
+        vrad_val_ord = np.zeros((N_spec,N_ord,N_bin))*np.nan
+        vrad_err_ord = np.zeros((N_spec,N_ord,N_bin))*np.nan
+        for i in range(N_spec):
+            for j in range(N_ord):
+                for k in range(N_bin):
+                    idx = ~np.isnan(vrad_val_lbl[j][i,:,k]) & (np.abs(vrad_err_lbl[j][i,:,k])>vrad_err_lim)
                     if np.sum(idx) > 0:
-                        vrad_val_ord[i,j,k] = np.average(vrad_val_arr[j][i,idx,k], weights=1/vrad_err_arr[j][i,idx,k]**2)
-                        vrad_err_ord[i,j,k] = np.sqrt(1/np.sum(1/vrad_err_arr[j][i,idx,k]**2))
+                        vrad_val_ord[i,j,k] = np.average(vrad_val_lbl[j][i,idx,k], weights=1/vrad_err_lbl[j][i,idx,k]**2)
+                        vrad_err_ord[i,j,k] = np.sqrt(1/np.sum(1/vrad_err_lbl[j][i,idx,k]**2))
 
         # weighted average of all orders per temperature bin
-        vrad_val_bin = np.zeros((Nspec,Nbin))*np.nan
-        vrad_err_bin = np.zeros((Nspec,Nbin))*np.nan
-        for i in range(Nspec):
-            for j in range(Nbin):
+        vrad_val_bin = np.zeros((N_spec,N_bin))*np.nan
+        vrad_err_bin = np.zeros((N_spec,N_bin))*np.nan
+        for i in range(N_spec):
+            for j in range(N_bin):
                 idx = ~np.isnan(vrad_val_ord[i,:,j]) & (np.abs(vrad_err_ord[i,:,j])>0)
                 if np.sum(idx) > 0:
                     vrad_val_bin[i,j] = np.average(vrad_val_ord[i,idx,j], weights=1/vrad_err_ord[i,idx,j]**2)
@@ -239,16 +255,32 @@ class compute_vrad_lbl:
             "vrad_err_bin": vrad_err_bin,
             "vrad_val_ord": vrad_val_ord,
             "vrad_err_ord": vrad_err_ord,
-            "vrad_val_pbp": vrad_val_arr,
-            "vrad_err_pbp": vrad_err_arr,
+            "vrad_val_lbl": vrad_val_lbl,
+            "vrad_err_lbl": vrad_err_lbl,
             "bins"        : bins        ,
             "method"      : "LBL"       ,
             }
 
         return None
 
-# spectrum shifted
-def _spec_shift(X, *param):
+def _spec_shift(
+    X      : tuple[np.ndarray],
+    *param : tuple[float]
+    ) -> np.ndarray:
+    """Spectrum shifted.
+
+    Parameters
+    ----------
+    X : tuple[np.ndarray]
+        wavelength, flux and gradient arrays
+    *param : tuple[float]
+        free parameter(s): z (RV divided by speed of light)
+
+    Returns
+    -------
+    np.ndarray
+        shifted spectrum
+    """
 
     wave, flux, grad = X
     z = param
@@ -256,11 +288,27 @@ def _spec_shift(X, *param):
 
     return S
 
-# spectrum shfited and scaled
-def _spec_shift_scale(X, *param):
+def _spec_shift_scale(
+    X      : tuple[np.ndarray],
+    *param : tuple[float]
+    ) -> np.ndarray:
+    """Spectrum shifted and scaled.
+
+    Parameters
+    ----------
+    X : tuple[np.ndarray]
+        wavelength, flux and gradient arrays
+    *param : tuple[float]
+        free parameter(s): z (RV divided by speed of light) and A (scaling factor)
+
+    Returns
+    -------
+    np.ndarray
+        shifted and scaled spectrum
+    """
 
     wave, flux, grad = X
-    z, c = param
-    S = (flux - grad*wave*z)*c
+    z, A = param
+    S = (flux - grad*wave*z)*A
 
     return S

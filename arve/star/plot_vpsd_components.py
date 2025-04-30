@@ -3,22 +3,31 @@ import numpy             as np
 
 class plot_vpsd_components:
 
-    def plot_vpsd_components(self, fig:plt.Figure=None, total_only:bool=False) -> plt.Figure:
+    def plot_vpsd_components(
+        self,
+        fig        : plt.Figure | None = None ,
+        total_only : bool              = False
+        ) -> plt.Figure:
         """Plot velocity power spectral density (VPSD) components.
 
-        :param fig: figure on which to plot (if None, a new figure is created), defaults to None
-        :type fig: plt.Figure, optional
-        :param total_only: plot only total component (sum of all components), defaults to False
-        :type total_only: bool, optional
-        :return: figure with the VPSD, its log-average and its modeled components
-        :rtype: plt.Figure
+        Parameters
+        ----------
+        fig : plt.Figure | None, optional
+            figure on which to plot (if None, a new figure is created), by default None
+        total_only : bool, optional
+            plot only total component (sum of all components), by default False
+
+        Returns
+        -------
+        plt.Figure
+            figure with the VPSD, its log-average and its modeled components
         """
 
         # figure
         if fig is None:
             fig = plt.figure()
 
-        # check vpsd is computed
+        # check VPSD is computed
         if self.vpsd is not None:
 
             # read VPSD and units
@@ -39,17 +48,17 @@ class plot_vpsd_components:
         vpsd_tot = np.zeros(len(freq))
 
         # loop components
-        for comp in self.vpsd_components.keys():
+        for comp_name in self.vpsd_components.keys():
 
             # component dictionary
-            comp_dict = self.vpsd_components[comp]
+            comp_dict = self.vpsd_components[comp_name]
 
-            # type and coefficients
-            type     = comp_dict["type"]
-            coef_val = comp_dict["coef_val"]
+            # function type and coefficients
+            func_type = comp_dict["func_type"]
+            coef_val  = comp_dict["coef_val"]
 
             # type Lorentz
-            if type == "Lorentz":
+            if func_type == "lorentz":
                 
                 # unpack coefficients
                 c0 = coef_val[0]
@@ -59,12 +68,8 @@ class plot_vpsd_components:
                 # compute component
                 vpsd_comp = c0*c1**2/(c1**2+(freq-c2)**2)
 
-                # plot component
-                if total_only == False:
-                    plt.loglog(freq, vpsd_comp, ls="--", label=comp)
-
             # type Harvey
-            if type == "Harvey":
+            if func_type == "harvey":
 
                 # unpack coefficients
                 c0 = coef_val[0]
@@ -74,25 +79,21 @@ class plot_vpsd_components:
                 # compute component
                 vpsd_comp = c0/(1+(c1*freq)**c2)
 
-                # plot component
-                if total_only == False:
-                    plt.loglog(freq, vpsd_comp, ls="--", label=comp)
-
-            # type Constant
-            if type == "Constant":
+            # type constant
+            if func_type == "constant":
 
                 # unpack coefficients
                 c0 = coef_val[0]
 
                 # compute component
-                vpsd_comp = c0
-
-                # plot component
-                if total_only == False:
-                    plt.axhline(vpsd_comp, ls="--", label=comp)
+                vpsd_comp = c0*np.ones_like(freq)
 
             # add component to sum
             vpsd_tot += vpsd_comp
+
+            # plot component
+            if total_only == False:
+                plt.loglog(freq, vpsd_comp, ls="--", label=comp_name.title())
 
         # plot component sum
         if total_only == False:

@@ -5,15 +5,23 @@ import numpy              as     np
 
 class plot_recoveries:
 
-    def plot_recoveries(self, vmin:float=0, vmax:float=2) -> plt.Figure:
+    def plot_recoveries(self,
+        vmin : float = 0,
+        vmax : float = 2
+        ) -> plt.Figure:
         """Plot recoveries.
 
-        :param vmin: minimum value in color map, defaults to 0
-        :type vmin: float, optional
-        :param vmax: maximum value in color map, defaults to 2
-        :type vmax: float, optional
-        :return: figure with injection-recovery test results
-        :rtype: plt.Figure
+        Parameters
+        ----------
+        vmin : float, optional
+            minimum value in color map, by default 0
+        vmax : float, optional
+            maximum value in color map, by default 2
+
+        Returns
+        -------
+        plt.Figure
+            figure with injection-recovery test results
         """
 
         # read recoveries

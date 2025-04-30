@@ -2,13 +2,21 @@ import numpy as np
 
 class compute_vpsd:
 
-    def compute_vpsd(self, N_bin:int=50) -> None:
+    def compute_vpsd(
+        self,
+        N_bin : int | None = None
+        ) -> None:
         """Compute velocity power spectral density (VPSD).
 
-        :param N_bin: number of frequency bins for the averaged VPSD, defaults to 50
-        :type N_bin: int, optional
-        :return: None
-        :rtype: None
+        Parameters
+        ----------
+        N_bin : int | None, optional
+            number of logarithmically equidistant frequency bins for the averaged VPSD (if None, each order of magnitude in frequency is divided into 10 bins), by default None
+
+        Returns
+        -------
+        None
+            None
         """
 
         # read RV time series
@@ -16,9 +24,11 @@ class compute_vpsd:
         vrad_val, vrad_err = [self.arve.data.vrad[key] for key in ["vrad_val", "vrad_err"]]
 
         # compute velocity power spectrum
-        freq, vps, phi, win_freq, win_vps, win_area = self.arve.functions.gls_periodogram(time=time_val, val=vrad_val, err=vrad_err, normalize=False, win_func=True)
+        freq, vps, phi, win_freq, win_vps, win_area = self.arve.functions.gls_periodogram(time_val=time_val, data_val=vrad_val, data_err=vrad_err, normalize=False, win_func=True)
 
         # compute log-average VPS
+        if N_bin is None:
+            N_bin = int((np.log10(freq[-1])-np.log10(freq[0]))*10)
         freq_bin = 10 ** (np.linspace(np.log10(freq[0]), np.log10(freq[-1]), N_bin+1))
         freq_avg = (freq_bin[1:] + freq_bin[:-1]) / 2
         vps_avg  = np.empty(freq_avg.size)

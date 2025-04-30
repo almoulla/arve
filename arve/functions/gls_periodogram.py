@@ -2,31 +2,44 @@ import numpy as np
 
 class gls_periodogram:
 
-    def gls_periodogram(self, time:list, val:list, err:list=None, ofac:int=1, normalize:bool=True, win_func:bool=False) -> tuple:
+    def gls_periodogram(
+        self,
+        time_val  : np.ndarray               ,
+        data_val  : np.ndarray               ,
+        data_err  : np.ndarray | None = None ,
+        oversamp  : float             = 1    ,
+        normalize : bool              = True ,
+        win_func  : bool              = False
+        ) -> tuple[np.ndarray | float]:
         """Generalized Lomb-Scargle (GLS) periodogram.
 
-        :param time: time values
-        :type time: list
-        :param val: values
-        :type val: list
-        :param err: errors, defaults to None
-        :type err: list, optional
-        :param ofac: over-factorization, defaults to 1
-        :type ofac: int, optional
-        :param normalize: normalization of periodogram, defaults to True
-        :type normalize: bool, optional
-        :param win_func: return window function, defaults to False
-        :type win_func: bool, optional
-        :return: frequency, power spectrum and phase of periodogram; if win_func is True, the frequency, power spectrum and phase of the window function are returned as well
-        :rtype: tuple
+        Parameters
+        ----------
+        time_val : np.ndarray
+            time values
+        data_val : np.ndarray
+            data values
+        data_err : np.ndarray | None, optional
+            data errors, by default None
+        oversamp : float, optional
+            oversamling factor of the periodogram frequency grid, by default 1
+        normalize : bool, optional
+            normalization of the periodogram, by default True
+        win_func : bool, optional
+            return window function, by default False
+
+        Returns
+        -------
+        tuple[np.ndarray | float]
+            frequency, power spectrum and phase of the periodogram; if win_func is True, the frequency, power spectrum and area of the window function are returned as well
         """
 
         # if not provided, set uncertainties to unity
-        if err is None:
-            err = np.ones(len(time))
+        if data_err is None:
+            data_err = np.ones(len(time_val))
 
         # frequencies, power spectrum and phases of data
-        freq, ps, phi = _gls(time, val, err, ofac, normalize)
+        freq, ps, phi = _gls(time_val, data_val, data_err, oversamp, normalize)
 
         # spectral window function
         if win_func:
@@ -35,11 +48,11 @@ class gls_periodogram:
             freq_c = freq[int(len(freq)/2)]
 
             # sinusoid with unit amplitude at central frequency
-            win_val = np.sin(2*np.pi*freq_c*time)
-            win_err = err
+            win_val = np.sin(2*np.pi*freq_c*time_val)
+            win_err = data_err
 
             # power spectrum of window function
-            win_freq, win_ps, _ = _gls(time, win_val, win_err, ofac)
+            win_freq, win_ps, _ = _gls(time_val, win_val, win_err, oversamp)
 
             # recenter window function frequencies
             win_freq -= freq_c
@@ -54,52 +67,69 @@ class gls_periodogram:
         else:
             return freq, ps, phi
 
-def _gls(time, val, err, ofac, normalize=True):
+def _gls(
+    time_val  : np.ndarray ,
+    data_val  : np.ndarray ,
+    data_err  : np.ndarray ,
+    oversamp  : float      ,
+    normalize : bool = True
+    ) -> tuple[np.ndarray]:
+    """Generalized Lomb-Scargle (GLS) periodogram.
 
-    # time span and steps
-    Time = time[-1] - time[0]
-    dtime = time[1:] - time[:-1]
+    Parameters
+    ----------
+    time_val : np.ndarray
+        time values
+    data_val : np.ndarray
+        data values
+    data_err : np.ndarray
+        data errors
+    oversamp : float
+        oversamling factor of the periodogram frequency grid
+    normalize : bool, optional
+        normalization of the periodogram, by default True
+
+    Returns
+    -------
+    tuple[np.ndarray]
+        frequency, power spectrum and phase of the periodogram
+    """
+
+    # time_val span and steps
+    time_val = time_val[-1] - time_val[0]
+    dtime    = time_val[1:] - time_val[:-1]
 
     # linear and angular frequencies
-    dfreq = 1/(Time*ofac)
-    freq = np.arange(1/Time, 1/(2*np.median(dtime)), dfreq)
+    dfreq = 1/(time_val*oversamp)
+    freq  = np.arange(1/time_val, 1/(2*np.median(dtime)), dfreq)
     omega = 2*np.pi*freq
 
     # weights
-    W = np.sum(1/err**2)
-    w = 1/(W*err**2)
+    W = np.sum(1/data_err**2)
+    w = 1/(W*data_err**2)
 
     # empty arrays for powers and phases
-    N = len(freq)
-    ps = np.empty(N)
-    phi = np.empty(N)
+    N_freq = len(freq)
+    ps     = np.empty(N_freq)
+    phi    = np.empty(N_freq)
 
     # loop through frequencies
-    for i in range(N):
+    for i in range(N_freq):
 
         # trigonometric terms
-        arg = omega[i] * time
+        arg    = omega[i] * time_val
         cosarg = np.cos(arg)
         sinarg = np.sin(arg)
 
         # weighted sums
-        #Y = _weight_sum1(w, val)
-        #C = _weight_sum1(w, cosarg)
-        #S = _weight_sum1(w, sinarg)
-        Y = np.sum(w*val)
+        Y = np.sum(w*data_val)
         C = np.sum(w*cosarg)
         S = np.sum(w*sinarg)
 
         # weighted sums of cross-terms
-        #YYhat = _weight_sum2(w, val, val)
-        #YChat = _weight_sum2(w, val, cosarg)
-        #YShat = _weight_sum2(w, val, sinarg)
-        #CChat = _weight_sum2(w, cosarg, cosarg)
-        #SShat = _weight_sum2(w, sinarg, sinarg)
-        #CShat = _weight_sum2(w, cosarg, sinarg)
-        YYhat = np.sum(w*val*val)
-        YChat = np.sum(w*val*cosarg)
-        YShat = np.sum(w*val*sinarg)
+        YYhat = np.sum(w*data_val*data_val)
+        YChat = np.sum(w*data_val*cosarg)
+        YShat = np.sum(w*data_val*sinarg)
         CChat = np.sum(w*cosarg*cosarg)
         SShat = np.sum(w*sinarg*sinarg)
         CShat = np.sum(w*cosarg*sinarg)
@@ -130,17 +160,3 @@ def _gls(time, val, err, ofac, normalize=True):
 
     # return frequencies, power spectrum and phases
     return freq, ps, phi
-
-#@njit()
-def _weight_sum1(w, arr):
-    sumw = 0
-    for i in range(len(w)):
-        sumw += w[i] * arr[i]
-    return sumw
-
-#@njit()
-def _weight_sum2(w, arr1, arr2):
-    sumw = 0
-    for i in range(len(w)):
-        sumw += w[i] * arr1[i] * arr2[i]
-    return sumw

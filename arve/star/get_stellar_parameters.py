@@ -3,11 +3,15 @@ import numpy             as     np
 
 class get_stellar_parameters:
 
-    def get_stellar_parameters(self) -> None:
-        """Get spectral type from SIMBAD query and stellar parameters from main-sequence table.
+    def get_stellar_parameters(
+        self
+        ) -> None:
+        """Get stellar parameters. Spectral type is queried from SIMBAD and other parameters are interpolated from a main-sequence table. The Sun has hard-coded values.
 
-        :return: None
-        :rtype: None
+        Returns
+        -------
+        None
+            None
         """
 
         # initiate dictionarty with stellar parameters
