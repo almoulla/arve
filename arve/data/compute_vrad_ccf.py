@@ -194,6 +194,8 @@ class compute_vrad_ccf:
                     a0 = 1-ccf_val[i,j,i_min]/C0
                     b0 = ccf_vrad[i_min]
                     c0 = (b0-interp1d(ccf_val[i,j,:i_min], ccf_vrad[:i_min])((ccf_val[i,j,i_min]+ccf_val[i,j,i_max])/2))*2
+                    if np.abs(b0) < 1e-3:
+                        b0 = 1e-3
                     p0 = (C0, a0, b0, c0)
 
                     # CCF parameters with fitted Gaussian

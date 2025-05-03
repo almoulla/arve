@@ -3,6 +3,7 @@ from .compute_spec_reference import compute_spec_reference
 from .compute_vrad_ccf       import compute_vrad_ccf
 from .compute_vrad_lbl       import compute_vrad_lbl
 from .get_aux_data           import get_aux_data
+from .plot_spec_data         import plot_spec_data
 from .plot_vrad              import plot_vrad
 from .read_spec              import read_spec
 
@@ -14,6 +15,7 @@ class Data(
     compute_vrad_ccf,
     compute_vrad_lbl,
     get_aux_data,
+    plot_spec_data,
     plot_vrad,
     read_spec
     ):
