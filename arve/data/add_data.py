@@ -7,28 +7,37 @@ class add_data:
 
     def add_data(
         self,
-        time_val       : np.ndarray                    | None = None ,
-        vrad_val       : np.ndarray                    | None = None ,
-        vrad_err       : np.ndarray                    | None = None ,
-        berv_val       : np.ndarray                    | None = None ,
-        wave_val       : np.ndarray                    | None = None ,
-        flux_val       : np.ndarray                    | None = None ,
-        flux_err       : np.ndarray                    | None = None ,
-        medium         : Literal["vac", "air"]                = "vac",
-        format         : Literal["s1d", "s2d"]                = "s1d",
-        path           : str                           | None = None ,
-        extension      : Literal["fits", "npz", "csv"] | None = None ,
-        compression    : str                           | None = None ,
+        time_val       : np.ndarray                    | None = None   ,
+        vrad_val       : np.ndarray                    | None = None   ,
+        vrad_err       : np.ndarray                    | None = None   ,
+        berv_val       : np.ndarray                    | None = None   ,
+        wave_val       : np.ndarray                    | None = None   ,
+        flux_val       : np.ndarray                    | None = None   ,
+        flux_err       : np.ndarray                    | None = None   ,
+        medium         : Literal["vac", "air"]                = "vac"  ,
+        format         : Literal["s1d", "s2d"]                = "s1d"  ,
+        path           : str                           | None = None   ,
+        extension      : Literal["fits", "npz", "csv"] | None = None   ,
+        compression    : str                           | None = None   ,
         instrument     : Literal["espresso",
                                  "harps",
                                  "harps-n",
                                  "kpf",
                                  "neid",
                                  "nirps",
-                                 "spirou"]             | None = None ,
-        resolution     : float                         | None = None ,
-        berv_corrected : bool                                 = True ,
-        same_wave_grid : bool                                 = False
+                                 "spirou"]             | None = None   ,
+        resolution     : float                         | None = None   ,
+        berv_corrected : bool                                 = True   ,
+        same_wave_grid : bool                                 = False  ,
+        interpolation  : Literal["linear",
+                                 "nearest",
+                                 "nearest-up",
+                                 "zero",
+                                 "slinear",
+                                 "quadratic",
+                                 "cubic",
+                                 "previous",
+                                 "next"]                      = "cubic"
         ) -> None:
         """Add data.
 
@@ -66,6 +75,8 @@ class add_data:
             spectra already BERV-corrected, by default True
         same_wave_grid : bool, optional
             spectra already on the same wavelength grid, by default False
+        interpolation : Literal[&quot;linear&quot;, &quot;nearest&quot;, &quot;nearest-up&quot;, &quot;zero&quot;, &quot;slinear&quot;, &quot;quadratic&quot;, &quot;cubic&quot;, &quot;previous&quot;, &quot;next&quot;], optional
+            kind of interpolation of spectra onto common wavelength grid, by default "cubic"
 
         Returns
         -------
@@ -122,6 +133,7 @@ class add_data:
             "instrument"    : instrument,
             "berv_corrected": berv_corrected,
             "same_wave_grid": same_wave_grid,
+            "interpolation" : interpolation,
             "files"         : files
             }
 
