@@ -201,14 +201,14 @@ class get_aux_data:
 
         # keep excluded regions which overlap with data
         excl_dict = {}
-        if exclude_regions is not None:
-            for i in range(self.spec["N_ord"]):
+        for i in range(self.spec["N_ord"]):
+            if exclude_regions is not None:
                 idx_wave     = (excl["wave_l"]>wave_val[i][-1]) | (excl["wave_u"]<wave_val[i][0]) == False
                 excl_dict[i] = excl[idx_wave].reset_index(drop=True)
                 excl_dict[i]["wave_l"][excl_dict[i]["wave_l"]<wave_val[i][ 0]] = wave_val[i][ 0]
                 excl_dict[i]["wave_u"][excl_dict[i]["wave_u"]>wave_val[i][-1]] = wave_val[i][-1]
-        else:
-            excl_dict[i] = pd.DataFrame(columns=["wave_l", "wave_u"])
+            else:
+                excl_dict[i] = pd.DataFrame(columns=["wave_l", "wave_u"])
 
         # criterion: lines not within telluric bands
         for i in range(self.spec["N_ord"]):
