@@ -5,7 +5,7 @@ with open("README.md") as file:
 
 setup(
     name="arve",
-    version="0.4.4",
+    version="0.4.5",
     author="Khaled Al Moulla",
     author_email="khaled.almoulla@gmail.com",
     description="Analyzing Radial Velocity Elements",

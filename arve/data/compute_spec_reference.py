@@ -34,6 +34,10 @@ class compute_spec_reference:
         N_ord    = self.spec["N_ord"]
         N_pix    = self.spec["N_pix"]
 
+        # nr. of spectra
+        if N_spec is None:
+            N_spec = self.spec["N_spec"]
+
         # read data from input
         if self.spec["path"] is None:
 
@@ -42,15 +46,11 @@ class compute_spec_reference:
 
             # reference spectrum
             ref_wave_val = wave_val
-            ref_flux_val = np.array([np.average(flux_val[:,i], weights=1/flux_err[:,i]**2, axis=0) for i in range(N_ord)])
-            ref_flux_err = np.array([np.sqrt(1/np.sum(1/flux_err[:,i]**2, axis=0))                 for i in range(N_ord)])
+            ref_flux_val = np.array([np.average(flux_val[:N_spec,i], weights=1/flux_err[:N_spec,i]**2, axis=0) for i in range(N_ord)])
+            ref_flux_err = np.array([np.sqrt(1/np.sum(1/flux_err[:N_spec,i]**2, axis=0))                       for i in range(N_ord)])
         
         # read data from path
         else:
-
-            # nr. of spectra
-            if N_spec is None:
-                N_spec = len(self.spec["files"])
 
             # loop spectra
             for i in range(N_spec):

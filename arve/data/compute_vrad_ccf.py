@@ -47,6 +47,11 @@ class compute_vrad_ccf:
         # read mask
         mask = self.aux_data["mask"]
 
+        # nr. of lines
+        N_line = np.zeros(N_ord, dtype=int)
+        for i in range(N_ord):
+            N_line[i] = len(mask[i])
+
         # central wavelengths
         wave_c = np.zeros(N_ord, dtype=object)
         for i in range(N_ord):
@@ -56,7 +61,7 @@ class compute_vrad_ccf:
         weight = np.zeros(N_ord, dtype=object)
         for i in range(N_ord):
             if weight_name is None:
-                weight[i] = np.ones(len(mask[i]))
+                weight[i] = np.ones(N_line[i])
             else:
                 weight[i] = np.array(mask[i][weight_name])
 
@@ -77,7 +82,7 @@ class compute_vrad_ccf:
         # lines which satisfy criteria
         if criteria is not None:
             for i in range(N_ord):
-                idx = np.ones_like(wave_c[i], dtype=bool)
+                idx = np.ones(N_line[i], dtype=bool)
                 for j in range(len(criteria)):
                     crit = np.array(mask[i][criteria[j]])
                     idx *= crit

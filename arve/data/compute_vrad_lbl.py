@@ -68,23 +68,14 @@ class compute_vrad_lbl:
         # read mask
         mask = self.aux_data["mask"]
 
-        # central, left and right wavelengths
-        wave_c = np.zeros(N_ord, dtype=object)
-        wave_l = np.zeros(N_ord, dtype=object)
-        wave_u = np.zeros(N_ord, dtype=object)
-        for i in range(N_ord):
-            wave_c[i] = np.array(mask[i]["wave"  ])
-            wave_l[i] = np.array(mask[i]["wave_l"])
-            wave_u[i] = np.array(mask[i]["wave_u"])
-
         # temperature bins
         if bins is None:
             bins = [[np.min(temp),np.max(temp)]]
 
         # nr. of lines and temperature bins
-        N_line = np.zeros(N_ord, dtype=object)
+        N_line = np.zeros(N_ord, dtype=int)
         for i in range(N_ord):
-            N_line[i] = len(wave_c[i])
+            N_line[i] = len(mask[i])
         N_bin = len(bins)
 
         # exclude tellurics
@@ -104,29 +95,32 @@ class compute_vrad_lbl:
         # lines which satisfy criteria
         idx_crit = np.zeros(N_ord, dtype=object)
         for i in range(N_ord):
-            idx_crit[i] = np.ones_like(wave_c[i], dtype=bool)
+            idx_crit[i] = np.ones(N_line[i], dtype=bool)
             if criteria is not None:
                 for j in range(len(criteria)):
                     crit = np.array(mask[i][criteria[j]])
                     idx_crit[i] *= crit
+
+        # lower and upper index of lines
+        idx_l = np.zeros(N_ord, dtype=object)
+        idx_u = np.zeros(N_ord, dtype=object)
+        for i in range(N_ord):
+            idx_l[i] = np.array(mask[i]["idx_l"])
+            idx_u[i] = np.array(mask[i]["idx_u"])
 
         # index of lines
         idx_line = np.zeros(N_ord, dtype=object)
         for i in range(N_ord):
             idx_line[i] = np.zeros(N_line[i], dtype=object)
             for j in range(N_line[i]):
-                i_l            = np.searchsorted(wave_val[i], wave_l[i][j], side="right")
-                i_u            = np.searchsorted(wave_val[i], wave_u[i][j], side="right")
-                idx_line[i][j] = np.arange(i_l, i_u)
+                idx_line[i][j] = np.arange(idx_l[i][j], idx_u[i][j]+1)
 
         # index of temperature bins
         idx_temp = np.zeros(N_ord, dtype=object)
         for i in range(N_ord):
             idx_temp[i] = np.zeros(N_bin, dtype=object)
             for j in range(N_bin):
-                i_l            = temp[i]>=bins[j][0]
-                i_u            = temp[i]<=bins[j][1]
-                idx_temp[i][j] = np.where(i_l & i_u)[0]
+                idx_temp[i][j] = np.where((temp[i]>=bins[j][0]) & (temp[i]<=bins[j][1]))[0]
 
         # index of temperature-segmented line parts
         idx = np.zeros(N_ord, dtype=object)
@@ -157,7 +151,7 @@ class compute_vrad_lbl:
                 for k in range(N_line[j]):
 
                     # check if line satisfies criteria
-                    if idx_crit[j][k] == True:
+                    if idx_crit[j][k]:
 
                         # loop temperature bins
                         for l in range(N_bin):
@@ -211,6 +205,9 @@ class compute_vrad_lbl:
                                 continue
 
         # outlier rejection
+        for i in range(N_ord):
+            vrad_val_lbl[i][np.abs(vrad_val_lbl[i]) == np.inf] = np.nan
+            vrad_err_lbl[i][np.abs(vrad_err_lbl[i]) == np.inf] = np.nan
         for i in range(N_spec):
             *_, clip_val_min, clip_val_max = sigma_clip(np.vstack([vrad_val_lbl[j][i,:,:] for j in range(N_ord)]), maxiters=None, return_bounds=True)
             *_, clip_err_min, clip_err_max = sigma_clip(np.vstack([vrad_err_lbl[j][i,:,:] for j in range(N_ord)]), maxiters=None, return_bounds=True)
@@ -228,7 +225,7 @@ class compute_vrad_lbl:
         for i in range(N_spec):
             for j in range(N_ord):
                 for k in range(N_bin):
-                    idx = ~np.isnan(vrad_val_lbl[j][i,:,k]) & (np.abs(vrad_err_lbl[j][i,:,k])>vrad_err_lim)
+                    idx = ~np.isnan(vrad_val_lbl[j][i,:,k]) & (vrad_err_lbl[j][i,:,k]>vrad_err_lim)
                     if np.sum(idx) > 0:
                         vrad_val_ord[i,j,k] = np.average(vrad_val_lbl[j][i,idx,k], weights=1/vrad_err_lbl[j][i,idx,k]**2)
                         vrad_err_ord[i,j,k] = np.sqrt(1/np.sum(1/vrad_err_lbl[j][i,idx,k]**2))
@@ -238,7 +235,7 @@ class compute_vrad_lbl:
         vrad_err_bin = np.zeros((N_spec,N_bin))*np.nan
         for i in range(N_spec):
             for j in range(N_bin):
-                idx = ~np.isnan(vrad_val_ord[i,:,j]) & (np.abs(vrad_err_ord[i,:,j])>0)
+                idx = ~np.isnan(vrad_val_ord[i,:,j]) & (vrad_err_ord[i,:,j]>0)
                 if np.sum(idx) > 0:
                     vrad_val_bin[i,j] = np.average(vrad_val_ord[i,idx,j], weights=1/vrad_err_ord[i,idx,j]**2)
                     vrad_err_bin[i,j] = np.sqrt(1/np.sum(1/vrad_err_ord[i,idx,j]**2))
