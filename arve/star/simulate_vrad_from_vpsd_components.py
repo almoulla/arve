@@ -25,24 +25,25 @@ class simulate_vrad_from_vpsd_components:
             None
         """
 
-        # time parameters
-        time   = np.arange(time_start, time_stop, time_step)
-        T      = time_stop - time_start
-        dt     = time_step
-        N_time = len(time)
-
-        # frequency parameters
-        freq   = np.arange(1/T, 1/(2*dt), 1/T)
-        df     = 1/T
-        omega  = 2*np.pi*freq
-        N_freq = len(freq)
-
-        # random phases
-        phi = np.random.uniform(-np.pi, np.pi, N_freq)
-
         # read VPSD components
         comp_name = list(self.vpsd_components.keys())
         N_comp    = len(comp_name)
+
+        # time parameters
+        time      = np.arange(time_start, time_stop, time_step)
+        time_span = time_stop - time_start
+        N_time    = len(time)
+
+        # frequency parameters
+        freq_min  = 1/time_span
+        freq_max  = 1/(2*time_step)
+        freq_step = 1/time_span
+        freq      = np.arange(freq_min, freq_max, freq_step)
+        omega     = 2*np.pi*freq
+        N_freq    = len(freq)
+
+        # random phases
+        phi = np.random.uniform(-np.pi, np.pi, N_freq)
 
         # empty array for VPSD
         vpsd_arr = np.zeros((N_comp,N_freq))
@@ -69,7 +70,7 @@ class simulate_vrad_from_vpsd_components:
                 vpsd_arr[i] = c0*np.ones_like(freq)
         
         # velocity amplitudes
-        vamp_arr = np.sqrt(vpsd_arr*df)
+        vamp_arr = np.sqrt(vpsd_arr*freq_step)
 
         # empty array for RV components + total + total without noise
         vrad_comp = np.zeros((N_time,N_comp+2))
@@ -79,7 +80,7 @@ class simulate_vrad_from_vpsd_components:
 
         # loop times
         for i in range(N_time):
-            
+
             # array of sine terms
             sin_arr = np.sin(omega*time[i] + phi)
 
@@ -95,7 +96,7 @@ class simulate_vrad_from_vpsd_components:
         
         # dictionary with RV components
         vrad_dict = {}
-        vrad_dict["time_val"] = time
+        vrad_dict["time"] = time
         for i in range(N_comp):
             vrad_dict[comp_name[i]] = vrad_comp[:,i]
         vrad_dict["total_no_noise"] = vrad_comp[:,-2]

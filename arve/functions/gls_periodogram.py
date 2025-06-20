@@ -95,18 +95,20 @@ def _gls(
         frequency, power spectrum and phase of the periodogram
     """
 
-    # time_val span and steps
-    time_val = time_val[-1] - time_val[0]
-    dtime    = time_val[1:] - time_val[:-1]
+    # time parameters
+    time_span = time_val[-1] - time_val[0]
+    time_step = time_val[1:] - time_val[:-1]
 
-    # linear and angular frequencies
-    dfreq = 1/(time_val*oversamp)
-    freq  = np.arange(1/time_val, 1/(2*np.median(dtime)), dfreq)
-    omega = 2*np.pi*freq
+    # frequency parameters
+    freq_min  = 1/time_span
+    freq_max  = 1/(2*np.median(time_step))
+    freq_step = 1/(time_span*oversamp)
+    freq      = np.arange(freq_min, freq_max, freq_step)
+    omega     = 2*np.pi*freq
 
     # weights
-    W = np.sum(1/data_err**2)
-    w = 1/(W*data_err**2)
+    w  = 1/(data_err**2)
+    w /= np.sum(w)
 
     # empty arrays for powers and phases
     N_freq = len(freq)
@@ -117,7 +119,7 @@ def _gls(
     for i in range(N_freq):
 
         # trigonometric terms
-        arg    = omega[i] * time_val
+        arg    = omega[i]*time_val
         cosarg = np.cos(arg)
         sinarg = np.sin(arg)
 
@@ -135,19 +137,19 @@ def _gls(
         CShat = np.sum(w*cosarg*sinarg)
 
         # differences of sums
-        YY = YYhat - Y * Y
-        YC = YChat - Y * C
-        YS = YShat - Y * S
-        CC = CChat - C * C
-        SS = SShat - S * S
-        CS = CShat - C * S
+        YY = YYhat - Y*Y
+        YC = YChat - Y*C
+        YS = YShat - Y*S
+        CC = CChat - C*C
+        SS = SShat - S*S
+        CS = CShat - C*S
 
         # normalization
-        D = CC * SS - CS ** 2
+        D = CC*SS - CS**2
 
         # amplitudes
-        a = (YC * SS - YS * CS) / D
-        b = (YS * CC - YC * CS) / D
+        a = (YC*SS - YS*CS) / D
+        b = (YS*CC - YC*CS) / D
 
         # power spectrum
         if normalize == True:

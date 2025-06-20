@@ -40,7 +40,7 @@ class fit_vpsd_coefficients:
             for i in range(len(coef_val)):
 
                 # add parameters
-                params.add(comp + "_" + str(i), value=coef_val[i], min=coef_val[i]/coef_bound, max=coef_val[i]*coef_bound, vary=coef_vary[i])
+                params.add(comp_name + "_" + str(i), value=coef_val[i], min=coef_val[i]/coef_bound, max=coef_val[i]*coef_bound, vary=coef_vary[i])
 
         # fit coefficients
         coef_fit = minimize(_func_res, params, args=(self, freq_avg, vpsd_avg))

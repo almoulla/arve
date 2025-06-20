@@ -6,13 +6,16 @@ import numpy              as     np
 class plot_recoveries:
 
     def plot_recoveries(self,
-        vmin : float = 0,
-        vmax : float = 2
+        figsize : tuple = (10,10),
+        vmin    : float = 0      ,
+        vmax    : float = 2
         ) -> plt.Figure:
         """Plot recoveries.
 
         Parameters
         ----------
+        figsize : tuple, optional
+            figure size, by default (10,10)
         vmin : float, optional
             minimum value in color map, by default 0
         vmax : float, optional
@@ -41,7 +44,7 @@ class plot_recoveries:
         cmap.set_bad("white", alpha=1)
 
         # initiate figure
-        fig = plt.figure()
+        fig = plt.figure(figsize=figsize)
 
         # if map is included
         if include_map:
@@ -91,7 +94,7 @@ class plot_recoveries:
         plt.gca().yaxis.set_minor_locator(AutoMinorLocator())
         
         # color bar
-        cb = plt.colorbar(pad=0.01)
+        cb = plt.colorbar(pad=0.01, extend="max")
         cb.ax.tick_params(axis="both", which="both", direction="in")
         cb.ax.yaxis.set_minor_locator(AutoMinorLocator())
         if y_var == "K": cb.set_label("$K_{\mathrm{rec}}/K_{\mathrm{inj}}$")

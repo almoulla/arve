@@ -38,10 +38,15 @@ class fit_keplerians:
         # copy RV values
         vrad_val_tmp = np.copy(vrad_val)
 
-        # frequency grid on which to compute periodograms
-        T    = np.max(time_val) - np.min(time_val)
-        dt   = np.nanmedian(np.diff(time_val))
-        freq = np.arange(1/T, 1/(2*dt), 1/(T*oversamp))
+        # time parameters
+        time_span = time_val[-1] - time_val[0]
+        time_step = time_val[1:] - time_val[:-1]
+
+        # frequency parameters
+        freq_min  = 1/time_span
+        freq_max  = 1/(2*np.median(time_step))
+        freq_step = 1/(time_span*oversamp)
+        freq      = np.arange(freq_min, freq_max, freq_step)
 
         # empty lists for parameter values and errors of fitted Keplerians
         para_val_arr = []

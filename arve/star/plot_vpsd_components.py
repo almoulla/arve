@@ -100,7 +100,7 @@ class plot_vpsd_components:
             plt.loglog(freq, vpsd_tot, ls="-", c="k", label="Total")
         else:
             plt.loglog(freq, vpsd_tot, ls="-", c="k")
-            plt.text(freq[0]*1.25, vpsd_tot[0]*1.1, self.stellar_parameters["sptype"], ha="left", va="bottom")
+            plt.text(freq[0]*1.25, vpsd_tot[0]*0.85, self.stellar_parameters["sptype"], ha="left", va="top")
 
         # plot limits
         plt.xlim(min(freq), max(freq))

@@ -55,7 +55,7 @@ class compute_vrad_ccf:
         # central wavelengths
         wave_c = np.zeros(N_ord, dtype=object)
         for i in range(N_ord):
-            wave_c[i] = np.array(mask[i]["wave"])
+            wave_c[i] = mask[i]["wave"].values
 
         # weights
         weight = np.zeros(N_ord, dtype=object)
@@ -63,7 +63,7 @@ class compute_vrad_ccf:
             if weight_name is None:
                 weight[i] = np.ones(N_line[i])
             else:
-                weight[i] = np.array(mask[i][weight_name])
+                weight[i] = mask[i][weight_name].values
 
         # exclude tellurics
         if exclude_tellurics:
@@ -84,7 +84,7 @@ class compute_vrad_ccf:
             for i in range(N_ord):
                 idx = np.ones(N_line[i], dtype=bool)
                 for j in range(len(criteria)):
-                    crit = np.array(mask[i][criteria[j]])
+                    crit = mask[i][criteria[j]].values
                     idx *= crit
                 wave_c[i] = wave_c[i][idx]
                 weight[i] = weight[i][idx]
@@ -138,7 +138,7 @@ class compute_vrad_ccf:
                 wc_shift = self.arve.functions.doppler_shift(wave=wave_c[i], v=ccf_vrad[j])
 
                 # upper and lower indices
-                i_u[i,j] = np.searchsorted(wave_val[i], wc_shift, side="right")
+                i_u[i,j] = np.searchsorted(wave_val[i], wc_shift)
                 i_l[i,j] = i_u[i,j] - 1
 
                 # upper and lower fractions

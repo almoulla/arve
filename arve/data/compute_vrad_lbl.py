@@ -70,7 +70,7 @@ class compute_vrad_lbl:
 
         # temperature bins
         if bins is None:
-            bins = [[np.min(temp),np.max(temp)]]
+            bins = [[np.nanmin(temp),np.nanmax(temp)]]
 
         # nr. of lines and temperature bins
         N_line = np.zeros(N_ord, dtype=int)
@@ -136,6 +136,11 @@ class compute_vrad_lbl:
         for i in range(N_ord):
             vrad_val_lbl[i] = np.zeros((N_spec,N_line[i],N_bin))*np.nan
             vrad_err_lbl[i] = np.zeros((N_spec,N_line[i],N_bin))*np.nan
+        
+        # mask array for RV values and errors
+        vrad_mask_lbl = np.zeros(N_ord, dtype=object)
+        for i in range(N_ord):
+            vrad_mask_lbl[i] = np.ones((N_spec,N_line[i],N_bin), dtype=bool)
 
         # loop spectra
         print("Analyzed spectra:")
@@ -204,10 +209,16 @@ class compute_vrad_lbl:
 
                                 continue
 
-        # outlier rejection
+        # replace infinite values with NaNs
         for i in range(N_ord):
             vrad_val_lbl[i][np.abs(vrad_val_lbl[i]) == np.inf] = np.nan
             vrad_err_lbl[i][np.abs(vrad_err_lbl[i]) == np.inf] = np.nan
+
+        # update mask array
+        for i in range(N_ord):
+            vrad_mask_lbl[i][np.isnan(vrad_val_lbl[i]) | np.isnan(vrad_err_lbl[i])] = False
+
+        # outlier identification
         for i in range(N_spec):
             *_, clip_val_min, clip_val_max = sigma_clip(np.vstack([vrad_val_lbl[j][i,:,:] for j in range(N_ord)]), maxiters=None, return_bounds=True)
             *_, clip_err_min, clip_err_max = sigma_clip(np.vstack([vrad_err_lbl[j][i,:,:] for j in range(N_ord)]), maxiters=None, return_bounds=True)
@@ -215,9 +226,9 @@ class compute_vrad_lbl:
                 for k in range(N_line[j]):
                     for l in range(N_bin):
                         if (vrad_val_lbl[j][i,k,l] < clip_val_min) | (vrad_val_lbl[j][i,k,l] > clip_val_max):
-                            vrad_val_lbl[j][i,k,l] = np.nan
+                            vrad_mask_lbl[j][i,k,l] = False
                         if (vrad_err_lbl[j][i,k,l] < clip_err_min) | (vrad_err_lbl[j][i,k,l] > clip_err_max):
-                            vrad_err_lbl[j][i,k,l] = np.nan
+                            vrad_mask_lbl[j][i,k,l] = False
 
         # weighted average of all valid lines per order
         vrad_val_ord = np.zeros((N_spec,N_ord,N_bin))*np.nan
@@ -225,7 +236,7 @@ class compute_vrad_lbl:
         for i in range(N_spec):
             for j in range(N_ord):
                 for k in range(N_bin):
-                    idx = ~np.isnan(vrad_val_lbl[j][i,:,k]) & (vrad_err_lbl[j][i,:,k]>vrad_err_lim)
+                    idx = vrad_mask_lbl[j][i,:,k] & (vrad_err_lbl[j][i,:,k]>vrad_err_lim)
                     if np.sum(idx) > 0:
                         vrad_val_ord[i,j,k] = np.average(vrad_val_lbl[j][i,idx,k], weights=1/vrad_err_lbl[j][i,idx,k]**2)
                         vrad_err_ord[i,j,k] = np.sqrt(1/np.sum(1/vrad_err_lbl[j][i,idx,k]**2))
@@ -246,16 +257,17 @@ class compute_vrad_lbl:
 
         # save RV data
         self.vrad = {
-            "vrad_val"    : vrad_val    ,
-            "vrad_err"    : vrad_err    ,
-            "vrad_val_bin": vrad_val_bin,
-            "vrad_err_bin": vrad_err_bin,
-            "vrad_val_ord": vrad_val_ord,
-            "vrad_err_ord": vrad_err_ord,
-            "vrad_val_lbl": vrad_val_lbl,
-            "vrad_err_lbl": vrad_err_lbl,
-            "bins"        : bins        ,
-            "method"      : "LBL"       ,
+            "vrad_val"     : vrad_val     ,
+            "vrad_err"     : vrad_err     ,
+            "vrad_val_bin" : vrad_val_bin ,
+            "vrad_err_bin" : vrad_err_bin ,
+            "vrad_val_ord" : vrad_val_ord ,
+            "vrad_err_ord" : vrad_err_ord ,
+            "vrad_val_lbl" : vrad_val_lbl ,
+            "vrad_err_lbl" : vrad_err_lbl ,
+            "vrad_mask_lbl": vrad_mask_lbl,
+            "bins"         : bins         ,
+            "method"       : "LBL"        ,
             }
 
         return None

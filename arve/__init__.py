@@ -1,4 +1,4 @@
-__version__ = "0.4.5"
+__version__ = "0.5.0"
 __author__  = "Khaled Al Moulla"
 
 from .arve import ARVE
