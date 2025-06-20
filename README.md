@@ -4,8 +4,14 @@
 
 # ARVE ~ Analyzing Radial Velocity Elements
 
+`ARVE` is multi-functional tool for extreme precision radial velocity (EPRV) analysis.
+
 ## Installation
 
 ```
 pip install arve
 ```
+
+## Documentation
+
+<https://arve.readthedocs.io>

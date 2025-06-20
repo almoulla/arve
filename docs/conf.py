@@ -15,7 +15,7 @@ sys.path.insert(0, os.path.abspath(".."))
 project = "ARVE"
 copyright = "2025, Khaled Al Moulla"
 author = "Khaled Al Moulla"
-release = "0.3.0"
+release = "0.5.0"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

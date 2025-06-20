@@ -1,5 +1,8 @@
-arve.star
-=========
+arve.star package
+=================
+
+Submodules
+----------
 
 arve.star.add\_vpsd\_components module
 --------------------------------------
@@ -45,6 +48,14 @@ arve.star.simulate\_vrad\_from\_vpsd\_components module
 -------------------------------------------------------
 
 .. automodule:: arve.star.simulate_vrad_from_vpsd_components
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: arve.star
    :members:
    :undoc-members:
    :show-inheritance:

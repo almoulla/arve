@@ -1,5 +1,8 @@
-arve.data
-=========
+arve.data package
+=================
+
+Submodules
+----------
 
 arve.data.add\_data module
 --------------------------
@@ -9,10 +12,10 @@ arve.data.add\_data module
    :undoc-members:
    :show-inheritance:
 
-arve.data.compute\_spec\_mast module
-------------------------------------
+arve.data.compute\_spec\_reference module
+-----------------------------------------
 
-.. automodule:: arve.data.compute_spec_mast
+.. automodule:: arve.data.compute_spec_reference
    :members:
    :undoc-members:
    :show-inheritance:
@@ -41,6 +44,14 @@ arve.data.get\_aux\_data module
    :undoc-members:
    :show-inheritance:
 
+arve.data.plot\_spec\_data module
+---------------------------------
+
+.. automodule:: arve.data.plot_spec_data
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 arve.data.plot\_vrad module
 ---------------------------
 
@@ -53,6 +64,14 @@ arve.data.read\_spec module
 ---------------------------
 
 .. automodule:: arve.data.read_spec
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: arve.data
    :members:
    :undoc-members:
    :show-inheritance:

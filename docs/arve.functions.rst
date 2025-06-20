@@ -1,5 +1,8 @@
-arve.functions
-==============
+arve.functions package
+======================
+
+Submodules
+----------
 
 arve.functions.convert\_air\_to\_vac module
 -------------------------------------------
@@ -53,6 +56,14 @@ arve.functions.sptype\_to\_num module
 -------------------------------------
 
 .. automodule:: arve.functions.sptype_to_num
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: arve.functions
    :members:
    :undoc-members:
    :show-inheritance:
