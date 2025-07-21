@@ -142,9 +142,9 @@ class read_spec:
                         self.spec["resolution"] = 100000
                     self.time["time_val"][i] = hdul[0].header["mjd_utc"]
                     if self.spec["format"] == "s2d":
-                        file = {"wave_val": hdul.data["wavelength" ],
-                                "flux_val": hdul.data["flux"       ],
-                                "flux_err": hdul.data["uncertainty"]}
+                        file = {"wave_val": hdul["wavelength" ].data,
+                                "flux_val": hdul["flux"       ].data,
+                                "flux_err": hdul["uncertainty"].data}
                 
                 # close file
                 hdul.close()
