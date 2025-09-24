@@ -59,6 +59,10 @@ class read_spec:
                         if hdul[0].header["HIERARCH ESO INS MODE"] == "SINGLEUHR":
                             self.spec["resolution"] = 190000
                     self.time["time_val"][i] = hdul[0].header["HIERARCH ESO QC BJD"]
+                    if self.spec["format"] == "s1d":
+                        file = {"wave_val": hdul[1].data["wavelength_air"],
+                                "flux_val": hdul[1].data["flux"          ],
+                                "flux_err": hdul[1].data["error"         ]}
                     if self.spec["format"] == "s2d":
                         file = {"wave_val": hdul[5].data,
                                 "flux_val": hdul[1].data,
@@ -81,9 +85,14 @@ class read_spec:
                         self.spec["medium"    ] = "air"
                         self.spec["resolution"] = 115000
                     self.time["time_val"][i] = hdul[0].header["HIERARCH ESO QC BJD"]
-                    file = {"wave_val": hdul[5].data,
-                            "flux_val": hdul[1].data,
-                            "flux_err": hdul[2].data}
+                    if self.spec["format"] == "s1d":
+                        file = {"wave_val": hdul[1].data["wavelength_air"],
+                                "flux_val": hdul[1].data["flux"          ],
+                                "flux_err": hdul[1].data["error"         ]}
+                    if self.spec["format"] == "s2d":
+                        file = {"wave_val": hdul[5].data,
+                                "flux_val": hdul[1].data,
+                                "flux_err": hdul[2].data}
 
                 # instrument: HARPS-N
                 if self.spec["instrument"] == "harps-n":
@@ -118,6 +127,10 @@ class read_spec:
                         self.spec["medium"    ] = "air"
                         self.spec["resolution"] = 80000
                     self.time["time_val"][i] = hdul[0].header["HIERARCH ESO QC BJD"]
+                    if self.spec["format"] == "s1d":
+                        file = {"wave_val": hdul[1].data["wavelength_air"],
+                                "flux_val": hdul[1].data["flux"          ],
+                                "flux_err": hdul[1].data["error"         ]}
                     if self.spec["format"] == "s2d":
                         file = {"wave_val": hdul[5].data,
                                 "flux_val": hdul[1].data,

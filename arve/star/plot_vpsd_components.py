@@ -5,7 +5,10 @@ class plot_vpsd_components:
 
     def plot_vpsd_components(
         self,
-        fig        : plt.Figure | None = None ,
+        fig        : plt.Figure | None = None                                                        ,
+        figsize    : tuple             = (10,10)                                                     ,
+        colors     : list[str]         = ["C0", "C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8", "C9"],
+        add_legend : bool              = True                                                        ,
         total_only : bool              = False
         ) -> plt.Figure:
         """Plot velocity power spectral density (VPSD) components.
@@ -14,6 +17,12 @@ class plot_vpsd_components:
         ----------
         fig : plt.Figure | None, optional
             figure on which to plot (if None, a new figure is created), by default None
+        figsize : tuple, optional
+            figure size, by default (10,10)
+        colors : list[str], optional
+            line colors for components, by default ["C0", "C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8", "C9"]
+        add_legend : bool, optional
+            add legend about line colors, by default True
         total_only : bool, optional
             plot only total component (sum of all components), by default False
 
@@ -25,7 +34,7 @@ class plot_vpsd_components:
 
         # figure
         if fig is None:
-            fig = plt.figure()
+            fig = plt.figure(figsize=figsize)
 
         # check VPSD is computed
         if self.vpsd is not None:
@@ -48,7 +57,7 @@ class plot_vpsd_components:
         vpsd_tot = np.zeros(len(freq))
 
         # loop components
-        for comp_name in self.vpsd_components.keys():
+        for i, comp_name in enumerate(self.vpsd_components.keys()):
 
             # component dictionary
             comp_dict = self.vpsd_components[comp_name]
@@ -93,7 +102,7 @@ class plot_vpsd_components:
 
             # plot component
             if total_only == False:
-                plt.loglog(freq, vpsd_comp, ls="--", label=comp_name.title())
+                plt.loglog(freq, vpsd_comp, ls="--", color=colors[i], label=comp_name.replace("_"," ").capitalize())
 
         # plot component sum
         if total_only == False:
@@ -110,8 +119,8 @@ class plot_vpsd_components:
         plt.ylabel("VPSD [(km/s)$^{2}$ / d$^{-1}$]")
 
         # plot legend
-        if total_only == False:
-            leg = plt.legend(loc="lower left")
+        if (total_only == False) & (add_legend == True):
+            leg = plt.legend(loc="lower left", framealpha=1)
             leg.set_zorder(101)
 
         # plot axes
