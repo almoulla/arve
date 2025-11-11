@@ -1,7 +1,7 @@
 Citation
 ========
 
-If you make use of ``ARVE``, please cite the following paper:
+If you make use of ``ARVE``, please cite the following publication:
 
 `Al Moulla 2025, A&A, 701, A266`_
 
