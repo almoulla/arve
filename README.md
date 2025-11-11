@@ -1,5 +1,5 @@
 <p align="center">
-    <img width="500" src="https://github.com/almoulla/arve/blob/main/logo/logo.png?raw=true"/>
+    <img width="500" src="https://github.com/almoulla/arve/blob/main/logo/arve_logo.png?raw=true"/>
 </p>
 
 # ARVE ~ Analyzing Radial Velocity Elements

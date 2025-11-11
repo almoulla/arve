@@ -31,19 +31,6 @@ class read_spec:
         # read data from files
         if self.spec["files"] is not None:
 
-            # read file: CSV
-            if self.spec["extension"] == "csv":
-                file = pd.read_csv(self.spec["files"][i])
-            
-            # read file: NPZ
-            if self.spec["extension"] == "npz":
-                file = np.load(self.spec["files"][i])
-                self.time["time_val"][i] = file["time_val"]
-                try:
-                    self.time["berv_val"][i] = file["berv_val"]
-                except:
-                    pass
-
             # read file: FITS
             if self.spec["extension"] == "fits":
 
@@ -161,6 +148,19 @@ class read_spec:
                 
                 # close file
                 hdul.close()
+            
+            # read file: NPZ
+            if self.spec["extension"] == "npz":
+                file = np.load(self.spec["files"][i])
+                self.time["time_val"][i] = file["time_val"]
+                try:
+                    self.time["berv_val"][i] = file["berv_val"]
+                except:
+                    pass
+            
+            # read file: CSV
+            if self.spec["extension"] == "csv":
+                file = pd.read_csv(self.spec["files"][i])
             
             # reshape arrays
             wave_val = np.array(file["wave_val"]).astype("float64")
