@@ -7,6 +7,7 @@ ARVE Documentation
    :maxdepth: 1
    :caption: Contents:
 
-   install
+   installation
+   citation
    tutorials
    api
