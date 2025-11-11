@@ -30,11 +30,11 @@ class injection_recovery:
             array with 2D map bounds in the format [x_min, x_max, y_min, y_max], by default None
         map_dim : list[float] | None, optional
             map dimensions in the format [x_dim, y_dim] (only used if xy_map is provided), by default [10,10]
-        x_var : Literal[&quot;P&quot;, &quot;a&quot;], optional
+        x_var : Literal["P", "a"], optional
             x variable, either period "P" in days or semi-major axis "a" in AUs, by default "P"
-        y_var : Literal[&quot;K&quot;, &quot;m&quot;], optional
+        y_var : Literal["K", "m"], optional
             y variable, either RV semi-amplitude "K" in km/s or planet mass "m" in Earth masses, by default "K"
-        scale : Literal[&quot;linear&quot;, &quot;log&quot;], optional
+        scale : Literal["linear", "log"], optional
             scale of injected values, either "linear" or "log", by default "linear"
         P_lim : float, optional
             fraction of injected periods within which the recovered periods can differ to count as recoveries, by default 0.1

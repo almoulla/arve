@@ -5,9 +5,15 @@ import numpy             as     np
 class plot_keplerians:
 
     def plot_keplerians(
-        self
+        self,
+        figsize : tuple | None = None,
         ) -> plt.Figure:
         """Plot Keplerians.
+
+        Parameters
+        ----------
+        figsize : tuple | None, optional
+            figure size, by default None
 
         Returns
         -------
@@ -34,7 +40,9 @@ class plot_keplerians:
         vrad_val_tmp  = np.copy(vrad_val)
 
         # initiate figure
-        fig, axs = plt.subplots(N_kep+1, 2, figsize=(15,(N_kep+1)*3))
+        if figsize is None:
+            figsize = (15,(N_kep+1)*3)
+        fig, axs = plt.subplots(N_kep+1, 2, figsize=figsize)
 
         # loop Keplerians
         for i in range(N_kep+1):            

@@ -6,14 +6,14 @@ class plot_vrad:
 
     def plot_vrad(
         self,
-        figsize : tuple = (10,10)
+        figsize : tuple = (20,10)
         ) -> plt.Figure:
         """Plot RV time series.
 
         Parameters
         ----------
         figsize : tuple, optional
-            figure size, by default (10,10)
+            figure size, by default (20,10)
 
         Returns
         -------

@@ -5,7 +5,8 @@ import numpy              as     np
 
 class plot_recoveries:
 
-    def plot_recoveries(self,
+    def plot_recoveries(
+        self,
         figsize : tuple = (10,10),
         vmin    : float = 0      ,
         vmax    : float = 2

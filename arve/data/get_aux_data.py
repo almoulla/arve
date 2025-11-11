@@ -26,7 +26,7 @@ class get_aux_data:
         ----------
         mask_path : str | None, optional
             path to self-provided line mask (must be a CSV file where the relevant columns are named the same as in the package-provided masks), by default None
-        mask_medium : Literal[&quot;vac&quot;, &quot;air&quot;], optional
+        mask_medium : Literal["vac", "air"], optional
             medium of mask wavelengths, by default "vac"
         tell_wave : np.ndarray | None, optional
             wavelength values of normalized telluric spectrum (to replace the general model), by default None

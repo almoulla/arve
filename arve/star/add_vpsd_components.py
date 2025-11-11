@@ -12,7 +12,7 @@ class add_vpsd_components:
 
         Parameters
         ----------
-        components : list[Literal[&quot;oscillations&quot;, &quot;granulation&quot;, &quot;supergranulation&quot;, &quot;noise&quot;]], optional
+        components : list[Literal["oscillations", "granulation", "supergranulation", "noise"]], optional
             VPSD components, by default ["oscillations", "granulation", "supergranulation", "noise"]
 
         Returns

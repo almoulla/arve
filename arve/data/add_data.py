@@ -58,19 +58,19 @@ class add_data:
             flux values, by default None
         flux_err : np.ndarray | None, optional
             flux errors, by default None
-        medium : Literal[&quot;vac&quot;, &quot;air&quot;], optional
+        medium : Literal["vac", "air"], optional
             medium of recorded wavelengths, by default "vac"
-        format : Literal[&quot;s1d&quot;, &quot;s2d&quot;], optional
+        format : Literal["s1d", "s2d"], optional
             spectral format, by default "s1d"
         files : list[str] | None, optional
             list of files of spectra including their path, by default None
         path : str | None, optional
             path to spectra, by default None
-        extension : Literal[&quot;fits&quot;, &quot;npz&quot;, &quot;csv&quot;] | None, optional
+        extension : Literal["fits", "npz", "csv"] | None, optional
             extension of files containing the spectra, by default None
         compression : str | None, optional
             compression of files containing the spectra, by default None
-        instrument : Literal[&quot;espresso&quot;, &quot;harps&quot;, &quot;harps-n&quot;, &quot;kpf&quot;, &quot;neid&quot;, &quot;nirps&quot;, &quot;spirou&quot;] | None, optional
+        instrument : Literal["espresso", "harps", "harps-n", "kpf", "neid", "nirps", "spirou"] | None, optional
             instrument name (if the spectra are in FITS files), by default None
         resolution : float | None, optional
             instrumental resolution (if the spectra are in NPZ or CSV files), by default None
@@ -78,7 +78,7 @@ class add_data:
             spectra already BERV-corrected, by default True
         same_wave_grid : bool, optional
             spectra already on the same wavelength grid, by default False
-        interpolation : Literal[&quot;linear&quot;, &quot;nearest&quot;, &quot;nearest-up&quot;, &quot;zero&quot;, &quot;slinear&quot;, &quot;quadratic&quot;, &quot;cubic&quot;, &quot;previous&quot;, &quot;next&quot;], optional
+        interpolation : Literal["linear", "nearest", "nearest-up", "zero", "slinear", "quadratic", "cubic", "previous", "next"], optional
             kind of interpolation of spectra onto common wavelength grid, by default "cubic"
 
         Returns
