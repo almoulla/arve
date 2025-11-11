@@ -16,6 +16,7 @@ class add_data:
         flux_err       : np.ndarray                    | None = None   ,
         medium         : Literal["vac", "air"]                = "vac"  ,
         format         : Literal["s1d", "s2d"]                = "s1d"  ,
+        files          : list[str]                     | None = None   ,
         path           : str                           | None = None   ,
         extension      : Literal["fits", "npz", "csv"] | None = None   ,
         compression    : str                           | None = None   ,
@@ -61,6 +62,8 @@ class add_data:
             medium of recorded wavelengths, by default "vac"
         format : Literal[&quot;s1d&quot;, &quot;s2d&quot;], optional
             spectral format, by default "s1d"
+        files : list[str] | None, optional
+            list of files of spectra including their path, by default None
         path : str | None, optional
             path to spectra, by default None
         extension : Literal[&quot;fits&quot;, &quot;npz&quot;, &quot;csv&quot;] | None, optional
@@ -89,18 +92,14 @@ class add_data:
             vrad_sys = self.arve.star.stellar_parameters["vrad_sys"]
 
         # input from keyword arguments
-        if path is None:
+        if wave_val is not None:
 
             # shift wavelength grid to system restframe
-            if wave_val is not None:
-                wave_val = self.arve.functions.doppler_shift(wave=wave_val, v=-vrad_sys)
-
-            # None entry for files
-            files = None
+            wave_val = self.arve.functions.doppler_shift(wave=wave_val, v=-vrad_sys)
 
         # input from path
         if path is not None:
-            
+
             # path to files
             path_ext = path+f"**/*.{extension}"
             
@@ -108,7 +107,7 @@ class add_data:
             if compression is not None:
                 path_ext += "."+compression
             
-            # search files
+            # search for files
             files = glob.glob(path_ext, recursive=True)
             files = sorted(files)
 
@@ -128,6 +127,7 @@ class add_data:
             "format"        : format,
             "resolution"    : resolution,
             "medium"        : medium,
+            "files"         : files,
             "path"          : path,
             "extension"     : extension,
             "instrument"    : instrument,
@@ -137,8 +137,8 @@ class add_data:
             "files"         : files
             }
 
-        # if input from path, make special additions
-        if path is not None:
+        # if input from files, make special additions
+        if files is not None:
 
             # if not provided, make time values an array with zeros to be populated
             if time_val is None:
@@ -160,13 +160,11 @@ class add_data:
             self.spec["flux_err"] = flux_err
 
         # add nr. of spectra, orders and pixels
-        if wave_val is not None:
-            if path is None:
-                if flux_val is not None:
-                    self.spec["N_spec"] = flux_val.shape[0]
-            else:
-                self.spec["N_spec"] = len(files)
-            self.spec["N_ord"] = wave_val.shape[0]
-            self.spec["N_pix"] = wave_val.shape[1]
+        if (files is None) & (flux_val is not None):
+            self.spec["N_spec"] = flux_val.shape[0]
+        else:
+            self.spec["N_spec"] = len(files)
+        self.spec["N_ord"] = wave_val.shape[0]
+        self.spec["N_pix"] = wave_val.shape[1]
         
         return None

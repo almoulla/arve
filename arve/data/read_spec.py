@@ -23,13 +23,13 @@ class read_spec:
         """
 
         # read data from input
-        if self.spec["path"] is None:
+        if self.spec["files"] is None:
             wave_val = self.spec["wave_val"]
             flux_val = self.spec["flux_val"][i]
             flux_err = self.spec["flux_err"][i]
         
-        # read data from path
-        if self.spec["path"] is not None:
+        # read data from files
+        if self.spec["files"] is not None:
 
             # read file: CSV
             if self.spec["extension"] == "csv":

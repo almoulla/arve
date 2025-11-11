@@ -199,6 +199,8 @@ class compute_vrad_lbl:
                                     # compute RV and RV error
                                     vrad_val += param[0]*c
                                     vrad_err  = 1/np.sqrt(np.sum(1/(obs_flux_err_shift/(ref_grad_val_inter*ref_wave_val_inter/c))**2))
+                                    if scale:
+                                        vrad_err /= np.sqrt(param[1])
 
                                 # save
                                 vrad_val_lbl[j][i,k,l] = vrad_val

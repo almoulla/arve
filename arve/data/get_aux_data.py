@@ -13,8 +13,10 @@ class get_aux_data:
 
     def get_aux_data(
         self,
-        path_mask       : str                   | None = None ,
-        medium_mask     : Literal["vac", "air"]        = "vac",
+        mask_path       : str                   | None = None ,
+        mask_medium     : Literal["vac", "air"]        = "vac",
+        tell_wave       : np.ndarray            | None = None ,
+        tell_flux       : np.ndarray            | None = None ,
         tell_lim        : float                        = 0.99 ,
         exclude_regions : list[list[float]]     | None = None
         ) -> None:
@@ -22,10 +24,14 @@ class get_aux_data:
 
         Parameters
         ----------
-        path_mask : str | None, optional
+        mask_path : str | None, optional
             path to self-provided line mask (must be a CSV file where the relevant columns are named the same as in the package-provided masks), by default None
-        medium_mask : Literal[&quot;vac&quot;, &quot;air&quot;], optional
+        mask_medium : Literal[&quot;vac&quot;, &quot;air&quot;], optional
             medium of mask wavelengths, by default "vac"
+        tell_wave : np.ndarray | None, optional
+            wavelength values of normalized telluric spectrum (to replace the general model), by default None
+        tell_flux : np.ndarray | None, optional
+            flux values of normalized telluric spectrum (to replace the general model), by default None
         tell_lim : float, optional
             normalized flux limit on telluric features (to add a criterion column for stellar lines unaffected by tellurics), by default 0.99
         exclude_regions : list[list[float]] | None, optional
@@ -72,20 +78,20 @@ class get_aux_data:
         file     = files[idx_file]
 
         # read closest mask
-        if path_mask is None:
+        if mask_path is None:
             mask      = pd.read_csv(path_aux_mask+file)
             mask_name = file
         # read self-provided mask
         else:
-            mask      = pd.read_csv(path_mask)
-            mask_name = path_mask.split("/")[-1]
+            mask      = pd.read_csv(mask_path)
+            mask_name = mask_path.split("/")[-1]
         
         # convert wavelengths to correct medium
-        if (medium=="air") & (medium_mask=="vac"):
+        if (medium=="air") & (mask_medium=="vac"):
             mask["wave"  ] = self.arve.functions.convert_vac_to_air(mask["wave"  ])
             mask["wave_l"] = self.arve.functions.convert_vac_to_air(mask["wave_l"])
             mask["wave_u"] = self.arve.functions.convert_vac_to_air(mask["wave_u"])
-        if (medium=="vac") & (medium_mask=="air"):
+        if (medium=="vac") & (mask_medium=="air"):
             mask["wave"  ] = self.arve.functions.convert_air_to_vac(mask["wave"  ])
             mask["wave_l"] = self.arve.functions.convert_air_to_vac(mask["wave_l"])
             mask["wave_u"] = self.arve.functions.convert_air_to_vac(mask["wave_u"])
@@ -135,25 +141,49 @@ class get_aux_data:
             mask_dict[i]["wave_l"] = spec_dict["wave"][i][mask_dict[i]["idx_l"]]
             mask_dict[i]["wave_u"] = spec_dict["wave"][i][mask_dict[i]["idx_u"]]
         
-        # read telluric spectrum
-        wave = pd.read_csv(path_aux_wave+"WAVE.csv.zip")["wave"]
-        tell = pd.read_csv(path_aux_tell+"TELL.csv.zip")
-        if medium == "air":
-            wave = self.arve.functions.convert_vac_to_air(wave)
-        wave = self.arve.functions.doppler_shift(wave=wave, v=-vrad_sys)
-        tell.insert(0, "wave", wave)
+        # construct telluric spectrum with a general model interpolated and convolved as the stellar spectrum
+        if (tell_wave is None) & (tell_flux is None):
 
-        # convolve telluric spectrum
-        if resolution is not None:
-            tell["flux"] = _convolve_gaussian(tell["wave"].values, tell["flux"].values, resolution)
+            # read telluric spectrum
+            wave = pd.read_csv(path_aux_wave+"WAVE.csv.zip")["wave"]
+            tell = pd.read_csv(path_aux_tell+"TELL.csv.zip")
+            if medium == "air":
+                wave = self.arve.functions.convert_vac_to_air(wave)
+            wave = self.arve.functions.doppler_shift(wave=wave, v=-vrad_sys)
+            tell.insert(0, "wave", wave)
 
-        # interpolate telluric spectrum
-        tell_wave = wave_val
-        tell_flux = np.array([interp1d(tell["wave"], tell["flux"], kind="cubic", bounds_error=False)(tell_wave[i]) for i in range(self.spec["N_ord"])])
-        tell_dict = {
-        "wave": tell_wave,
-        "flux": tell_flux
-        }
+            # convolve telluric spectrum
+            if resolution is not None:
+                tell["flux"] = _convolve_gaussian(tell["wave"].values, tell["flux"].values, resolution)
+
+            # interpolate telluric spectrum
+            tell_wave = wave_val
+            tell_flux = np.array([interp1d(tell["wave"], tell["flux"], kind="cubic", bounds_error=False)(tell_wave[i]) for i in range(self.spec["N_ord"])])
+            tell_dict = {
+            "wave": tell_wave,
+            "flux": tell_flux
+            }
+
+        # or use provided telluric spectrum (assumed to have the same resolution as the stellar spectrum but not necessarily sampled on the same wavelength grid)
+        else:
+
+            # concatenate stellar spectrum
+            tell_wave_1d = np.concatenate(tell_wave)
+            tell_flux_1d = np.concatenate(tell_flux)
+            idx_sort = np.argsort(tell_wave_1d)
+
+            # create DataFrame with flattened telluric spectrum
+            tell = pd.DataFrame()
+            tell["wave"] = tell_wave_1d[idx_sort]
+            tell["flux"] = tell_flux_1d[idx_sort]
+
+            # create dictionary with interpolated telluric spectrum
+            tell_wave = wave_val
+            tell_flux = np.array([interp1d(tell_wave[i], tell_flux[i], kind="cubic", bounds_error=False)(tell_wave[i]) for i in range(self.spec["N_ord"])])
+            tell_dict = {
+            "wave": tell_wave,
+            "flux": tell_flux
+            }
 
         # find lower and upper bounds of telluric bands
         tell_wave = np.array(tell["wave"])
