@@ -171,7 +171,7 @@ class read_spec:
                 flux_val = flux_val.reshape(1,flux_val.shape[0])
                 flux_err = flux_err.reshape(1,flux_err.shape[0])
             
-            # remove NaN or null wavelengths
+            # replace points where wavelength is NaN or null with NaN
             idx_nan = np.isnan(wave_val) | (wave_val==0)
             wave_val[idx_nan] = np.nan
             flux_val[idx_nan] = np.nan
