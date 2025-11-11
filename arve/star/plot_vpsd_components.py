@@ -9,7 +9,7 @@ class plot_vpsd_components:
         figsize    : tuple             = (10,10)                                                     ,
         colors     : list[str]         = ["C0", "C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8", "C9"],
         add_legend : bool              = True                                                        ,
-        total_only : bool              = False
+        total_only : bool              = False                                                       ,
         ) -> plt.Figure:
         """Plot velocity power spectral density (VPSD) components.
 

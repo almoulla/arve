@@ -5,7 +5,7 @@ class doppler_shift:
     def doppler_shift(
         self,
         wave : float | np.ndarray,
-        v    : float
+        v    : float             ,
         ) -> float | np.ndarray:
         """Doppler shift.
 

@@ -10,7 +10,7 @@ class recovery_test:
         P_err    : np.ndarray | None = None,
         oversamp : float             = 3   ,
         fap      : float             = 0.01,
-        N_max    : int               = 10
+        N_max    : int               = 10  ,
         ) -> np.ndarray:
         """Recovery test (used by injection_recovery() function).
 

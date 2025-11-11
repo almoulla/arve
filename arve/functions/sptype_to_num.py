@@ -2,7 +2,7 @@ class sptype_to_num:
 
     def sptype_to_num(
         self,
-        sptype : str
+        sptype : str,
         ) -> int:
         """Spectral type to number.
 

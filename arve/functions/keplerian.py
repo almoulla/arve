@@ -5,7 +5,7 @@ class keplerian:
     def keplerian(
         self,
         t       : np.ndarray  ,
-        *params : tuple[float]
+        *params : tuple[float],
         ) -> np.ndarray:
         """Keplerian.
 

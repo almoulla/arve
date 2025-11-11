@@ -9,7 +9,7 @@ class plot_recoveries:
         self,
         figsize : tuple = (10,10),
         vmin    : float = 0      ,
-        vmax    : float = 2
+        vmax    : float = 2      ,
         ) -> plt.Figure:
         """Plot recoveries.
 

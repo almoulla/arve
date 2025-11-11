@@ -21,5 +21,5 @@ class Functions(
     def __init__(self, arve):
         self.arve                        = arve
         self.constants : dict[str,float] = {
-            "c": 2.99792458e5 # [km/s] speed of light in vacuum
+            "c" : 2.99792458e5 # [km/s] speed of light in vacuum
         }

@@ -6,7 +6,7 @@ class simulate_vrad_from_vpsd_components:
         self,
         time_start : float,
         time_stop  : float,
-        time_step  : float
+        time_step  : float,
         ) -> None:
         """Simulate radial velocities (RVs) from velocity power spectral density (VPSD) components.
 

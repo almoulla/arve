@@ -10,7 +10,7 @@ class compute_spec_reference:
         self,
         N_spec   : int | None = None ,
         oversamp : int        = 10   ,
-        smooth   : bool       = False
+        smooth   : bool       = False,
         ) -> None:
         """Compute reference spectrum.
 

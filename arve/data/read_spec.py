@@ -7,7 +7,7 @@ class read_spec:
 
     def read_spec(
         self,
-        i : int
+        i : int,
         ) -> tuple[np.ndarray]:
         """Read spectrum.
 

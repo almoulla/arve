@@ -38,7 +38,7 @@ class add_data:
                                  "quadratic",
                                  "cubic",
                                  "previous",
-                                 "next"]                      = "cubic"
+                                 "next"]                      = "cubic",
         ) -> None:
         """Add data.
 

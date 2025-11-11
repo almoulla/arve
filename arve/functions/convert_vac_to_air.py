@@ -4,7 +4,7 @@ class convert_vac_to_air:
 
     def convert_vac_to_air(
         self,
-        wave_vac : float | np.ndarray
+        wave_vac : float | np.ndarray,
         ) -> float | np.ndarray:
         """Convert wavelengths from vacuum to air. Source: https://www.astro.uu.se/valdwiki/Air-to-vacuum%20conversion
 

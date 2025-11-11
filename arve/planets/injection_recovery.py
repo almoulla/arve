@@ -16,7 +16,7 @@ class injection_recovery:
         P_lim    : float                           = 0.1     ,
         oversamp : float                           = 3       ,
         fap      : float                           = 0.01    ,
-        N_max    : int                             = 10
+        N_max    : int                             = 10      ,
         ) -> None:
         """Injection-recovery test of specific injected values, 2D map or both.
 

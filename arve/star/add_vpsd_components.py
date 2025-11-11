@@ -6,7 +6,7 @@ class add_vpsd_components:
 
     def add_vpsd_components(
         self,
-        components : list[Literal["oscillations", "granulation", "supergranulation", "noise"]] = ["oscillations", "granulation", "supergranulation", "noise"]
+        components : list[Literal["oscillations", "granulation", "supergranulation", "noise"]] = ["oscillations", "granulation", "supergranulation", "noise"],
         ) -> None:
         """Add velocity power spectral density (VPSD) components.
 

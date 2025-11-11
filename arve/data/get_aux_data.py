@@ -18,7 +18,7 @@ class get_aux_data:
         tell_wave       : np.ndarray            | None = None ,
         tell_flux       : np.ndarray            | None = None ,
         tell_lim        : float                        = 0.99 ,
-        exclude_regions : list[list[float]]     | None = None
+        exclude_regions : list[list[float]]     | None = None ,
         ) -> None:
         """Get auxiliary data.
 

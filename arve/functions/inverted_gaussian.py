@@ -5,7 +5,7 @@ class inverted_gaussian:
     def inverted_gaussian(
         self,
         x       : np.ndarray  ,
-        *params : tuple[float]
+        *params : tuple[float],
         ) -> np.ndarray:
         """Inverted Gaussian.
 

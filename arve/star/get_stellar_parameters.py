@@ -4,7 +4,7 @@ import numpy             as     np
 class get_stellar_parameters:
 
     def get_stellar_parameters(
-        self
+        self,
         ) -> None:
         """Get stellar parameters. Spectral type is queried from SIMBAD and other parameters are interpolated from a main-sequence table. The Sun has hard-coded values.
 

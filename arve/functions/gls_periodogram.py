@@ -9,7 +9,7 @@ class gls_periodogram:
         data_err  : np.ndarray | None = None ,
         oversamp  : float             = 1    ,
         normalize : bool              = True ,
-        win_func  : bool              = False
+        win_func  : bool              = False,
         ) -> tuple[np.ndarray | float]:
         """Generalized Lomb-Scargle (GLS) periodogram.
 

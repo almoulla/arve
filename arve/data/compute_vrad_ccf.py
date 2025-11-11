@@ -12,7 +12,7 @@ class compute_vrad_ccf:
         ccf_err_scale     : bool               = False,
         criteria          : list[str]   | None = None ,
         exclude_tellurics : bool               = True ,
-        exclude_regions   : bool               = True
+        exclude_regions   : bool               = True ,
         ) -> None:
         """Compute radial velocities (RVs) from spectral data using the cross-correlation function (CCF) method.
 

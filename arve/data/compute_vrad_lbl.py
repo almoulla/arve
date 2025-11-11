@@ -16,7 +16,7 @@ class compute_vrad_lbl:
         vrad_err_lim      : float                    = 1e-3,
         criteria          : list[str]         | None = None,
         exclude_tellurics : bool                     = True,
-        exclude_regions   : bool                     = True
+        exclude_regions   : bool                     = True,
         ) -> None:
         """Compute radial velocities (RVs) from spectral data using the line-by-line (LBL) method.
 

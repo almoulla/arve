@@ -5,7 +5,7 @@ class fit_vpsd_coefficients:
 
     def fit_vpsd_coefficients(
         self,
-        coef_bound : float = 10
+        coef_bound : float = 10,
         ) -> None:
         """Fit velocity power spectral density (VPSD) coefficients.
 

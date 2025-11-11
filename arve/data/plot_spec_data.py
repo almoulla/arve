@@ -18,7 +18,7 @@ class plot_spec_data:
         plot_excl        : bool               = True   ,
         plot_mask        : bool               = True   ,
         add_legend       : bool               = True   ,
-        annotate         : bool               = False
+        annotate         : bool               = False  ,
         ) -> plt.Figure:
         """Plot spectral data.
 

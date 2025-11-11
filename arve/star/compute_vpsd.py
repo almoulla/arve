@@ -4,7 +4,7 @@ class compute_vpsd:
 
     def compute_vpsd(
         self,
-        N_bin : int | None = None
+        N_bin : int | None = None,
         ) -> None:
         """Compute velocity power spectral density (VPSD).
 

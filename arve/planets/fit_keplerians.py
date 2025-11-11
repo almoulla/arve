@@ -10,7 +10,7 @@ class fit_keplerians:
         oversamp : float = 3   ,
         fap      : float = 0.01,
         P_lim    : float = 0.1 ,
-        N_max    : int   = 10
+        N_max    : int   = 10  ,
         ) -> None:
         """Fit Keplerians.
 
