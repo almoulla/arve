@@ -33,6 +33,7 @@ class compute_spec_reference:
         wave_val = self.spec["wave_val"]
         N_ord    = self.spec["N_ord"]
         N_pix    = self.spec["N_pix"]
+        kind     = self.spec["interpolation"]
 
         # nr. of spectra
         if N_spec is None:
@@ -74,21 +75,21 @@ class compute_spec_reference:
                     ref_flux_val = np.array([np.average(flux_val_arr[:,j], weights=1/flux_err_arr[:,j]**2, axis=0) for j in range(N_ord)])
                     ref_flux_err = np.array([np.sqrt(1/np.sum(1/flux_err_arr[:,j]**2, axis=0))                     for j in range(N_ord)])
 
-        # remove NaN
-        idx = np.isnan(ref_flux_val) | np.isnan(ref_flux_err)
-        ref_flux_val[idx] = 0
-        ref_flux_err[idx] = 0
-
         # oversample
         ref_wave_val_samp = np.zeros((N_ord,N_pix+(oversamp-1)*(N_pix-1)))
         ref_flux_val_samp = np.zeros((N_ord,N_pix+(oversamp-1)*(N_pix-1)))
         ref_flux_err_samp = np.zeros((N_ord,N_pix+(oversamp-1)*(N_pix-1)))
         for i in range(N_ord):
-            func_flux_val        = interp1d(ref_wave_val[i], ref_flux_val[i], "cubic")
-            func_flux_err        = interp1d(ref_wave_val[i], ref_flux_err[i], "cubic")
             ref_wave_val_samp[i] = np.append(np.concatenate([np.linspace(ref_wave_val[i][j], ref_wave_val[i][j+1], oversamp+1)[:oversamp] for j in range(N_pix-1)]), ref_wave_val[i][-1])
-            ref_flux_val_samp[i] = func_flux_val(ref_wave_val_samp[i])
-            ref_flux_err_samp[i] = func_flux_err(ref_wave_val_samp[i])
+            idx_nan_samp = np.isnan(ref_wave_val_samp[i])
+            idx_val_samp = ~idx_nan_samp
+            if np.sum(idx_val_samp) > 0:
+                idx_val = ~np.isnan(ref_wave_val[i])
+                ref_flux_val_samp[i,idx_val_samp] = interp1d(ref_wave_val[i,idx_val], ref_flux_val[i,idx_val], kind=kind)(ref_wave_val_samp[i,idx_val_samp])
+                ref_flux_err_samp[i,idx_val_samp] = interp1d(ref_wave_val[i,idx_val], ref_flux_err[i,idx_val], kind=kind)(ref_wave_val_samp[i,idx_val_samp])
+            if np.sum(idx_nan_samp) > 0:
+                ref_flux_val_samp[i,idx_nan_samp] = np.nan
+                ref_flux_err_samp[i,idx_nan_samp] = np.nan
 
         # save spectral data
         self.spec_reference = {"wave_val": ref_wave_val_samp,
