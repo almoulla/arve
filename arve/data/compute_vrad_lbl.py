@@ -49,6 +49,7 @@ class compute_vrad_lbl:
         temp                       =  self.aux_data["spec"]["temp"]
         N_spec                     =  self.spec["N_spec"]
         N_ord                      =  self.spec["N_ord"]
+        kind                       =  self.spec["interpolation"]
 
         # reference spectrum gradient
         ref_grad_val = np.zeros_like(ref_wave_val)
@@ -59,8 +60,13 @@ class compute_vrad_lbl:
         ref_flux_val_func = np.zeros(N_ord, dtype=object)
         ref_grad_val_func = np.zeros(N_ord, dtype=object)
         for i in range(N_ord):
-            ref_flux_val_func[i] = interp1d(ref_wave_val[i], ref_flux_val[i], kind="cubic")
-            ref_grad_val_func[i] = interp1d(ref_wave_val[i], ref_grad_val[i], kind="cubic")
+            idx_val = ~np.isnan(ref_wave_val[i]) & ~np.isnan(ref_flux_val[i]) & ~np.isnan(ref_grad_val[i])
+            if np.sum(idx_val) > 0:
+                ref_flux_val_func[i] = interp1d(ref_wave_val[i,idx_val], ref_flux_val[i,idx_val], kind=kind, assume_sorted=True, bounds_error=False)
+                ref_grad_val_func[i] = interp1d(ref_wave_val[i,idx_val], ref_grad_val[i,idx_val], kind=kind, assume_sorted=True, bounds_error=False)
+            else:
+                ref_flux_val_func[i] = lambda x: np.zeros_like(x)*np.nan
+                ref_grad_val_func[i] = lambda x: np.zeros_like(x)*np.nan
 
         # read constants
         c = self.arve.functions.constants["c"]
@@ -143,7 +149,8 @@ class compute_vrad_lbl:
             vrad_mask_lbl[i] = np.ones((N_spec,N_line[i],N_bin), dtype=bool)
 
         # loop spectra
-        print("Analyzed spectra:")
+        print("Extracting LBL RVs.")
+        print("~~~~ Processed spectra:")
         for i in tqdm(range(N_spec)):
 
             # read spectrum

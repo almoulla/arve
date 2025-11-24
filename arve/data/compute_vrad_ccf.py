@@ -160,7 +160,8 @@ class compute_vrad_ccf:
         fwhm_err_arr = np.zeros((N_spec,N_ord+1))*np.nan
 
         # loop spectra
-        print("Analyzed spectra:")
+        print("Extracting CCF RVs.")
+        print("~~~~ Processed spectra:")
         for i in tqdm(range(N_spec)):
 
             # read spectrum

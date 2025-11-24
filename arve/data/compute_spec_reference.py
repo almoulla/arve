@@ -1,6 +1,7 @@
 import numpy             as     np
 from   scipy.interpolate import interp1d
 from   scipy.signal      import savgol_filter
+from   tqdm              import tqdm
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -54,7 +55,9 @@ class compute_spec_reference:
         else:
 
             # loop spectra
-            for i in range(N_spec):
+            print("Building reference spectrum.")
+            print("~~~~ Processed spectra:")
+            for i in tqdm(range(N_spec)):
 
                 # read spectrum
                 _, flux_val, flux_err = self.read_spec(i)
@@ -84,9 +87,9 @@ class compute_spec_reference:
             idx_nan_samp = np.isnan(ref_wave_val_samp[i])
             idx_val_samp = ~idx_nan_samp
             if np.sum(idx_val_samp) > 0:
-                idx_val = ~np.isnan(ref_wave_val[i])
-                ref_flux_val_samp[i,idx_val_samp] = interp1d(ref_wave_val[i,idx_val], ref_flux_val[i,idx_val], kind=kind)(ref_wave_val_samp[i,idx_val_samp])
-                ref_flux_err_samp[i,idx_val_samp] = interp1d(ref_wave_val[i,idx_val], ref_flux_err[i,idx_val], kind=kind)(ref_wave_val_samp[i,idx_val_samp])
+                idx_val = ~np.isnan(ref_wave_val[i]) & ~np.isnan(ref_flux_val[i]) & ~np.isnan(ref_flux_err[i])
+                ref_flux_val_samp[i,idx_val_samp] = interp1d(ref_wave_val[i,idx_val], ref_flux_val[i,idx_val], kind=kind, assume_sorted=True, bounds_error=False)(ref_wave_val_samp[i,idx_val_samp])
+                ref_flux_err_samp[i,idx_val_samp] = interp1d(ref_wave_val[i,idx_val], ref_flux_err[i,idx_val], kind=kind, assume_sorted=True, bounds_error=False)(ref_wave_val_samp[i,idx_val_samp])
             if np.sum(idx_nan_samp) > 0:
                 ref_flux_val_samp[i,idx_nan_samp] = np.nan
                 ref_flux_err_samp[i,idx_nan_samp] = np.nan

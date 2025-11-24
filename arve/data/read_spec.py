@@ -194,8 +194,8 @@ class read_spec:
                     idx_nan = np.isnan(wave_val[j]) | np.isnan(flux_val[j]) | np.isnan(flux_err[j])
                     idx_val = ~idx_nan
                     if np.sum(idx_val) > 0:
-                        flux_val_inter[j,idx_val] = interp1d(wave_val[j,idx_val], flux_val[j,idx_val], kind=kind, bounds_error=False)(wave_val_inter[j,idx_val])
-                        flux_err_inter[j,idx_val] = interp1d(wave_val[j,idx_val], flux_err[j,idx_val], kind=kind, bounds_error=False)(wave_val_inter[j,idx_val])
+                        flux_val_inter[j,idx_val] = interp1d(wave_val[j,idx_val], flux_val[j,idx_val], kind=kind, assume_sorted=True, bounds_error=False)(wave_val_inter[j,idx_val])
+                        flux_err_inter[j,idx_val] = interp1d(wave_val[j,idx_val], flux_err[j,idx_val], kind=kind, assume_sorted=True, bounds_error=False)(wave_val_inter[j,idx_val])
                     if np.sum(idx_nan) > 0:
                         flux_val_inter[j][idx_nan] = np.nan
                         flux_err_inter[j][idx_nan] = np.nan
