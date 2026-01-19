@@ -160,11 +160,12 @@ class add_data:
             self.spec["flux_err"] = flux_err
 
         # add nr. of spectra, orders and pixels
-        if (files is None) & (flux_val is not None):
-            self.spec["N_spec"] = flux_val.shape[0]
-        else:
-            self.spec["N_spec"] = len(files)
-        self.spec["N_ord"] = wave_val.shape[0]
-        self.spec["N_pix"] = wave_val.shape[1]
+        if (wave_val is not None) & (flux_val is not None):
+            if files is not None:
+                self.spec["N_spec"] = len(files)
+            else:
+                self.spec["N_spec"] = flux_val.shape[0]
+            self.spec["N_ord"]      = wave_val.shape[0]
+            self.spec["N_pix"]      = wave_val.shape[1]
         
         return None

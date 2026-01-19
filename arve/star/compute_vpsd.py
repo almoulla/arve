@@ -4,12 +4,15 @@ class compute_vpsd:
 
     def compute_vpsd(
         self,
-        N_bin : int | None = None,
+        oversamp : float      = 1   ,
+        N_bin    : int | None = None,
         ) -> None:
         """Compute velocity power spectral density (VPSD).
 
         Parameters
         ----------
+        oversamp : float, optional
+            oversamling factor of the periodogram frequency grid, by default 1
         N_bin : int | None, optional
             number of logarithmically equidistant frequency bins for the averaged VPSD (if None, each order of magnitude in frequency is divided into 10 bins), by default None
 
@@ -24,7 +27,7 @@ class compute_vpsd:
         vrad_val, vrad_err = [self.arve.data.vrad[key] for key in ["vrad_val", "vrad_err"]]
 
         # compute velocity power spectrum
-        freq, vps, phi, win_freq, win_vps, win_area = self.arve.functions.gls_periodogram(time_val=time_val, data_val=vrad_val, data_err=vrad_err, normalize=False, win_func=True)
+        freq, vps, phi, win_freq, win_vps, win_area = self.arve.functions.gls_periodogram(time_val=time_val, data_val=vrad_val, data_err=vrad_err, oversamp=oversamp, normalize=False, win_func=True)
 
         # compute log-average VPS
         if N_bin is None:
