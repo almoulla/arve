@@ -79,20 +79,16 @@ class compute_spec_reference:
                     ref_flux_err = np.array([np.sqrt(1/np.sum(1/flux_err_arr[:,j]**2, axis=0))                     for j in range(N_ord)])
 
         # oversample
-        ref_wave_val_samp = np.zeros((N_ord,N_pix+(oversamp-1)*(N_pix-1)))
-        ref_flux_val_samp = np.zeros((N_ord,N_pix+(oversamp-1)*(N_pix-1)))
-        ref_flux_err_samp = np.zeros((N_ord,N_pix+(oversamp-1)*(N_pix-1)))
+        ref_wave_val_samp = np.zeros((N_ord,N_pix+(oversamp-1)*(N_pix-1)))*np.nan
+        ref_flux_val_samp = np.zeros((N_ord,N_pix+(oversamp-1)*(N_pix-1)))*np.nan
+        ref_flux_err_samp = np.zeros((N_ord,N_pix+(oversamp-1)*(N_pix-1)))*np.nan
         for i in range(N_ord):
             ref_wave_val_samp[i] = np.append(np.concatenate([np.linspace(ref_wave_val[i][j], ref_wave_val[i][j+1], oversamp+1)[:oversamp] for j in range(N_pix-1)]), ref_wave_val[i][-1])
-            idx_nan_samp = np.isnan(ref_wave_val_samp[i])
-            idx_val_samp = ~idx_nan_samp
-            if np.sum(idx_val_samp) > 0:
-                idx_val = ~np.isnan(ref_wave_val[i]) & ~np.isnan(ref_flux_val[i]) & ~np.isnan(ref_flux_err[i])
+            idx_val_samp         = ~np.isnan(ref_wave_val_samp[i])
+            idx_val              = ~np.isnan(ref_wave_val[i]) & ~np.isnan(ref_flux_val[i]) & ~np.isnan(ref_flux_err[i])
+            if (np.sum(idx_val_samp) > 1) & (np.sum(idx_val) > 1):
                 ref_flux_val_samp[i,idx_val_samp] = interp1d(ref_wave_val[i,idx_val], ref_flux_val[i,idx_val], kind=kind, assume_sorted=True, bounds_error=False)(ref_wave_val_samp[i,idx_val_samp])
                 ref_flux_err_samp[i,idx_val_samp] = interp1d(ref_wave_val[i,idx_val], ref_flux_err[i,idx_val], kind=kind, assume_sorted=True, bounds_error=False)(ref_wave_val_samp[i,idx_val_samp])
-            if np.sum(idx_nan_samp) > 0:
-                ref_flux_val_samp[i,idx_nan_samp] = np.nan
-                ref_flux_err_samp[i,idx_nan_samp] = np.nan
 
         # save spectral data
         self.spec_reference = {"wave_val": ref_wave_val_samp,

@@ -188,17 +188,13 @@ class read_spec:
             if (self.spec["same_wave_grid"] == False) & (i > 0):
                 kind           = self.spec["interpolation"]
                 wave_val_inter = self.spec["wave_val"]
-                flux_val_inter = np.zeros_like(wave_val_inter)
-                flux_err_inter = np.zeros_like(wave_val_inter)
+                flux_val_inter = np.zeros_like(wave_val_inter)*np.nan
+                flux_err_inter = np.zeros_like(wave_val_inter)*np.nan
                 for j in range(self.spec["N_ord"]):
-                    idx_nan = np.isnan(wave_val[j]) | np.isnan(flux_val[j]) | np.isnan(flux_err[j])
-                    idx_val = ~idx_nan
-                    if np.sum(idx_val) > 0:
+                    idx_val = ~np.isnan(wave_val[j]) & ~np.isnan(flux_val[j]) & ~np.isnan(flux_err[j])
+                    if np.sum(idx_val) > 1:
                         flux_val_inter[j,idx_val] = interp1d(wave_val[j,idx_val], flux_val[j,idx_val], kind=kind, assume_sorted=True, bounds_error=False)(wave_val_inter[j,idx_val])
                         flux_err_inter[j,idx_val] = interp1d(wave_val[j,idx_val], flux_err[j,idx_val], kind=kind, assume_sorted=True, bounds_error=False)(wave_val_inter[j,idx_val])
-                    if np.sum(idx_nan) > 0:
-                        flux_val_inter[j][idx_nan] = np.nan
-                        flux_err_inter[j][idx_nan] = np.nan
                 wave_val = wave_val_inter
                 flux_val = flux_val_inter
                 flux_err = flux_err_inter
