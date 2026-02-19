@@ -39,6 +39,7 @@ class compute_vrad_ccf:
 
         # read data
         wave_val = self.spec["wave_val"]
+        N_spec   = self.spec["N_spec"]
         N_ord    = self.spec["N_ord"]
 
         # read constants
@@ -101,6 +102,7 @@ class compute_vrad_ccf:
         else:
             ccf_vrad       = np.arange(vrad_grid[0], vrad_grid[1]+vrad_grid[2]/2, vrad_grid[2])
             ccf_err_corr   = (vrad_step_med/vrad_grid[2])**(1/2)
+        N_vrad = len(ccf_vrad)
 
         # keep mask lines within spectrum overlap
         for i in range(N_ord):
@@ -112,13 +114,6 @@ class compute_vrad_ccf:
         # normalize weights
         for i in range(N_ord):
             weight[i] = weight[i]/np.sum(weight[i])
-        
-        # nr. of spectra, RV shifts and lines
-        if self.spec["path"] is None:
-            N_spec = len(self.spec["flux_val"])
-        else:
-            N_spec = len(self.spec["files"])
-        N_vrad = len(ccf_vrad)
 
         # empty arrays for indices
         i_l = np.zeros((N_ord,N_vrad), dtype=object)
