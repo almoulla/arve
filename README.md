@@ -4,7 +4,7 @@
 
 # ARVE ~ Analyzing Radial Velocity Elements
 
-`ARVE` is multi-functional tool for extreme precision radial velocity (EPRV) analysis.
+`ARVE` is a multi-functional tool for extreme precision radial velocity (EPRV) analysis.
 
 ## Installation
 
